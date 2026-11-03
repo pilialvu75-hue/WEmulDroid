@@ -14,6 +14,17 @@
 
 Per il primo collaudo **non occorrono APK esterni**. Vedi [guida prima prova](docs/SMOKE_TEST.md).
 
+## Google Play Store ufficiale
+
+È disponibile anche un secondo profilo Android con **Play Store integrato**. Non sostituisce l'emulatore tecnico e non richiede APK di provenienza sconosciuta.
+
+1. Esegui **Installa-PlayStore.cmd** per scaricare l'immagine Google Play dal repository SDK ufficiale.
+2. Esegui **Avvia-PlayStore.cmd**, poi premi **Avvia Android** e **Apri Play Store**.
+3. Accedi a Google direttamente nell'Android emulato, cerca e installa app/giochi compatibili dal negozio.
+
+Questo ambiente non è ancora stato verificato su un PC reale. Leggi [guida Google Play e limitazioni](docs/GOOGLE_PLAY.md).
+
+
 ## Requisiti e limiti
 
 - Windows 10/11 x64, CPU con virtualizzazione attiva, Windows Hypervisor Platform (WHPX), connessione Internet per la prima installazione.
@@ -31,7 +42,9 @@ Per il primo collaudo **non occorrono APK esterni**. Vedi [guida prima prova](do
 | Verifica-PC.cmd | Diagnosi read-only di prerequisiti Windows |
 | Installa-Android.cmd | Installazione SDK/AVD Google con consenso |
 | Prova-Android.cmd | Test indipendente con Impostazioni Android |
-| Avvia-Android.cmd | Pannello di controllo e installazione APK scelti dall'utente |
+| Avvia-Android.cmd | Pannello di controllo Android standard |
+| Installa-PlayStore.cmd | Scarica e prepara il secondo profilo ufficiale Google Play |
+| Avvia-PlayStore.cmd | Pannello Android Google Play, con pulsante Apri Play Store |
 
 ## Percorsi Windows
 
@@ -45,6 +58,7 @@ La verifica del PC salva solo il report locale; non modifica configurazioni.
 
 - [Roadmap](docs/ROADMAP.md)
 - [Primo test](docs/SMOKE_TEST.md)
+- [Play Store ufficiale](docs/GOOGLE_PLAY.md)
 - [Download SDK Android](https://developer.android.com/studio)
 - [Accelerazione su Windows](https://developer.android.com/studio/run/emulator-acceleration)
 

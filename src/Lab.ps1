@@ -1,5 +1,10 @@
 # WEmulDroid v0.1 - Windows PowerShell 5.1 / WinForms
 # Independent launcher, no Android runtime binaries bundled.
+[CmdletBinding()]
+param(
+    [ValidateSet('WEmulDroid_API_35', 'WEmulDroid_Play_API_35')]
+    [string]$AvdName = 'WEmulDroid_API_35'
+)
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
@@ -7,7 +12,7 @@ Add-Type -AssemblyName System.Drawing
 
 $script:SdkRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk'
 $script:ReportsRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Reports'
-$script:AvdName = 'WEmulDroid_API_35'
+$script:AvdName = $AvdName
 $script:Emulator = Join-Path $script:SdkRoot 'emulator\emulator.exe'
 $script:Adb = Join-Path $script:SdkRoot 'platform-tools\adb.exe'
 
@@ -135,7 +140,7 @@ function Collect-Report([string]$serial, [string]$packageName) {
 }
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'WEmulDroid - Android Desktop Lab v0.1'
+$form.Text = 'WEmulDroid - Android Desktop Lab v0.3'
 $form.ClientSize = New-Object System.Drawing.Size(810, 570)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
@@ -149,7 +154,7 @@ $titleLabel.SetBounds(20, 15, 760, 40)
 $form.Controls.Add($titleLabel)
 
 $script:DeviceLabel = New-Object System.Windows.Forms.Label
-$script:DeviceLabel.Text = 'Dispositivo: da avviare (WEmulDroid_API_35)'
+$script:DeviceLabel.Text = ('Dispositivo: da avviare (' + $script:AvdName + ')')
 $script:DeviceLabel.SetBounds(20, 60, 770, 26)
 $form.Controls.Add($script:DeviceLabel)
 
@@ -169,6 +174,8 @@ $btnStop = New-LabButton 'Arresta Android' 599 100
 $btnInstall = New-LabButton 'Installa APK' 20 162
 $btnMeasure = New-LabButton 'Misura risorse' 213 162
 $btnReports = New-LabButton 'Apri report' 406 162
+$btnPlay = New-LabButton 'Apri Play Store' 599 162
+$btnPlay.Enabled = ($script:AvdName -eq 'WEmulDroid_Play_API_35')
 
 $packageLabel = New-Object System.Windows.Forms.Label
 $packageLabel.Text = 'App installata da analizzare:'
@@ -196,8 +203,9 @@ $form.Controls.Add($script:LogBox)
 $btnSetup.Add_Click({
     try {
         $root = Split-Path -Parent $PSScriptRoot
-        $installer = Join-Path $root 'Installa-Android.cmd'
-        if (-not (Test-Path -LiteralPath $installer)) { throw 'Installa-Android.cmd non trovato.' }
+        $installerName = if ($script:AvdName -eq 'WEmulDroid_Play_API_35') { 'Installa-PlayStore.cmd' } else { 'Installa-Android.cmd' }
+        $installer = Join-Path $root $installerName
+        if (-not (Test-Path -LiteralPath $installer)) { throw ($installerName + ' non trovato.') }
         Start-Process -FilePath $installer -WorkingDirectory $root
         Write-Log 'Finestra di installazione aperta; segui le istruzioni e riavvia il laboratorio alla fine.'
     } catch { Show-Error $_.Exception.Message }
@@ -213,7 +221,7 @@ $btnStart.Add_Click({
         }
         $avds = (& $script:Emulator -list-avds | Out-String)
         if ($avds -notmatch ('(?m)^' + [regex]::Escape($script:AvdName) + '\s*$')) {
-            throw 'Dispositivo virtuale non presente. Completa prima Installa-Android.cmd.'
+            throw 'Dispositivo virtuale non presente. Completa prima il comando Installa strumenti.'
         }
         Start-Process -FilePath $script:Emulator -ArgumentList @('-avd', $script:AvdName, '-gpu', 'auto')
         Write-Log 'Avvio Android richiesto. Attendi la schermata iniziale e premi Aggiorna elenco.'
@@ -265,10 +273,28 @@ $btnReports.Add_Click({
     } catch { Show-Error $_.Exception.Message }
 })
 
+$btnPlay.Add_Click({
+    try {
+        if ($script:AvdName -ne 'WEmulDroid_Play_API_35') {
+            throw 'Questo profilo Android non include Play Store. Avvia il profilo Google Play.'
+        }
+        $serial = Require-RunningDevice
+        $packagePath = (& $script:Adb -s $serial shell pm path com.android.vending 2>&1 | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0 -or $packagePath -notmatch '(?m)^package:') {
+            throw 'Play Store non trovato nel profilo corrente. Reinstalla il profilo Google Play senza cancellare quello standard.'
+        }
+        $result = (& $script:Adb -s $serial shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -p com.android.vending 2>&1 | Out-String)
+        if ($LASTEXITCODE -ne 0 -or $result -match '(?i)Error:|Exception:') {
+            throw ('Non riesco ad aprire Play Store: ' + $result.Trim())
+        }
+        Write-Log 'Comando Play Store inviato. Accedi con il tuo account Google solo nel dispositivo virtuale ufficiale.'
+    } catch { Show-Error $_.Exception.Message }
+})
+
 $btnStop.Add_Click({
     try {
         $serial = Get-LabSerial
-        if (-not $serial) { Write-Log 'Nessun dispositivo AIVEXUS attivo.'; return }
+        if (-not $serial) { Write-Log 'Nessun dispositivo WEmulDroid attivo.'; return }
         $result = (& $script:Adb -s $serial emu kill 2>&1 | Out-String)
         if ($LASTEXITCODE -ne 0) { throw ('Arresto non riuscito: ' + $result) }
         $script:DeviceLabel.Text = 'Dispositivo: arrestato'
@@ -277,6 +303,7 @@ $btnStop.Add_Click({
     } catch { Show-Error $_.Exception.Message }
 })
 
+Write-Log ('Profilo selezionato: ' + $script:AvdName)
 Write-Log 'Pronto. Prima installazione: clicca Installa strumenti.'
 Write-Log 'Per usare APK di terze parti, rispetta le relative licenze.'
 [void]$form.ShowDialog()

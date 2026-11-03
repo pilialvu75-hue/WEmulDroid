@@ -1,8 +1,14 @@
-# AIVEXUS Android Desktop Lab — Windows
+# WEmulDroid — Android Emulator for Windows
 
 **Prototipo indipendente (v0.1)** per avviare Android in una finestra Windows, installare APK e raccogliere primi dati diagnostici. Non importa codice da `Ai-orchestrator-riserva` e non modifica il suo repository.
 
 > **Stato:** codice iniziale pubblicato; avvio reale dell'emulatore e collaudo su PC Windows **non ancora verificati**.
+
+## Primo test consigliato: AI-Orchestrator Android
+
+Dopo l'installazione iniziale degli strumenti, puoi lanciare direttamente **`Prova-AI-Orchestrator.cmd`**. Lo script individua l'ultima release stabile pubblica di AI-Orchestrator, chiede conferma per scaricarne l'APK e tenta installazione e avvio nell'AVD dedicato, conservando i log. **Il primo avvio su Windows deve ancora essere verificato sul PC fisico.**
+
+Guida: [Primo test AI-Orchestrator](docs/FIRST_TEST.md).
 
 ## Come iniziare (Windows 11 x64)
 

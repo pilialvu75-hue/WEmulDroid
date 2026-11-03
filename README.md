@@ -1,47 +1,51 @@
-# WEmulDroid — Android Emulator for Windows
+# WEmulDroid — Android su Windows
 
-**Prototipo indipendente (v0.1)** per avviare Android in una finestra Windows, installare APK e raccogliere primi dati diagnostici. Non importa codice da `Ai-orchestrator-riserva` e non modifica il suo repository.
+**Prototipo autonomo v0.2**, indipendente da AI-Orchestrator e da altre applicazioni. Usa [Android Emulator ufficiale](https://developer.android.com/studio/run/emulator) per avviare Android in una finestra Windows, gestire APK autorizzati e raccogliere dati diagnostici.
 
-> **Stato:** codice iniziale pubblicato; avvio reale dell'emulatore e collaudo su PC Windows **non ancora verificati**.
+**Stato:** codice presente e controlli sintattici tramite CI; il funzionamento reale su un PC Windows **non è ancora stato verificato**. Nessun APK, immagine Google o binario di terzi viene redistribuito qui.
 
-## Primo test consigliato: AI-Orchestrator Android
+## Come iniziare (Windows 10/11 64-bit)
 
-Dopo l'installazione iniziale degli strumenti, puoi lanciare direttamente **`Prova-AI-Orchestrator.cmd`**. Lo script individua l'ultima release stabile pubblica di AI-Orchestrator, chiede conferma per scaricarne l'APK e tenta installazione e avvio nell'AVD dedicato, conservando i log. **Il primo avvio su Windows deve ancora essere verificato sul PC fisico.**
+1. Scarica il repository da **Code → Download ZIP** ed estrailo.
+2. Avvia **Verifica-PC.cmd**: controllo di sola lettura per RAM, disco, Java, virtualizzazione e WHPX.
+3. Avvia **Installa-Android.cmd**: scarica gli strumenti ufficiali Google, controlla SHA-256, richiede le licenze e crea l'AVD Aivexus_API_35.
+4. Avvia **Prova-Android.cmd**: accende Android e apre **Impostazioni**, app preinstallata. Registra esito, RAM, CPU e rendering.
+5. Avvia **Avvia-Android.cmd** per utilizzare la GUI: installa un APK locale, visualizza app e report e arresta solo l'emulatore di questo laboratorio.
 
-Guida: [Primo test AI-Orchestrator](docs/FIRST_TEST.md).
+Per il primo collaudo **non occorrono APK esterni**. Vedi [guida prima prova](docs/SMOKE_TEST.md).
 
-## Come iniziare (Windows 11 x64)
+## Requisiti e limiti
 
-1. Scarica questo repository da **Code → Download ZIP** ed estrailo.
-2. Fai doppio clic su **`Installa-Android.cmd`**. Leggi e accetta i termini dell'SDK Google quando richiesto. Verranno scaricati gli strumenti Android ufficiali, un'immagine Android 15 (API 35) e configurato il dispositivo `Aivexus_API_35`.
-3. Fai doppio clic su **`Avvia-Android.cmd`**, poi premi **Avvia Android**.
-4. Dopo il primo avvio, usa **Aggiorna elenco** per vedere le applicazioni, **Installa APK** per installarne una e **Misura risorse** per creare un report testuale.
+- Windows 10/11 x64, CPU con virtualizzazione attiva, Windows Hypervisor Platform (WHPX), connessione Internet per la prima installazione.
+- Java 17+ (anche il JBR di Android Studio), diversi GB di disco e RAM adeguata.
+- Android 15, API 35, Google APIs x86_64, AVD Aivexus_API_35.
+- Il progetto **non modifica Ai-orchestrator-riserva** né il suo codice, build e canali di aggiornamento.
+- La GUI è un prototipo PowerShell + WinForms, non ancora un installer Windows firmato.
+- Android x86_64 potrebbe non supportare APK con sole librerie ARM64.
+- Le misure in emulatore NON rappresentano direttamente i consumi di uno smartphone fisico.
 
-**Dipendenze:** Windows 10/11 64-bit con virtualizzazione CPU, Windows Hypervisor Platform (WHPX), Java 17+ (può essere usato quello già incluso con Android Studio), connessione Internet per la prima installazione, diversi GB di spazio libero. Al primo avvio Android può essere lento. I comandi non installano né modificano Android Studio e non richiedono Python o Flutter.
+## Comandi
 
-**Separazione dei dati:** l'SDK viene installato in `%LOCALAPPDATA%\AivexusAndroidLab\Sdk`, i report in `%LOCALAPPDATA%\AivexusAndroidLab\Reports`; l'AVD si trova nella directory Android standard dell'utente (`%USERPROFILE%\.android\avd`). Il codice dell'applicazione resta in questo repository.
+| File | Funzione |
+| --- | --- |
+| Verifica-PC.cmd | Diagnosi read-only di prerequisiti Windows |
+| Installa-Android.cmd | Installazione SDK/AVD Google con consenso |
+| Prova-Android.cmd | Test indipendente con Impostazioni Android |
+| Avvia-Android.cmd | Pannello di controllo e installazione APK scelti dall'utente |
 
-**Nota sulle APK:** le applicazioni con sole librerie native ARM/ARM64 potrebbero non essere compatibili con l'immagine x86_64 usata dall'emulatore. Le prove di compatibilità e di consumo energetico reale richiedono anche un dispositivo fisico.
+## Percorsi Windows
 
-## Funzioni implementate nel prototipo
+- SDK: %LOCALAPPDATA%\AivexusAndroidLab\Sdk
+- Report: %LOCALAPPDATA%\AivexusAndroidLab\Reports
+- AVD: %USERPROFILE%\.android\avd (directory Android standard)
 
-- Installazione guidata del motore Android ufficiale tramite `sdkmanager`; download verificato tramite checksum SHA-256 delle command-line tools
-- Interfaccia Windows semplice (PowerShell + Windows Forms), separata dal motore Android
-- Avvio di un AVD dedicato e arresto dello stesso, senza terminare emulatori non appartenenti al laboratorio
-- Installazione di file APK e elenco dei package utente
-- Report con `dumpsys meminfo`, `dumpsys cpuinfo`, `dumpsys gfxinfo` e informazioni sui processi dell'host
-
-## Limiti v0.1
-
-Il report contiene dati diagnostici, **non** una misura affidabile del consumo energetico reale, della percentuale di utilizzo GPU o degli FPS aggregati. L'installer richiede interazione e l'accettazione delle licenze Google; i componenti Google vengono scaricati direttamente dal produttore e **non** sono distribuiti nel repository. Mancano ancora benchmark automatici ripetibili, CI Windows, gestione di più profili e pacchetto .exe firmato.
+La verifica del PC salva solo il report locale; non modifica configurazioni.
 
 ## Documentazione
 
-- [Roadmap e criteri di collaudo](docs/ROADMAP.md)
-- [Android Emulator](https://developer.android.com/studio/run/emulator)
-- [SDK Command-line tools](https://developer.android.com/studio)
-- [Accelerazione hardware Windows](https://developer.android.com/studio/run/emulator-acceleration)
+- [Roadmap](docs/ROADMAP.md)
+- [Primo test](docs/SMOKE_TEST.md)
+- [Download SDK Android](https://developer.android.com/studio)
+- [Accelerazione su Windows](https://developer.android.com/studio/run/emulator-acceleration)
 
-## Licenza
-
-Il codice di questo progetto è distribuito sotto licenza MIT (vedi `LICENSE`). Android SDK ed eventuali immagini di sistema seguono le proprie licenze, che non sono incluse in questa licenza.
+Codice launcher sotto licenza MIT; gli strumenti Google e le app di terzi mantengono le rispettive licenze.

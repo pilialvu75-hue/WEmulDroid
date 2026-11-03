@@ -94,6 +94,8 @@ function Collect-Report([string]$serial, [string]$packageName) {
     $cpuExit = $LASTEXITCODE
     $gfxInfo = (& $script:Adb -s $serial shell dumpsys gfxinfo $packageName 2>&1 | Out-String)
     $gfxExit = $LASTEXITCODE
+    $resolution = (& $script:Adb -s $serial shell wm size 2>&1 | Out-String).Trim()
+    $density = (& $script:Adb -s $serial shell wm density 2>&1 | Out-String).Trim()
     if ($memExit -ne 0 -or $cpuExit -ne 0 -or $gfxExit -ne 0) {
         throw 'adb ha restituito un errore durante la raccolta dei dati.'
     }
@@ -120,6 +122,8 @@ function Collect-Report([string]$serial, [string]$packageName) {
         ('Seriale: ' + $serial)
         ('Package: ' + $packageName)
         ('RAM app: TOTAL PSS = ' + $pssLabel)
+        ('Schermo Android: ' + $resolution)
+        ('Densita Android: ' + $density)
         'NOTA: RAM e CPU vengono osservate in un emulatore, non sono misure equivalenti ad hardware reale.'
         'NOTA: gfxinfo fornisce statistiche di rendering, non una percentuale attendibile di utilizzo GPU.'
         ''
@@ -221,8 +225,8 @@ $script:LogBox.Font = New-Object System.Drawing.Font('Consolas', 9)
 $form.Controls.Add($script:LogBox)
 
 
-function Invoke-DeviceCommand([string]$serial, [string[]]$args, [string]$what) {
-    $out = (& $script:Adb -s $serial @args 2>&1 | Out-String)
+function Invoke-DeviceCommand([string]$serial, [string[]]$arguments, [string]$what) {
+    $out = (& $script:Adb -s $serial @arguments 2>&1 | Out-String)
     if ($LASTEXITCODE -ne 0 -or $out -match '(?i)\bException\b|\bSecurityException\b|\bError:') {
         throw ($what + ' non riuscito: ' + $out.Trim())
     }

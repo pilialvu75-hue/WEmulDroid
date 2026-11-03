@@ -140,8 +140,8 @@ function Collect-Report([string]$serial, [string]$packageName) {
 }
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'WEmulDroid - Android Desktop Lab v0.3'
-$form.ClientSize = New-Object System.Drawing.Size(810, 570)
+$form.Text = 'WEmulDroid - Android Desktop Lab v0.4'
+$form.ClientSize = New-Object System.Drawing.Size(810, 675)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
 $form.MaximizeBox = $false
@@ -187,18 +187,116 @@ $script:PackageCombo.DropDownStyle = 'DropDownList'
 $script:PackageCombo.SetBounds(280, 222, 510, 30)
 $form.Controls.Add($script:PackageCombo)
 
+
+$screenLabel = New-Object System.Windows.Forms.Label
+$screenLabel.Text = 'Schermo Android:'
+$screenLabel.SetBounds(20, 273, 135, 26)
+$form.Controls.Add($screenLabel)
+
+$script:ScreenCombo = New-Object System.Windows.Forms.ComboBox
+$script:ScreenCombo.DropDownStyle = 'DropDownList'
+$script:ScreenCombo.SetBounds(153, 270, 245, 30)
+[void]$script:ScreenCombo.Items.Add('Leggero 720 x 1280 (320 dpi)')
+[void]$script:ScreenCombo.Items.Add('Smartphone 1080 x 2400 (420 dpi)')
+[void]$script:ScreenCombo.Items.Add('Tablet 1600 x 2560 (320 dpi)')
+$script:ScreenCombo.SelectedIndex = 0
+$form.Controls.Add($script:ScreenCombo)
+
+$btnScreen = New-LabButton 'Applica schermo' 406 267
+$btnScreenReset = New-LabButton 'Ripristina' 599 267
+$btnCapture = New-LabButton 'Screenshot' 20 320
+$btnTouchHelp = New-LabButton 'Touch / Audio' 213 320
+
 $logLabel = New-Object System.Windows.Forms.Label
 $logLabel.Text = 'Attivita e diagnostica:'
-$logLabel.SetBounds(20, 267, 750, 26)
+$logLabel.SetBounds(20, 373, 750, 26)
 $form.Controls.Add($logLabel)
 
 $script:LogBox = New-Object System.Windows.Forms.TextBox
 $script:LogBox.Multiline = $true
 $script:LogBox.ReadOnly = $true
 $script:LogBox.ScrollBars = 'Vertical'
-$script:LogBox.SetBounds(20, 296, 770, 245)
+$script:LogBox.SetBounds(20, 403, 770, 245)
 $script:LogBox.Font = New-Object System.Drawing.Font('Consolas', 9)
 $form.Controls.Add($script:LogBox)
+
+
+function Invoke-DeviceCommand([string]$serial, [string[]]$args, [string]$what) {
+    $out = (& $script:Adb -s $serial @args 2>&1 | Out-String)
+    if ($LASTEXITCODE -ne 0 -or $out -match '(?i)\bException\b|\bSecurityException\b|\bError:') {
+        throw ($what + ' non riuscito: ' + $out.Trim())
+    }
+    return $out.Trim()
+}
+
+$btnScreen.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        $selected = $script:ScreenCombo.SelectedIndex
+        if ($selected -lt 0) { throw 'Scegli un profilo di schermo.' }
+        $sizes = @('720x1280', '1080x2400', '1600x2560')
+        $dpis = @('320', '420', '320')
+        $size = $sizes[$selected]
+        $dpi = $dpis[$selected]
+        # Modifica reversibile del solo display Android emulato.
+        [void](Invoke-DeviceCommand $serial @('shell', 'wm', 'size', $size) 'Risoluzione')
+        [void](Invoke-DeviceCommand $serial @('shell', 'wm', 'density', $dpi) 'Densita')
+        Write-Log ('Schermo Android simulato: ' + $size + ' @ ' + $dpi + ' dpi.')
+        Write-Log 'La dimensione della finestra Windows resta indipendente dalla risoluzione Android.'
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnScreenReset.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        [void](Invoke-DeviceCommand $serial @('shell', 'wm', 'size', 'reset') 'Ripristino risoluzione')
+        [void](Invoke-DeviceCommand $serial @('shell', 'wm', 'density', 'reset') 'Ripristino densita')
+        Write-Log 'Dimensioni e densita Android riportate ai valori originali dell AVD.'
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnCapture.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        $folder = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Screenshots'
+        New-Item -ItemType Directory -Path $folder -Force | Out-Null
+        $path = Join-Path $folder ('screen-' + (Get-Date -Format 'yyyyMMdd-HHmmss') + '.png')
+        # Su Windows PowerShell 5.1 la redirezione di adb exec-out puo danneggiare PNG binari.
+        # Si salva prima nell AVD e poi si usa adb pull (trasferimento binario sicuro).
+        $remote = '/sdcard/Download/wemuldroid-screenshot.png'
+        [void](Invoke-DeviceCommand $serial @('shell', 'screencap', '-p', $remote) 'Cattura screenshot')
+        try {
+            [void](Invoke-DeviceCommand $serial @('pull', $remote, $path) 'Download screenshot')
+            if (-not (Test-Path -LiteralPath $path)) { throw 'Il file screenshot non e stato creato.' }
+            Write-Log ('Screenshot salvato: ' + $path)
+        } finally {
+            & $script:Adb -s $serial shell rm -f $remote | Out-Null
+        }
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnTouchHelp.Add_Click({
+    $help = @(
+        'GESTI: clic sinistro = tocco; doppio clic = doppio tocco.'
+        'Tieni premuto e trascina il mouse per simulare swipe e drag.'
+        'CTRL + mouse = gesto pinch a due dita, usando i controlli standard Google.'
+        'Puoi digitare con la tastiera Windows.'
+        ''
+        'AUDIO: la riproduzione usa le casse o cuffie del PC.'
+        'VOLUME: usa i pulsanti laterali della finestra Android.'
+        'MICROFONO: nell emulatore apri Extended controls > Microphone'
+        'e abilita host microphone access solo quando ti serve.'
+        'Il microfono resta disattivato per impostazione predefinita.'
+        ''
+        'WORK: i test grafici richiedono Computer Use locale autorizzato.'
+        'Screenshot e report rimangono sul PC fino a condivisione esplicita.'
+    ) -join [Environment]::NewLine
+    [System.Windows.Forms.MessageBox]::Show(
+        $help, 'WEmulDroid - Comandi touch e audio',
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Information
+    ) | Out-Null
+})
 
 $btnSetup.Add_Click({
     try {

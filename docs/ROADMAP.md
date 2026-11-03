@@ -10,6 +10,10 @@
 - [x] Script di test iniziale indipendente con Impostazioni Android (nessun APK esterno)
 - [x] Profilo aggiuntivo ufficiale Google Play Store (installazione e avvio disponibili da script)
 - [x] Interfaccia Play Store separata dal profilo Android tecnico
+- [x] Controlli GUI per profili di risoluzione, ripristino e screenshot
+- [x] Guida rapida per touch e audio
+- [ ] Collaudo video, speaker, microfono e gesti multitouch su Windows
+- [ ] Validare futuro collaudo Work con Computer Use locale, senza accesso implicito al PC
 - [x] CI leggera che verifica la sintassi PowerShell
 - [ ] Esecuzione reale del downloader e dell'installazione su PC Windows
 - [ ] Avvio completo AVD e UI Android visualizzata

@@ -47,7 +47,7 @@ function Set-EmulatorWindowFullscreen([string]$avdName) {
         throw 'Non riesco a identificare univocamente la finestra Android di questo AVD. Clicca sulla finestra Android e prova Alt+Invio (se supportato dalla versione Emulator). Nessuna altra finestra e stata modificata.'
     }
     $hwnd = $matches[0]
-    $rect = New-Object WEmulDroidNativeWindow+Rect
+    $rect = [WEmulDroidNativeWindow+Rect]::new()
     if (-not [WEmulDroidNativeWindow]::GetWindowRect($hwnd, [ref]$rect)) {
         throw 'Impossibile leggere la geometria della finestra Android.'
     }

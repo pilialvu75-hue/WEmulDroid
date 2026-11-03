@@ -90,6 +90,7 @@ function Get-RemoteApk([string]$value, [string]$folder) {
     $handler = New-Object System.Net.Http.HttpClientHandler
     $handler.AllowAutoRedirect = $false
     $client = [System.Net.Http.HttpClient]::new($handler)
+    $client.DefaultRequestHeaders.UserAgent.ParseAdd('WEmulDroid/0.5')
     $client.Timeout = [TimeSpan]::FromMinutes(15)
     $stream = $null
     $response = $null

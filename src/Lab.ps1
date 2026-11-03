@@ -1,0 +1,282 @@
+# AIVEXUS Android Desktop Lab v0.1 - Windows PowerShell 5.1 / WinForms
+# Independent launcher, no Android runtime binaries bundled.
+$ErrorActionPreference = 'Stop'
+Add-Type -AssemblyName System.Windows.Forms
+Add-Type -AssemblyName System.Drawing
+[System.Windows.Forms.Application]::EnableVisualStyles()
+
+$script:SdkRoot = Join-Path $env:LOCALAPPDATA 'AivexusAndroidLab\Sdk'
+$script:ReportsRoot = Join-Path $env:LOCALAPPDATA 'AivexusAndroidLab\Reports'
+$script:AvdName = 'Aivexus_API_35'
+$script:Emulator = Join-Path $script:SdkRoot 'emulator\emulator.exe'
+$script:Adb = Join-Path $script:SdkRoot 'platform-tools\adb.exe'
+
+function Write-Log([string]$message) {
+    $line = ('[{0}] {1}' -f (Get-Date -Format 'HH:mm:ss'), $message)
+    $script:LogBox.AppendText($line + [Environment]::NewLine)
+    $script:LogBox.SelectionStart = $script:LogBox.TextLength
+    $script:LogBox.ScrollToCaret()
+}
+
+function Show-Error([string]$message) {
+    Write-Log ('ERRORE: ' + $message)
+    [System.Windows.Forms.MessageBox]::Show(
+        $message, 'AIVEXUS Android Desktop Lab',
+        [System.Windows.Forms.MessageBoxButtons]::OK,
+        [System.Windows.Forms.MessageBoxIcon]::Warning
+    ) | Out-Null
+}
+
+function Assert-ToolsInstalled {
+    if (-not (Test-Path -LiteralPath $script:Emulator)) {
+        throw 'Motore Android non trovato. Esegui Installa-Android.cmd o premi Installa strumenti.'
+    }
+    if (-not (Test-Path -LiteralPath $script:Adb)) {
+        throw 'adb.exe non trovato. Esegui Installa-Android.cmd.'
+    }
+}
+
+function Get-LabSerial {
+    Assert-ToolsInstalled
+    $devices = @(& $script:Adb devices 2>&1)
+    if ($LASTEXITCODE -ne 0) {
+        throw 'adb non risponde.'
+    }
+    foreach ($line in $devices) {
+        if ([string]$line -match '^(emulator-[0-9]+)\s+device\b') {
+            $serial = $Matches[1]
+            $avdDetails = (& $script:Adb -s $serial emu avd name 2>&1 | Out-String)
+            if ($avdDetails -match [regex]::Escape($script:AvdName)) {
+                return $serial
+            }
+        }
+    }
+    return $null
+}
+
+function Require-RunningDevice {
+    $serial = Get-LabSerial
+    if (-not $serial) {
+        throw 'Android non ancora pronto. Premi Avvia Android, attendi la schermata iniziale e poi Aggiorna elenco.'
+    }
+    return $serial
+}
+
+function Refresh-Packages {
+    $script:PackageCombo.Items.Clear()
+    $serial = Require-RunningDevice
+    $script:DeviceLabel.Text = ('Dispositivo attivo: ' + $script:AvdName + ' (' + $serial + ')')
+    $output = @(& $script:Adb -s $serial shell pm list packages -3 2>&1)
+    if ($LASTEXITCODE -ne 0) { throw 'Impossibile leggere le applicazioni installate.' }
+    foreach ($line in $output) {
+        if ([string]$line -match '^package:(.+)$') {
+            [void]$script:PackageCombo.Items.Add($Matches[1].Trim())
+        }
+    }
+    if ($script:PackageCombo.Items.Count -gt 0) { $script:PackageCombo.SelectedIndex = 0 }
+    Write-Log ("Android collegato; trovate {0} applicazioni utente." -f $script:PackageCombo.Items.Count)
+}
+
+function Collect-Report([string]$serial, [string]$packageName) {
+    New-Item -ItemType Directory -Path $script:ReportsRoot -Force | Out-Null
+    $stamp = Get-Date -Format 'yyyyMMdd-HHmmss'
+    $safePackage = $packageName -replace '[^a-zA-Z0-9._-]', '_'
+    $path = Join-Path $script:ReportsRoot ('report-' + $safePackage + '-' + $stamp + '.txt')
+
+    $memInfo = (& $script:Adb -s $serial shell dumpsys meminfo $packageName 2>&1 | Out-String)
+    $memExit = $LASTEXITCODE
+    $cpuInfo = (& $script:Adb -s $serial shell dumpsys cpuinfo 2>&1 | Out-String)
+    $cpuExit = $LASTEXITCODE
+    $gfxInfo = (& $script:Adb -s $serial shell dumpsys gfxinfo $packageName 2>&1 | Out-String)
+    $gfxExit = $LASTEXITCODE
+    if ($memExit -ne 0 -or $cpuExit -ne 0 -or $gfxExit -ne 0) {
+        throw 'adb ha restituito un errore durante la raccolta dei dati.'
+    }
+    $appCpuLines = @($cpuInfo -split '\r?\n' | Where-Object { $_ -match [regex]::Escape($packageName) })
+    $pssLabel = 'non disponibile'
+    if ($memInfo -match '(?mi)^\s*TOTAL PSS:\s*(\d+)') {
+        $pssLabel = ('{0} KiB' -f $Matches[1])
+    }
+
+    $hostMem = [System.GC]::GetTotalMemory($false)
+    $hostProcesses = @(Get-Process -ErrorAction SilentlyContinue |
+        Where-Object { $_.ProcessName -match '^(emulator|qemu-system)' } |
+        Select-Object ProcessName, Id, CPU, WorkingSet64, PrivateMemorySize64)
+    $hostText = if ($hostProcesses.Count -gt 0) {
+        $hostProcesses | Format-Table -AutoSize | Out-String
+    } else {
+        'Nessun processo emulator/qemu trovato dalla sessione utente.'
+    }
+
+    $report = @(
+        'AIVEXUS ANDROID DESKTOP LAB - DIAGNOSTICA v0.1'
+        ('Data: ' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'))
+        ('AVD: ' + $script:AvdName)
+        ('Seriale: ' + $serial)
+        ('Package: ' + $packageName)
+        ('RAM app: TOTAL PSS = ' + $pssLabel)
+        'NOTA: RAM e CPU vengono osservate in un emulatore, non sono misure equivalenti ad hardware reale.'
+        'NOTA: gfxinfo fornisce statistiche di rendering, non una percentuale attendibile di utilizzo GPU.'
+        ''
+        '=== PROCESSI EMULATORE SU WINDOWS (CPU cumulativa in secondi; memoria in byte) ==='
+        $hostText
+        '=== DUMPSYS MEMINFO (APP) ==='
+        $memInfo
+        '=== RIGHE CPUINFO RELATIVE ALL APP ==='
+        ($appCpuLines -join [Environment]::NewLine)
+        '=== DUMPSYS CPUINFO (COMPLETO) ==='
+        $cpuInfo
+        '=== DUMPSYS GFXINFO (APP) ==='
+        $gfxInfo
+    ) -join [Environment]::NewLine
+
+    [System.IO.File]::WriteAllText($path, $report, (New-Object System.Text.UTF8Encoding($false)))
+    return $path
+}
+
+$form = New-Object System.Windows.Forms.Form
+$form.Text = 'AIVEXUS - Android Desktop Lab v0.1'
+$form.ClientSize = New-Object System.Drawing.Size(810, 570)
+$form.StartPosition = 'CenterScreen'
+$form.FormBorderStyle = 'FixedDialog'
+$form.MaximizeBox = $false
+$form.Font = New-Object System.Drawing.Font('Segoe UI', 10)
+
+$titleLabel = New-Object System.Windows.Forms.Label
+$titleLabel.Text = 'Android su Windows | Laboratorio indipendente'
+$titleLabel.Font = New-Object System.Drawing.Font('Segoe UI', 15, [System.Drawing.FontStyle]::Bold)
+$titleLabel.SetBounds(20, 15, 760, 40)
+$form.Controls.Add($titleLabel)
+
+$script:DeviceLabel = New-Object System.Windows.Forms.Label
+$script:DeviceLabel.Text = 'Dispositivo: da avviare (Aivexus_API_35)'
+$script:DeviceLabel.SetBounds(20, 60, 770, 26)
+$form.Controls.Add($script:DeviceLabel)
+
+function New-LabButton([string]$text, [int]$x, [int]$y, [int]$width = 178) {
+    $b = New-Object System.Windows.Forms.Button
+    $b.Text = $text
+    $b.SetBounds($x, $y, $width, 38)
+    $form.Controls.Add($b)
+    return $b
+}
+
+$btnSetup = New-LabButton '1. Installa strumenti' 20 100
+$btnStart = New-LabButton '2. Avvia Android' 213 100
+$btnRefresh = New-LabButton '3. Aggiorna elenco' 406 100
+$btnStop = New-LabButton 'Arresta Android' 599 100
+
+$btnInstall = New-LabButton 'Installa APK' 20 162
+$btnMeasure = New-LabButton 'Misura risorse' 213 162
+$btnReports = New-LabButton 'Apri report' 406 162
+
+$packageLabel = New-Object System.Windows.Forms.Label
+$packageLabel.Text = 'App installata da analizzare:'
+$packageLabel.SetBounds(20, 225, 260, 26)
+$form.Controls.Add($packageLabel)
+
+$script:PackageCombo = New-Object System.Windows.Forms.ComboBox
+$script:PackageCombo.DropDownStyle = 'DropDownList'
+$script:PackageCombo.SetBounds(280, 222, 510, 30)
+$form.Controls.Add($script:PackageCombo)
+
+$logLabel = New-Object System.Windows.Forms.Label
+$logLabel.Text = 'Attivita e diagnostica:'
+$logLabel.SetBounds(20, 267, 750, 26)
+$form.Controls.Add($logLabel)
+
+$script:LogBox = New-Object System.Windows.Forms.TextBox
+$script:LogBox.Multiline = $true
+$script:LogBox.ReadOnly = $true
+$script:LogBox.ScrollBars = 'Vertical'
+$script:LogBox.SetBounds(20, 296, 770, 245)
+$script:LogBox.Font = New-Object System.Drawing.Font('Consolas', 9)
+$form.Controls.Add($script:LogBox)
+
+$btnSetup.Add_Click({
+    try {
+        $root = Split-Path -Parent $PSScriptRoot
+        $installer = Join-Path $root 'Installa-Android.cmd'
+        if (-not (Test-Path -LiteralPath $installer)) { throw 'Installa-Android.cmd non trovato.' }
+        Start-Process -FilePath $installer -WorkingDirectory $root
+        Write-Log 'Finestra di installazione aperta; segui le istruzioni e riavvia il laboratorio alla fine.'
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnStart.Add_Click({
+    try {
+        Assert-ToolsInstalled
+        $existing = Get-LabSerial
+        if ($existing) {
+            Write-Log ('Android e gia avviato: ' + $existing)
+            return
+        }
+        $avds = (& $script:Emulator -list-avds | Out-String)
+        if ($avds -notmatch ('(?m)^' + [regex]::Escape($script:AvdName) + '\s*$')) {
+            throw 'Dispositivo virtuale non presente. Completa prima Installa-Android.cmd.'
+        }
+        Start-Process -FilePath $script:Emulator -ArgumentList @('-avd', $script:AvdName, '-gpu', 'auto')
+        Write-Log 'Avvio Android richiesto. Attendi la schermata iniziale e premi Aggiorna elenco.'
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnRefresh.Add_Click({
+    try { Refresh-Packages } catch { Show-Error $_.Exception.Message }
+})
+
+$btnInstall.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        $dialog = New-Object System.Windows.Forms.OpenFileDialog
+        $dialog.Title = 'Seleziona APK da installare'
+        $dialog.Filter = 'Applicazioni Android (*.apk)|*.apk'
+        $dialog.CheckFileExists = $true
+        if ($dialog.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
+        Write-Log ('Installazione APK: ' + $dialog.FileName)
+        $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
+        try {
+            $installOutput = (& $script:Adb -s $serial install -r $dialog.FileName 2>&1 | Out-String)
+            if ($LASTEXITCODE -ne 0) { throw ('Installazione fallita: ' + $installOutput.Trim()) }
+            Write-Log $installOutput.Trim()
+            Refresh-Packages
+        } finally { $form.Cursor = [System.Windows.Forms.Cursors]::Default }
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnMeasure.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        $package = [string]$script:PackageCombo.SelectedItem
+        if ([string]::IsNullOrWhiteSpace($package)) {
+            throw 'Seleziona prima una applicazione dalla lista (Aggiorna elenco).'
+        }
+        $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
+        try {
+            $path = Collect-Report -serial $serial -packageName $package
+            Write-Log ('Report salvato: ' + $path)
+        } finally { $form.Cursor = [System.Windows.Forms.Cursors]::Default }
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnReports.Add_Click({
+    try {
+        New-Item -ItemType Directory -Path $script:ReportsRoot -Force | Out-Null
+        Start-Process -FilePath 'explorer.exe' -ArgumentList ('"' + $script:ReportsRoot + '"')
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnStop.Add_Click({
+    try {
+        $serial = Get-LabSerial
+        if (-not $serial) { Write-Log 'Nessun dispositivo AIVEXUS attivo.'; return }
+        $result = (& $script:Adb -s $serial emu kill 2>&1 | Out-String)
+        if ($LASTEXITCODE -ne 0) { throw ('Arresto non riuscito: ' + $result) }
+        $script:DeviceLabel.Text = 'Dispositivo: arrestato'
+        $script:PackageCombo.Items.Clear()
+        Write-Log ('Arresto richiesto solo per ' + $script:AvdName + '.')
+    } catch { Show-Error $_.Exception.Message }
+})
+
+Write-Log 'Pronto. Prima installazione: clicca Installa strumenti.'
+Write-Log 'Per usare APK di terze parti, rispetta le relative licenze.'
+[void]$form.ShowDialog()

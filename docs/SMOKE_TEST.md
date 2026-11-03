@@ -6,10 +6,10 @@
 
 1. Scarica WEmulDroid da GitHub, estrai lo ZIP.
 2. Avvia **Verifica-PC.cmd**, che salva un report sulla virtualizzazione, WHPX, RAM e disco. Non modifica Windows.
-3. Avvia **Installa-Android.cmd**. Accetta, se desideri, le licenze Google e lascia configurare Aivexus_API_35, Android 15 API 35.
+3. Avvia **Installa-Android.cmd**. Accetta, se desideri, le licenze Google e lascia configurare WEmulDroid_API_35, Android 15 API 35.
 4. Avvia **Prova-Android.cmd**. Attende fino a cinque minuti il boot, apre Impostazioni e registra RAM, CPU e dati di rendering.
 5. **Controlla visivamente** che Impostazioni sia aperta e utilizzabile. Un messaggio COMMANDS_OK non dimostra che la GUI funzioni.
-6. Apri il report in %LOCALAPPDATA%\AivexusAndroidLab\Reports.
+6. Apri il report in %LOCALAPPDATA%\WEmulDroid\Reports.
 7. Solo dopo questa prova, utilizza **Avvia-Android.cmd → Installa APK** con una piccola app indipendente e autorizzata compatibile con x86_64.
 
 ## Criteri

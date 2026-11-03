@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - "src/**/*.ps1"
+      - "tests/**/*.ps1"
       - "*.cmd"
       - ".github/workflows/syntax.yml"
   pull_request:
     paths:
       - "src/**/*.ps1"
+      - "tests/**/*.ps1"
       - "*.cmd"
       - ".github/workflows/syntax.yml"
   workflow_dispatch:
@@ -49,11 +51,15 @@ jobs:
           if ($files.Count -lt 2 -or $allErrors.Count -gt 0) {
             throw 'PowerShell syntax check failed.'
           }
+      - name: Run APK offline validation tests
+        shell: pwsh
+        run: |
+          ./tests/ApkSafety.Tests.ps1
       - name: Guard independent project boundary and required entrypoints
         shell: bash
         run: |
           set -euo pipefail
-          for f in Verifica-PC.cmd Installa-Android.cmd Prova-Android.cmd Avvia-Android.cmd Installa-PlayStore.cmd Avvia-PlayStore.cmd src/Check-Requirements.ps1 src/Setup-Android.ps1 src/Test-Android.ps1 src/Lab.ps1; do
+          for f in Verifica-PC.cmd Installa-Android.cmd Prova-Android.cmd Avvia-Android.cmd Installa-PlayStore.cmd Avvia-PlayStore.cmd src/Check-Requirements.ps1 src/Setup-Android.ps1 src/Test-Android.ps1 src/Lab.ps1 src/ApkInstall.ps1 src/WindowMode.ps1; do
             test -s "$f" || { echo "::error::Missing file $f"; exit 1; }
           done
           if grep -RniE 'Ai-orchestrator-riserva|com[.]aiorchestrator|Test-AiOrchestrator|AivexusAndroidLab|Aivexus_API_35' src --include='*.ps1'; then
@@ -61,6 +67,10 @@ jobs:
             exit 1
           fi
           echo 'Independent project boundaries: PASS'
+          grep -Fq 'Fullscreen' src/Lab.ps1
+          grep -Fq 'Install-VerifiedApk' src/Lab.ps1
+          grep -Fq 'Get-RemoteApk' src/Lab.ps1
+          grep -Fq 'Touchpad + mouse (futuro)' src/Lab.ps1
       - name: Check Google Play profile separation
         shell: bash
         run: |

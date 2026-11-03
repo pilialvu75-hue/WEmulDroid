@@ -32,6 +32,7 @@ Questo ambiente non è ancora stato verificato su un PC reale. Leggi [guida Goog
 - Android 15, API 35, Google APIs x86_64, AVD WEmulDroid_API_35.
 - Il progetto **non modifica Ai-orchestrator-riserva** né il suo codice, build e canali di aggiornamento.
 - La GUI è un prototipo PowerShell + WinForms, non ancora un installer Windows firmato.
+- La GUI offre profili di risoluzione, reset, screenshot e guida touch/audio, ancora da testare su PC reale.
 - Android x86_64 potrebbe non supportare APK con sole librerie ARM64.
 - Le misure in emulatore NON rappresentano direttamente i consumi di uno smartphone fisico.
 
@@ -59,6 +60,7 @@ La verifica del PC salva solo il report locale; non modifica configurazioni.
 - [Roadmap](docs/ROADMAP.md)
 - [Primo test](docs/SMOKE_TEST.md)
 - [Play Store ufficiale](docs/GOOGLE_PLAY.md)
+- [Schermo, audio, touch e Work](docs/VIDEO_AUDIO_TOUCH_WORK.md)
 - [Download SDK Android](https://developer.android.com/studio)
 - [Accelerazione su Windows](https://developer.android.com/studio/run/emulator-acceleration)
 

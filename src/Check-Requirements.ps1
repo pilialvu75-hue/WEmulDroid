@@ -2,8 +2,8 @@
 [CmdletBinding()]
 param()
 $ErrorActionPreference = 'Stop'
-$SdkRoot = Join-Path $env:LOCALAPPDATA 'AivexusAndroidLab\Sdk'
-$reportRoot = Join-Path $env:LOCALAPPDATA 'AivexusAndroidLab\Reports'
+$SdkRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk'
+$reportRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Reports'
 $lines = New-Object System.Collections.Generic.List[string]
 
 function Add-Result([string]$label, [string]$value) {

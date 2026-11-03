@@ -8,7 +8,7 @@
 
 1. Scarica il repository da **Code → Download ZIP** ed estrailo.
 2. Avvia **Verifica-PC.cmd**: controllo di sola lettura per RAM, disco, Java, virtualizzazione e WHPX.
-3. Avvia **Installa-Android.cmd**: scarica gli strumenti ufficiali Google, controlla SHA-256, richiede le licenze e crea l'AVD Aivexus_API_35.
+3. Avvia **Installa-Android.cmd**: scarica gli strumenti ufficiali Google, controlla SHA-256, richiede le licenze e crea l'AVD WEmulDroid_API_35.
 4. Avvia **Prova-Android.cmd**: accende Android e apre **Impostazioni**, app preinstallata. Registra esito, RAM, CPU e rendering.
 5. Avvia **Avvia-Android.cmd** per utilizzare la GUI: installa un APK locale, visualizza app e report e arresta solo l'emulatore di questo laboratorio.
 
@@ -18,7 +18,7 @@ Per il primo collaudo **non occorrono APK esterni**. Vedi [guida prima prova](do
 
 - Windows 10/11 x64, CPU con virtualizzazione attiva, Windows Hypervisor Platform (WHPX), connessione Internet per la prima installazione.
 - Java 17+ (anche il JBR di Android Studio), diversi GB di disco e RAM adeguata.
-- Android 15, API 35, Google APIs x86_64, AVD Aivexus_API_35.
+- Android 15, API 35, Google APIs x86_64, AVD WEmulDroid_API_35.
 - Il progetto **non modifica Ai-orchestrator-riserva** né il suo codice, build e canali di aggiornamento.
 - La GUI è un prototipo PowerShell + WinForms, non ancora un installer Windows firmato.
 - Android x86_64 potrebbe non supportare APK con sole librerie ARM64.
@@ -35,8 +35,8 @@ Per il primo collaudo **non occorrono APK esterni**. Vedi [guida prima prova](do
 
 ## Percorsi Windows
 
-- SDK: %LOCALAPPDATA%\AivexusAndroidLab\Sdk
-- Report: %LOCALAPPDATA%\AivexusAndroidLab\Reports
+- SDK: %LOCALAPPDATA%\WEmulDroid\Sdk
+- Report: %LOCALAPPDATA%\WEmulDroid\Reports
 - AVD: %USERPROFILE%\.android\avd (directory Android standard)
 
 La verifica del PC salva solo il report locale; non modifica configurazioni.

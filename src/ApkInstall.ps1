@@ -89,7 +89,7 @@ function Get-RemoteApk([string]$value, [string]$folder) {
     $temp = $path + '.partial'
     $handler = New-Object System.Net.Http.HttpClientHandler
     $handler.AllowAutoRedirect = $false
-    $client = New-Object System.Net.Http.HttpClient($handler)
+    $client = [System.Net.Http.HttpClient]::new($handler)
     $client.Timeout = [TimeSpan]::FromMinutes(15)
     $stream = $null
     $response = $null

@@ -135,7 +135,7 @@ function Collect-Report([string]$serial, [string]$packageName) {
 }
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'AIVEXUS - Android Desktop Lab v0.1'
+$form.Text = 'WEmulDroid - Android Desktop Lab v0.1'
 $form.ClientSize = New-Object System.Drawing.Size(810, 570)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
@@ -143,7 +143,7 @@ $form.MaximizeBox = $false
 $form.Font = New-Object System.Drawing.Font('Segoe UI', 10)
 
 $titleLabel = New-Object System.Windows.Forms.Label
-$titleLabel.Text = 'Android su Windows | Laboratorio indipendente'
+$titleLabel.Text = 'WEmulDroid | Android su Windows'
 $titleLabel.Font = New-Object System.Drawing.Font('Segoe UI', 15, [System.Drawing.FontStyle]::Bold)
 $titleLabel.SetBounds(20, 15, 760, 40)
 $form.Controls.Add($titleLabel)

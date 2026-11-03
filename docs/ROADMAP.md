@@ -12,6 +12,11 @@
 - [x] Interfaccia Play Store separata dal profilo Android tecnico
 - [x] Controlli GUI per profili di risoluzione, ripristino e screenshot
 - [x] Guida rapida per touch e audio
+- [x] Fullscreen reversibile sulla finestra dell'AVD selezionato (da collaudare)
+- [x] Importazione APK da cartella locale e link HTTPS/GitHub con consenso, limite e SHA-256 (da collaudare)
+- [x] Test offline delle regole di importazione APK (CI)
+- [ ] Verificare fullscreen, ripristino, installazione singola/cartella/link sul PC fisico
+- [ ] Gestione split APK / AAB / XAPK solo se giustificata dai casi d'uso
 - [ ] Collaudo video, speaker, microfono e gesti multitouch su Windows
 - [ ] Validare futuro collaudo Work con Computer Use locale, senza accesso implicito al PC
 - [x] CI leggera che verifica la sintassi PowerShell
@@ -23,6 +28,12 @@
 - [ ] Installazione e avvio di una piccola applicazione indipendente x86_64
 - [ ] Verifica Windows PowerShell, WHPX, Java, GPU, spazio su disco
 - [ ] Rifinitura GUI e gestione dei problemi emersi su hardware reale
+
+## P1 — Gestione input evoluta
+- [ ] Verificare se il touchpad ASUS espone contatti separati leggibili dal software
+- [ ] Esperimento dito 1 da touchpad + dito 2 da mouse, senza driver invasivi
+- [ ] Traduzione in due tocchi Android indipendenti, con latenza accettabile e rilascio affidabile
+- [ ] Fallback Ctrl+mouse e controllo WASD/gamepad se impossibile il vero multi-pointer
 
 ## P1 — Benchmark e misurazioni
 - RAM: PSS, RSS, picchi, andamento temporale, possibili leak

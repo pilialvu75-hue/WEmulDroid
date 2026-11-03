@@ -3,11 +3,11 @@
 [CmdletBinding()]
 param()
 $ErrorActionPreference = 'Stop'
-$SdkRoot = Join-Path $env:LOCALAPPDATA 'AivexusAndroidLab\Sdk'
-$ReportsRoot = Join-Path $env:LOCALAPPDATA 'AivexusAndroidLab\Reports'
+$SdkRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk'
+$ReportsRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Reports'
 $Adb = Join-Path $SdkRoot 'platform-tools\adb.exe'
 $Emulator = Join-Path $SdkRoot 'emulator\emulator.exe'
-$AvdName = 'Aivexus_API_35'
+$AvdName = 'WEmulDroid_API_35'
 $serial = $null
 $state = 'NOT_STARTED'
 $message = ''
@@ -78,7 +78,7 @@ try {
     if (-not $serial) {
         $avds = (& $Emulator -list-avds | Out-String)
         if ($avds -notmatch ('(?m)^' + [regex]::Escape($AvdName) + '\s*$')) {
-            throw 'Dispositivo Aivexus_API_35 mancante: completa Installa-Android.cmd.'
+            throw 'Dispositivo WEmulDroid_API_35 mancante: completa Installa-Android.cmd.'
         }
         Write-Host 'Avvio dell emulatore...'
         Start-Process -FilePath $Emulator -ArgumentList @('-avd', $AvdName, '-gpu', 'auto', '-memory', '2048', '-cores', '2')

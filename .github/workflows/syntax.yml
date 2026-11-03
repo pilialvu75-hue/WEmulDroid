@@ -53,7 +53,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          for f in Verifica-PC.cmd Installa-Android.cmd Prova-Android.cmd Avvia-Android.cmd src/Check-Requirements.ps1 src/Setup-Android.ps1 src/Test-Android.ps1 src/Lab.ps1; do
+          for f in Verifica-PC.cmd Installa-Android.cmd Prova-Android.cmd Avvia-Android.cmd Installa-PlayStore.cmd Avvia-PlayStore.cmd src/Check-Requirements.ps1 src/Setup-Android.ps1 src/Test-Android.ps1 src/Lab.ps1; do
             test -s "$f" || { echo "::error::Missing file $f"; exit 1; }
           done
           if grep -RniE 'Ai-orchestrator-riserva|com[.]aiorchestrator|Test-AiOrchestrator|AivexusAndroidLab|Aivexus_API_35' src --include='*.ps1'; then
@@ -61,3 +61,15 @@ jobs:
             exit 1
           fi
           echo 'Independent project boundaries: PASS'
+      - name: Check Google Play profile separation
+        shell: bash
+        run: |
+          set -euo pipefail
+          grep -Fq "system-images;android-35;google_apis_playstore;x86_64" src/Setup-Android.ps1
+          grep -Fq "WEmulDroid_Play_API_35" src/Setup-Android.ps1
+          grep -Fq "WEmulDroid_API_35" src/Setup-Android.ps1
+          grep -Fq -- "-PlayStore" Installa-PlayStore.cmd
+          grep -Fq -- "-AvdName" Avvia-PlayStore.cmd
+          grep -Fq "pm path com.android.vending" src/Lab.ps1
+          test -s docs/GOOGLE_PLAY.md
+          echo "Google Play and standard profiles are separate: PASS"

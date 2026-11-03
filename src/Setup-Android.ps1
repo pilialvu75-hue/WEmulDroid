@@ -1,11 +1,11 @@
 # Windows PowerShell 5.1+. Run through Installa-Android.cmd.
 [CmdletBinding()]
 param(
-    [string]$SdkRoot = (Join-Path $env:LOCALAPPDATA 'AivexusAndroidLab\Sdk')
+    [string]$SdkRoot = (Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk')
 )
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$avdName = 'Aivexus_API_35'
+$avdName = 'WEmulDroid_API_35'
 $imagePackage = 'system-images;android-35;google_apis;x86_64'
 $toolsUrl = 'https://dl.google.com/android/repository/commandlinetools-win-15859902_latest.zip'
 $toolsSha256 = '90ae805d20434428bffcb699c290860f19bb5f66a67e6b330067e3de801fb04a'
@@ -42,7 +42,7 @@ function Assert-ExitCode([string]$step) {
 }
 
 Write-Host '==================================================' -ForegroundColor Cyan
-Write-Host ' AIVEXUS Android Desktop Lab - Setup Android 15' -ForegroundColor Cyan
+Write-Host ' WEmulDroid - Setup Android 15' -ForegroundColor Cyan
 Write-Host '==================================================' -ForegroundColor Cyan
 Write-Host ''
 Write-Host "SDK dedicato: $SdkRoot"

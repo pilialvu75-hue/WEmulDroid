@@ -1,12 +1,13 @@
 # Windows PowerShell 5.1+. Run through Installa-Android.cmd.
 [CmdletBinding()]
 param(
-    [string]$SdkRoot = (Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk')
+    [string]$SdkRoot = (Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk'),
+    [switch]$PlayStore
 )
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$avdName = 'WEmulDroid_API_35'
-$imagePackage = 'system-images;android-35;google_apis;x86_64'
+$avdName = if ($PlayStore) { 'WEmulDroid_Play_API_35' } else { 'WEmulDroid_API_35' }
+$imagePackage = if ($PlayStore) { 'system-images;android-35;google_apis_playstore;x86_64' } else { 'system-images;android-35;google_apis;x86_64' }
 $toolsUrl = 'https://dl.google.com/android/repository/commandlinetools-win-15859902_latest.zip'
 $toolsSha256 = '90ae805d20434428bffcb699c290860f19bb5f66a67e6b330067e3de801fb04a'
 
@@ -42,11 +43,15 @@ function Assert-ExitCode([string]$step) {
 }
 
 Write-Host '==================================================' -ForegroundColor Cyan
-Write-Host ' WEmulDroid - Setup Android 15' -ForegroundColor Cyan
+Write-Host (' WEmulDroid - Setup Android 15 ' + $(if ($PlayStore) { '(Google Play)' } else { '(standard)' })) -ForegroundColor Cyan
 Write-Host '==================================================' -ForegroundColor Cyan
 Write-Host ''
 Write-Host "SDK dedicato: $SdkRoot"
 Write-Host 'I componenti vengono scaricati direttamente da Google.'
+if ($PlayStore) {
+    Write-Host 'Questa immagine Android contiene Google Play Store e Google Play Services.'
+    Write-Host 'L accesso al Play Store avverra direttamente dentro il dispositivo virtuale.'
+}
 Write-Host 'Leggi i termini Android SDK: https://developer.android.com/studio/terms'
 Write-Host "Saranno scaricati diversi GB di dati. Verifica lo spazio disponibile."
 $answer = Read-Host "Dopo avere letto i termini, vuoi continuare? Digita SI"
@@ -78,7 +83,7 @@ try {
     New-Item -ItemType Directory -Path $SdkRoot -Force | Out-Null
 
     if (-not (Test-Path -LiteralPath $sdkManager)) {
-        $work = Join-Path ([System.IO.Path]::GetTempPath()) ('aivexus-sdk-' + [guid]::NewGuid().ToString('N'))
+        $work = Join-Path ([System.IO.Path]::GetTempPath()) ('wemuldroid-sdk-' + [guid]::NewGuid().ToString('N'))
         New-Item -ItemType Directory -Path $work -Force | Out-Null
         try {
             $archive = Join-Path $work 'cmdline-tools.zip'
@@ -125,6 +130,16 @@ try {
         Assert-ExitCode 'Creazione AVD'
     } else {
         Write-Host "Dispositivo virtuale gia presente: $avdName"
+    }
+    if ($PlayStore) {
+        $avdConfig = Join-Path $env:USERPROFILE ('.android\avd\' + $avdName + '.avd\config.ini')
+        if (Test-Path -LiteralPath $avdConfig) {
+            $configContent = Get-Content -LiteralPath $avdConfig -Raw
+            if ($configContent -notmatch 'google_apis_playstore') {
+                throw 'Il dispositivo esiste ma non risulta basato su immagine Google Play. Non modifico ne sovrascrivo i dati.'
+            }
+        }
+        Write-Host 'Per aprire il Play Store usa Avvia-PlayStore.cmd e accedi dal dispositivo virtuale.'
     }
 
     Write-Host ''

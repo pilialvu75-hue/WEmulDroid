@@ -1,0 +1,13 @@
+# Never commit downloaded Android SDK files, VM images, reports or apps
+*.apk
+*.aab
+*.ipa
+*.zip
+*.log
+*.tmp
+android-sdk/
+Sdk/
+Reports/
+bin/
+obj/
+.vs/

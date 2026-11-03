@@ -119,7 +119,7 @@ try {
     $releaseTag = [string]$release.tag_name
     $apk = @($release.assets | Where-Object { $_.name -eq 'app-release.apk' } | Select-Object -First 1)
     if ($apk.Count -ne 1 -or -not $apk[0].browser_download_url) {
-        throw "Release $releaseTag: APK non trovato. Non utilizzare AAB come APK."
+        throw "Release ${releaseTag}: APK non trovato. Non utilizzare AAB come APK."
     }
     $releaseUrl = [string]$apk[0].browser_download_url
     if (-not $releaseUrl.StartsWith('https://github.com/pilialvu75-hue/Ai-orchestrator-riserva/releases/download/', [System.StringComparison]::OrdinalIgnoreCase)) {

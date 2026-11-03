@@ -101,7 +101,7 @@ function Get-RemoteApk([string]$value, [string]$folder) {
             $code = [int]$response.StatusCode
             if ($code -ge 300 -and $code -lt 400) {
                 if (-not $response.Headers.Location) { throw 'Redirect senza indirizzo di destinazione.' }
-                $next = New-Object System.Uri($uri, $response.Headers.Location)
+                $next = [System.Uri]::new($uri, $response.Headers.Location)
                 $uri = Assert-ApkUri $next.AbsoluteUri
                 continue
             }

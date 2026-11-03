@@ -1,13 +1,13 @@
-# AIVEXUS Android Desktop Lab v0.1 - Windows PowerShell 5.1 / WinForms
+# WEmulDroid v0.1 - Windows PowerShell 5.1 / WinForms
 # Independent launcher, no Android runtime binaries bundled.
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 
-$script:SdkRoot = Join-Path $env:LOCALAPPDATA 'AivexusAndroidLab\Sdk'
-$script:ReportsRoot = Join-Path $env:LOCALAPPDATA 'AivexusAndroidLab\Reports'
-$script:AvdName = 'Aivexus_API_35'
+$script:SdkRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk'
+$script:ReportsRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Reports'
+$script:AvdName = 'WEmulDroid_API_35'
 $script:Emulator = Join-Path $script:SdkRoot 'emulator\emulator.exe'
 $script:Adb = Join-Path $script:SdkRoot 'platform-tools\adb.exe'
 
@@ -21,7 +21,7 @@ function Write-Log([string]$message) {
 function Show-Error([string]$message) {
     Write-Log ('ERRORE: ' + $message)
     [System.Windows.Forms.MessageBox]::Show(
-        $message, 'AIVEXUS Android Desktop Lab',
+        $message, 'WEmulDroid',
         [System.Windows.Forms.MessageBoxButtons]::OK,
         [System.Windows.Forms.MessageBoxIcon]::Warning
     ) | Out-Null
@@ -109,7 +109,7 @@ function Collect-Report([string]$serial, [string]$packageName) {
     }
 
     $report = @(
-        'AIVEXUS ANDROID DESKTOP LAB - DIAGNOSTICA v0.1'
+        'WEMULDROID ANDROID LAB - DIAGNOSTICA v0.1'
         ('Data: ' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss'))
         ('AVD: ' + $script:AvdName)
         ('Seriale: ' + $serial)
@@ -149,7 +149,7 @@ $titleLabel.SetBounds(20, 15, 760, 40)
 $form.Controls.Add($titleLabel)
 
 $script:DeviceLabel = New-Object System.Windows.Forms.Label
-$script:DeviceLabel.Text = 'Dispositivo: da avviare (Aivexus_API_35)'
+$script:DeviceLabel.Text = 'Dispositivo: da avviare (WEmulDroid_API_35)'
 $script:DeviceLabel.SetBounds(20, 60, 770, 26)
 $form.Controls.Add($script:DeviceLabel)
 

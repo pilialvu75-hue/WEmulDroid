@@ -8,10 +8,14 @@
 - [x] GUI Windows (avvio/arresto AVD, installazione APK locale, elenco app, report)
 - [x] Diagnosi preliminare read-only dei requisiti Windows
 - [x] Script di test iniziale indipendente con Impostazioni Android (nessun APK esterno)
+- [x] Profilo aggiuntivo ufficiale Google Play Store (installazione e avvio disponibili da script)
+- [x] Interfaccia Play Store separata dal profilo Android tecnico
 - [x] CI leggera che verifica la sintassi PowerShell
 - [ ] Esecuzione reale del downloader e dell'installazione su PC Windows
 - [ ] Avvio completo AVD e UI Android visualizzata
 - [ ] Test Impostazioni Android, conferma UI e report RAM/CPU
+- [ ] Primo avvio Google Play Store su Windows, login nel dispositivo virtuale
+- [ ] Verifica download/installazione e avvio app compatibile autorizzata dal Play Store
 - [ ] Installazione e avvio di una piccola applicazione indipendente x86_64
 - [ ] Verifica Windows PowerShell, WHPX, Java, GPU, spazio su disco
 - [ ] Rifinitura GUI e gestione dei problemi emersi su hardware reale
@@ -37,3 +41,5 @@
 - Non dichiarare funzionamento sul PC o prestazioni senza prove reali
 - Rispettare licenze e permessi delle app di terze parti
 - Finché il PC non è disponibile: migliorie statiche/CI soltanto; collaudo rinviato
+
+**Nota giochi Supercell:** Brawl Stars non è il benchmark iniziale: le condizioni d'uso Supercell limitano l'impiego di emulatori. Per la prima prova usare un gioco consentito e leggero. Vedi [Google Play](GOOGLE_PLAY.md).

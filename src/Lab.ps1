@@ -1,4 +1,4 @@
-# WEmulDroid v0.1 - Windows PowerShell 5.1 / WinForms
+# WEmulDroid v0.5 - Windows PowerShell 5.1 / WinForms
 # Independent launcher, no Android runtime binaries bundled.
 [CmdletBinding()]
 param(
@@ -9,6 +9,8 @@ $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
+. (Join-Path $PSScriptRoot 'ApkInstall.ps1')
+. (Join-Path $PSScriptRoot 'WindowMode.ps1')
 
 $script:SdkRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk'
 $script:ReportsRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Reports'
@@ -144,8 +146,8 @@ function Collect-Report([string]$serial, [string]$packageName) {
 }
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'WEmulDroid - Android Desktop Lab v0.4'
-$form.ClientSize = New-Object System.Drawing.Size(810, 675)
+$form.Text = 'WEmulDroid - Android Desktop Lab v0.5'
+$form.ClientSize = New-Object System.Drawing.Size(810, 766)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
 $form.MaximizeBox = $false
@@ -210,17 +212,25 @@ $btnScreen = New-LabButton 'Applica schermo' 406 267
 $btnScreenReset = New-LabButton 'Ripristina' 599 267
 $btnCapture = New-LabButton 'Screenshot' 20 320
 $btnTouchHelp = New-LabButton 'Touch / Audio' 213 320
+$btnFullscreen = New-LabButton 'Fullscreen' 406 320
+$btnApkFolder = New-LabButton 'APK da cartella' 599 320
+$btnApkLink = New-LabButton 'APK da link HTTPS' 20 373
+$btnSplitTouch = New-LabButton 'Touchpad + mouse (futuro)' 213 373 274
+$btnSplitTouch.Enabled = $false
+$tip = New-Object System.Windows.Forms.ToolTip
+$tip.SetToolTip($btnSplitTouch, 'Richiede due puntatori hardware indipendenti. Windows Precision Touchpad puo nascondere i contatti raw. Funzione sperimentale non ancora attiva.')
+
 
 $logLabel = New-Object System.Windows.Forms.Label
 $logLabel.Text = 'Attivita e diagnostica:'
-$logLabel.SetBounds(20, 373, 750, 26)
+$logLabel.SetBounds(20, 459, 750, 26)
 $form.Controls.Add($logLabel)
 
 $script:LogBox = New-Object System.Windows.Forms.TextBox
 $script:LogBox.Multiline = $true
 $script:LogBox.ReadOnly = $true
 $script:LogBox.ScrollBars = 'Vertical'
-$script:LogBox.SetBounds(20, 403, 770, 245)
+$script:LogBox.SetBounds(20, 489, 770, 248)
 $script:LogBox.Font = New-Object System.Drawing.Font('Consolas', 9)
 $form.Controls.Add($script:LogBox)
 
@@ -232,6 +242,81 @@ function Invoke-DeviceCommand([string]$serial, [string[]]$arguments, [string]$wh
     }
     return $out.Trim()
 }
+
+
+$btnFullscreen.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        # Il nome AVD/seriale viene verificato prima di intervenire sulla finestra.
+        $msg = Set-EmulatorWindowFullscreen $script:AvdName
+        Write-Log $msg
+        if ($script:FullscreenWindowState) {
+            $btnFullscreen.Text = 'Esci fullscreen'
+        } else {
+            $btnFullscreen.Text = 'Fullscreen'
+        }
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnApkFolder.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+        $dialog.Description = 'Seleziona la cartella che contiene file APK indipendenti (solo livello principale).'
+        $dialog.ShowNewFolderButton = $false
+        if ($dialog.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
+        $apks = @(Get-ChildItem -LiteralPath $dialog.SelectedPath -Filter '*.apk' -File -ErrorAction Stop | Sort-Object Name)
+        if ($apks.Count -eq 0) { throw 'La cartella non contiene APK.' }
+        if ($apks.Count -gt 30) { throw 'La cartella contiene piu di 30 APK. Seleziona una cartella piu piccola.' }
+        $prompt = "Vuoi installare $($apks.Count) APK nel SOLO emulatore $($script:AvdName)? Ogni APK verra trattato come app indipendente; non usare cartelle di split APK."
+        if ([System.Windows.Forms.MessageBox]::Show($prompt, 'Conferma installazione APK', 'YesNo', 'Question') -ne 'Yes') { return }
+        $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
+        try {
+            $ok = 0
+            $failed = 0
+            foreach ($apk in $apks) {
+                try {
+                    $message = Install-VerifiedApk $script:Adb $serial $apk.FullName
+                    Write-Log $message
+                    $ok++
+                } catch {
+                    $failed++
+                    Write-Log ('APK non installato: ' + $apk.Name + ' - ' + $_.Exception.Message)
+                }
+            }
+            Write-Log ("Cartella completata: successi $ok; falliti $failed.")
+            Refresh-Packages
+        } finally { $form.Cursor = [System.Windows.Forms.Cursors]::Default }
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnApkLink.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        Add-Type -AssemblyName Microsoft.VisualBasic
+        $url = [Microsoft.VisualBasic.Interaction]::InputBox(
+            'Incolla URL HTTPS di un APK oppure pagina GitHub releases/latest o releases/tag/...',
+            'WEmulDroid - Installa APK da link',
+            ''
+        )
+        if ([string]::IsNullOrWhiteSpace($url)) { return }
+        # Una pagina GitHub viene risolta prima del consenso; nessun APK scaricato.
+        $resolved = Resolve-ApkDownloadUri $url.Trim()
+        $display = $resolved.Host + $resolved.AbsolutePath
+        $prompt = "Scaricare e installare nell emulatore $($script:AvdName) questo APK?" + [Environment]::NewLine +
+            $display + [Environment]::NewLine + 'Usa soltanto sorgenti affidabili. Gli APK non sono automaticamente certificati.'
+        if ([System.Windows.Forms.MessageBox]::Show($prompt, 'Conferma download e installazione', 'YesNo', 'Warning') -ne 'Yes') { return }
+        $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
+        try {
+            $folder = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Downloads'
+            $downloaded = Get-RemoteApk $resolved.AbsoluteUri $folder
+            $message = Install-VerifiedApk $script:Adb $serial $downloaded
+            Write-Log ('Download HTTPS: ' + $display)
+            Write-Log $message
+            Refresh-Packages
+        } finally { $form.Cursor = [System.Windows.Forms.Cursors]::Default }
+    } catch { Show-Error $_.Exception.Message }
+})
 
 $btnScreen.Add_Click({
     try {
@@ -283,7 +368,10 @@ $btnTouchHelp.Add_Click({
     $help = @(
         'GESTI: clic sinistro = tocco; doppio clic = doppio tocco.'
         'Tieni premuto e trascina il mouse per simulare swipe e drag.'
-        'CTRL + mouse = gesto pinch a due dita, usando i controlli standard Google.'
+        'CTRL + mouse = due dita speculari (pinch) nell emulatore Google.'
+        'Touchpad + mouse come due dita indipendenti: NON disponibile oggi.'
+        'Richiede accesso ai contatti raw del touchpad e iniezione multitouch.'
+        'Nel pannello questa opzione rimane disabilitata per evitare falsi test.'
         'Puoi digitare con la tastiera Windows.'
         ''
         'AUDIO: la riproduzione usa le casse o cuffie del PC.'
@@ -345,9 +433,8 @@ $btnInstall.Add_Click({
         Write-Log ('Installazione APK: ' + $dialog.FileName)
         $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
         try {
-            $installOutput = (& $script:Adb -s $serial install -r $dialog.FileName 2>&1 | Out-String)
-            if ($LASTEXITCODE -ne 0) { throw ('Installazione fallita: ' + $installOutput.Trim()) }
-            Write-Log $installOutput.Trim()
+            $result = Install-VerifiedApk $script:Adb $serial $dialog.FileName
+            Write-Log $result
             Refresh-Packages
         } finally { $form.Cursor = [System.Windows.Forms.Cursors]::Default }
     } catch { Show-Error $_.Exception.Message }
@@ -393,10 +480,19 @@ $btnPlay.Add_Click({
     } catch { Show-Error $_.Exception.Message }
 })
 
+$form.Add_FormClosing({
+    if ($script:FullscreenWindowState) {
+        try { [void](Restore-EmulatorWindow) } catch {}
+    }
+})
 $btnStop.Add_Click({
     try {
         $serial = Get-LabSerial
         if (-not $serial) { Write-Log 'Nessun dispositivo WEmulDroid attivo.'; return }
+        if ($script:FullscreenWindowState) {
+            [void](Restore-EmulatorWindow)
+            $btnFullscreen.Text = 'Fullscreen'
+        }
         $result = (& $script:Adb -s $serial emu kill 2>&1 | Out-String)
         if ($LASTEXITCODE -ne 0) { throw ('Arresto non riuscito: ' + $result) }
         $script:DeviceLabel.Text = 'Dispositivo: arrestato'

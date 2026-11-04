@@ -54,7 +54,9 @@ try {
         } catch {}
     }
     Add-Result 'Windows Hypervisor Platform' $whpx
-    if ($whpx -match '(?i)disabilitata|installstate=2|^disabled
+    if ($whpx -like '*InstallState=2*' -or $whpx -eq 'Disabled' -or $whpx -eq 'disabilitata') {
+        Add-Result 'Prossimo passo WHPX' 'Win+R > optionalfeatures > Piattaforma Hypervisor Windows > attiva > OK > riavvio.'
+    }
 
     $sdkDrive = [System.IO.Path]::GetPathRoot($SdkRoot)
     $driveId = $sdkDrive.TrimEnd('\')

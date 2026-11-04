@@ -59,6 +59,7 @@ Name: "french"; MessagesFile: "compiler:Languages\French.isl"
 Source: "{#Payload}\WEmulDroid.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\WEmulDroid.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\VERSION.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "{#Payload}\CHANNEL.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\src\*.ps1"; DestDir: "{app}\src"; Flags: ignoreversion
 Source: "{#Payload}\docs\*.md"; DestDir: "{app}\docs"; Flags: ignoreversion
 Source: "{#Payload}\README.md"; DestDir: "{app}"; Flags: ignoreversion

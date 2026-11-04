@@ -63,16 +63,16 @@ function Show-WEmulDroidUpdateSettings {
     $close.Add_Click({ $dialog.Close() })
     $dialog.Controls.Add($close)
 
-    $pending = $null
-    $candidate = $null
+    $script:WEmulDroidUpdatePending = $null
+    $script:WEmulDroidUpdateCandidate = $null
 
     $beta.Add_CheckedChanged({
         $folder = Split-Path -Parent $betaPath
         New-Item -Path $folder -ItemType Directory -Force | Out-Null
         [IO.File]::WriteAllText($betaPath, $(if ($beta.Checked) { 'true' } else { 'false' }),
             (New-Object Text.UTF8Encoding($false)))
-        $candidate = $null
-        $pending = $null
+        $script:WEmulDroidUpdateCandidate = $null
+        $script:WEmulDroidUpdatePending = $null
         $download.Enabled = $false
         $apply.Enabled = $false
         $status.Text = (T 'updatesDescription')
@@ -82,10 +82,10 @@ function Show-WEmulDroidUpdateSettings {
         $check.Enabled = $false
         $dialog.Cursor = [Windows.Forms.Cursors]::WaitCursor
         try {
-            $candidate = Find-WEmulDroidUpdate -Current $version -IncludeBeta $beta.Checked
-            $download.Enabled = ($null -ne $candidate)
+            $script:WEmulDroidUpdateCandidate = Find-WEmulDroidUpdate -Current $version -IncludeBeta $beta.Checked
+            $download.Enabled = ($null -ne $script:WEmulDroidUpdateCandidate)
             $apply.Enabled = $false
-            $status.Text = if ($candidate) { (T 'updatesFound') + ' ' + $candidate.Tag }
+            $status.Text = if ($script:WEmulDroidUpdateCandidate) { (T 'updatesFound') + ' ' + $script:WEmulDroidUpdateCandidate.Tag }
                            else { T 'updatesNoNew' }
         } catch {
             $status.Text = (T 'updatesError') + ' ' + $_.Exception.Message
@@ -96,17 +96,17 @@ function Show-WEmulDroidUpdateSettings {
     })
 
     $download.Add_Click({
-        if (-not $candidate) { return }
+        if (-not $script:WEmulDroidUpdateCandidate) { return }
         $msg = (T 'updatesConfirmDownload') + [Environment]::NewLine +
-            $candidate.Tag + [Environment]::NewLine + $script:UpdateRepository
+            $script:WEmulDroidUpdateCandidate.Tag + [Environment]::NewLine + $script:UpdateRepository
         if ([Windows.Forms.MessageBox]::Show($msg, (T 'updatesTitle'),
             'YesNo', 'Warning') -ne 'Yes') { return }
         $download.Enabled = $false
         $dialog.Cursor = [Windows.Forms.Cursors]::WaitCursor
         try {
-            $pending = Save-WEmulDroidUpdate $candidate
+            $script:WEmulDroidUpdatePending = Save-WEmulDroidUpdate $script:WEmulDroidUpdateCandidate
             $apply.Enabled = $true
-            $status.Text = (T 'updatesDownloaded') + [Environment]::NewLine + $pending
+            $status.Text = (T 'updatesDownloaded') + [Environment]::NewLine + $script:WEmulDroidUpdatePending
         } catch {
             $status.Text = (T 'updatesError') + ' ' + $_.Exception.Message
             $download.Enabled = $true
@@ -114,9 +114,9 @@ function Show-WEmulDroidUpdateSettings {
     })
 
     $apply.Add_Click({
-        if (-not $pending) { return }
+        if (-not $script:WEmulDroidUpdatePending) { return }
         $msg = (T 'updatesConfirmApply') + [Environment]::NewLine +
-            $candidate.Tag
+            $script:WEmulDroidUpdateCandidate.Tag
         if ([Windows.Forms.MessageBox]::Show($msg, (T 'updatesTitle'),
             'YesNo', 'Warning') -ne 'Yes') { return }
         try {
@@ -126,7 +126,7 @@ function Show-WEmulDroidUpdateSettings {
                 '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
                 ('"' + $updater + '"'),
                 '-InstallRoot', ('"' + $InstallRoot + '"'),
-                '-StagedDir', ('"' + $pending + '"'),
+                '-StagedDir', ('"' + $script:WEmulDroidUpdatePending + '"'),
                 '-WaitPid', [string]$PID,
                 '-Launcher', $Launcher
             )

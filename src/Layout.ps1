@@ -4,13 +4,13 @@
 
 function Initialize-WEmulDroidLayout {
     $form.ClientSize = New-Object System.Drawing.Size(960, 715)
-    $form.MinimumSize = New-Object System.Drawing.Size(820, 655)
+    $form.MinimumSize = New-Object System.Drawing.Size(965, 690)
     $form.FormBorderStyle = [System.Windows.Forms.FormBorderStyle]::Sizable
     $form.MaximizeBox = $true
 
     $titleLabel.SetBounds(20, 14, 608, 43)
-    $languageLabel.SetBounds(652, 23, 74, 26)
-    $script:LanguageCombo.SetBounds(725, 18, 213, 32)
+    $languageLabel.SetBounds(650, 23, 68, 26)
+    $script:LanguageCombo.SetBounds(728, 18, 210, 32)
     $script:DeviceLabel.SetBounds(22, 65, 685, 26)
     $btnSettings.SetBounds(750, 60, 188, 38)
 

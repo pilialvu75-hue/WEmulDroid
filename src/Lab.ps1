@@ -15,6 +15,7 @@ Add-Type -AssemblyName System.Drawing
 . (Join-Path $PSScriptRoot 'Snapshots.ps1')
 . (Join-Path $PSScriptRoot 'Diagnostics.ps1')
 . (Join-Path $PSScriptRoot 'Localization.ps1')
+. (Join-Path $PSScriptRoot 'Layout.ps1')
 . (Join-Path $PSScriptRoot 'UpdateDialog.ps1')
 [void](Assert-WEmulDroidTranslations)
 [void](Load-WEmulDroidLanguage)
@@ -267,6 +268,8 @@ $script:LogBox.ScrollBars = 'Vertical'
 $script:LogBox.SetBounds(20, 559, 770, 248)
 $script:LogBox.Font = New-Object System.Drawing.Font('Consolas', 9)
 $form.Controls.Add($script:LogBox)
+
+Initialize-WEmulDroidLayout
 
 
 function Invoke-DeviceCommand([string]$serial, [string[]]$arguments, [string]$what) {
@@ -603,6 +606,9 @@ $btnStop.Add_Click({
 })
 
 function Update-WEmulDroidLanguage {
+    $script:AppsTab.Text = (T 'tabApps')
+    $script:DisplayTab.Text = (T 'tabDisplay')
+    $script:DiagnosticsTab.Text = (T 'tabDiagnostics')
     $titleLabel.Text = (T 'title')
     $languageLabel.Text = (T 'language')
     $script:DeviceLabel.Text = (T 'device') + ' ' + $script:AvdName

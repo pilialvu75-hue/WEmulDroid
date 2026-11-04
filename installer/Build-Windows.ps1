@@ -49,6 +49,25 @@ if ($Signed) {
     $env:WEMULDROID_SIGN_PWD = $env:WEMULDROID_PFX_PASSWORD
     $cert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2($pfx, $env:WEMULDROID_PFX_PASSWORD, [System.Security.Cryptography.X509Certificates.X509KeyStorageFlags]::DefaultKeySet)
     if (-not $cert.HasPrivateKey) { throw 'Signing certificate has no private key.' }
+    if ($cert.Subject -eq $cert.Issuer) {
+        throw 'Self-signed certificate not accepted for official Windows releases.'
+    }
+    if ($cert.NotAfter -lt [DateTime]::UtcNow.AddDays(30)) {
+        throw 'Signing certificate is expired or too close to expiry.'
+    }
+    $codeSigningOid = '1.3.6.1.5.5.7.3.3'
+    $eku = $cert.Extensions | Where-Object {
+        $_ -is [Security.Cryptography.X509Certificates.X509EnhancedKeyUsageExtension]
+    }
+    $validPurpose = $false
+    foreach ($extension in $eku) {
+        foreach ($usage in $extension.EnhancedKeyUsages) {
+            if ($usage.Value -eq $codeSigningOid) { $validPurpose = $true }
+        }
+    }
+    if (-not $validPurpose) {
+        throw 'Certificate is not issued for Code Signing.'
+    }
     $chain = New-Object System.Security.Cryptography.X509Certificates.X509Chain
     $chain.ChainPolicy.RevocationMode = [Security.Cryptography.X509Certificates.X509RevocationMode]::Online
     if (-not $chain.Build($cert)) { throw 'Code signing certificate is not trusted by Windows.' }

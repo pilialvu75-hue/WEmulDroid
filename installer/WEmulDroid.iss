@@ -15,6 +15,7 @@
 AppId={#ProductId}
 AppName={#ProductName}
 AppVersion={#AppVersion}
+VersionInfoVersion=0.9.0.1
 AppVerName={#ProductName} {#AppVersion}
 AppPublisher=WEmulDroid
 AppPublisherURL=https://github.com/pilialvu75-hue/WEmulDroid
@@ -23,7 +24,6 @@ AppUpdatesURL=https://github.com/pilialvu75-hue/WEmulDroid/releases
 DefaultDirName={localappdata}\Programs\WEmulDroid
 DefaultGroupName=WEmulDroid
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=
 DisableProgramGroupPage=yes
 UsePreviousAppDir=yes
 UsePreviousLanguage=yes

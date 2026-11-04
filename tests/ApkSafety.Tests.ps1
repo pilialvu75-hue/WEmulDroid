@@ -1,6 +1,6 @@
 # Test puramente offline delle regole di importazione APK. Nessun emulator o rete.
 $ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot '..' 'src' 'ApkInstall.ps1')
+. (Join-Path (Join-Path $PSScriptRoot '..') 'src\ApkInstall.ps1')
 
 function Expect-Reject([string]$value) {
     $rejected = $false

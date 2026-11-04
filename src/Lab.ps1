@@ -275,7 +275,7 @@ $btnSnapshotList.Add_Click({
         $items = Invoke-WEmulDroidSnapshot -Adb $script:Adb -Serial $serial -Action list
         if (-not $items) { $items = '(Nessuno snapshot disponibile)' }
         [void][System.Windows.Forms.MessageBox]::Show(
-            $items, 'Snapshot sul dispositivo selezionato', 'OK', 'Information'
+            $items, (T 'snapshotListTitle'), 'OK', 'Information'
         )
     } catch { Show-Error $_.Exception.Message }
 })
@@ -283,10 +283,10 @@ $btnSnapshotList.Add_Click({
 $btnSnapshotSave.Add_Click({
     try {
         $serial = Require-RunningDevice
-        $msg = "Salvare lo stato attuale del SOLO dispositivo $($script:AvdName) nello snapshot $($script:BaselineSnapshot)?" +
-            [Environment]::NewLine + 'Se esiste gia, il precedente punto di ripristino potrebbe essere sostituito.' +
-            [Environment]::NewLine + 'Gli snapshot possono includere dati personali e accessi al Play Store.'
-        if ([System.Windows.Forms.MessageBox]::Show($msg, 'Conferma salvataggio snapshot', 'YesNo', 'Warning') -ne 'Yes') { return }
+        $msg = (T 'snapshotSavePrompt') + [Environment]::NewLine +
+            $script:AvdName + ' / ' + $script:BaselineSnapshot + [Environment]::NewLine +
+            (T 'snapshotOverwriteWarning')
+        if ([System.Windows.Forms.MessageBox]::Show($msg, (T 'snapshotSaveTitle'), 'YesNo', 'Warning') -ne 'Yes') { return }
         $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
         try {
             $output = Invoke-WEmulDroidSnapshot -Adb $script:Adb -Serial $serial -Action save -Name $script:BaselineSnapshot
@@ -302,16 +302,16 @@ $btnSnapshotLoad.Add_Click({
         if ($existing -notmatch [regex]::Escape($script:BaselineSnapshot)) {
             throw ('Snapshot baseline non trovato sul dispositivo: ' + $script:AvdName)
         }
-        $msg = "ATTENZIONE: ripristinare $($script:BaselineSnapshot) nel SOLO $($script:AvdName)?" +
-            [Environment]::NewLine + 'Tutte le modifiche a dati, app e sessioni successive allo snapshot potrebbero andare perse.' +
-            [Environment]::NewLine + 'Il ripristino non e reversibile se non esiste un altro snapshot.'
-        if ([System.Windows.Forms.MessageBox]::Show($msg, 'Conferma ripristino dati Android', 'YesNo', 'Warning') -ne 'Yes') { return }
+        $msg = (T 'snapshotRestorePrompt') + [Environment]::NewLine +
+            $script:AvdName + ' / ' + $script:BaselineSnapshot + [Environment]::NewLine +
+            (T 'snapshotRestoreWarning')
+        if ([System.Windows.Forms.MessageBox]::Show($msg, (T 'snapshotRestoreTitle'), 'YesNo', 'Warning') -ne 'Yes') { return }
         $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
         try {
             $output = Invoke-WEmulDroidSnapshot -Adb $script:Adb -Serial $serial -Action load -Name $script:BaselineSnapshot
             $script:PackageCombo.Items.Clear()
             Write-Log ('Ripristino snapshot richiesto: ' + $script:BaselineSnapshot + '. ' + $output)
-            Write-Log 'Attendi che Android torni pronto, poi premi Aggiorna elenco.'
+            Write-Log (T 'afterRestore')
         } finally { $form.Cursor = [System.Windows.Forms.Cursors]::Default }
     } catch { Show-Error $_.Exception.Message }
 })
@@ -320,9 +320,8 @@ $btnDiagnostics.Add_Click({
     try {
         $serial = Require-RunningDevice
         $pkg = [string]$script:PackageCombo.SelectedItem
-        $warning = 'Raccogliere localmente screenshot, logcat (ultime 120 righe), RAM/CPU e rendering del SOLO emulatore selezionato?' +
-            [Environment]::NewLine + 'Screenshot e log possono contenere dati personali. Non saranno inviati automaticamente.'
-        if ([System.Windows.Forms.MessageBox]::Show($warning, 'Conferma diagnostica locale', 'YesNo', 'Warning') -ne 'Yes') { return }
+        $warning = (T 'diagnosticPrompt') + [Environment]::NewLine + (T 'diagnosticWarning')
+        if ([System.Windows.Forms.MessageBox]::Show($warning, (T 'diagnosticTitle'), 'YesNo', 'Warning') -ne 'Yes') { return }
         $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
         try {
             $report = Collect-WEmulDroidDiagnostics -Adb $script:Adb -Serial $serial -ReportsRoot $script:ReportsRoot -PackageName $pkg
@@ -353,14 +352,14 @@ $btnApkFolder.Add_Click({
     try {
         $serial = Require-RunningDevice
         $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
-        $dialog.Description = 'Seleziona la cartella che contiene file APK indipendenti (solo livello principale).'
+        $dialog.Description = (T 'folderTitle')
         $dialog.ShowNewFolderButton = $false
         if ($dialog.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
         $apks = @(Get-ChildItem -LiteralPath $dialog.SelectedPath -Filter '*.apk' -File -ErrorAction Stop | Sort-Object Name)
-        if ($apks.Count -eq 0) { throw 'La cartella non contiene APK.' }
-        if ($apks.Count -gt 30) { throw 'La cartella contiene piu di 30 APK. Seleziona una cartella piu piccola.' }
-        $prompt = "Vuoi installare $($apks.Count) APK nel SOLO emulatore $($script:AvdName)? Ogni APK verra trattato come app indipendente; non usare cartelle di split APK."
-        if ([System.Windows.Forms.MessageBox]::Show($prompt, 'Conferma installazione APK', 'YesNo', 'Question') -ne 'Yes') { return }
+        if ($apks.Count -eq 0) { throw (T 'folderEmpty') }
+        if ($apks.Count -gt 30) { throw (T 'folderTooMany') }
+        $prompt = (T 'folderConfirmPrompt') + [Environment]::NewLine + ('APK: ' + $apks.Count + ' / ' + $script:AvdName)
+        if ([System.Windows.Forms.MessageBox]::Show($prompt, (T 'folderConfirmTitle'), 'YesNo', 'Question') -ne 'Yes') { return }
         $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
         try {
             $ok = 0
@@ -375,7 +374,7 @@ $btnApkFolder.Add_Click({
                     Write-Log ('APK non installato: ' + $apk.Name + ' - ' + $_.Exception.Message)
                 }
             }
-            Write-Log ("Cartella completata: successi $ok; falliti $failed.")
+            Write-Log ((T 'finishedFolder') + ' ' + $ok + '; ' + (T 'finishedFolderFailures') + ' ' + $failed)
             Refresh-Packages
         } finally { $form.Cursor = [System.Windows.Forms.Cursors]::Default }
     } catch { Show-Error $_.Exception.Message }
@@ -386,17 +385,18 @@ $btnApkLink.Add_Click({
         $serial = Require-RunningDevice
         Add-Type -AssemblyName Microsoft.VisualBasic
         $url = [Microsoft.VisualBasic.Interaction]::InputBox(
-            'Incolla URL HTTPS di un APK oppure pagina GitHub releases/latest o releases/tag/...',
-            'WEmulDroid - Installa APK da link',
+            (T 'urlDialogPrompt'),
+            (T 'urlDialogTitle'),
             ''
         )
         if ([string]::IsNullOrWhiteSpace($url)) { return }
         # Una pagina GitHub viene risolta prima del consenso; nessun APK scaricato.
         $resolved = Resolve-ApkDownloadUri $url.Trim()
         $display = $resolved.Host + $resolved.AbsolutePath
-        $prompt = "Scaricare e installare nell emulatore $($script:AvdName) questo APK?" + [Environment]::NewLine +
-            $display + [Environment]::NewLine + 'Usa soltanto sorgenti affidabili. Gli APK non sono automaticamente certificati.'
-        if ([System.Windows.Forms.MessageBox]::Show($prompt, 'Conferma download e installazione', 'YesNo', 'Warning') -ne 'Yes') { return }
+        $prompt = (T 'urlConfirmPrompt') + [Environment]::NewLine +
+            $script:AvdName + ': ' + $display + [Environment]::NewLine +
+            (T 'urlWarning')
+        if ([System.Windows.Forms.MessageBox]::Show($prompt, (T 'urlConfirmTitle'), 'YesNo', 'Warning') -ne 'Yes') { return }
         $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
         try {
             $folder = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Downloads'
@@ -413,7 +413,7 @@ $btnScreen.Add_Click({
     try {
         $serial = Require-RunningDevice
         $selected = $script:ScreenCombo.SelectedIndex
-        if ($selected -lt 0) { throw 'Scegli un profilo di schermo.' }
+        if ($selected -lt 0) { throw (T 'chooseScreenFirst') }
         $sizes = @('720x1280', '1080x2400', '1600x2560')
         $dpis = @('320', '420', '320')
         $size = $sizes[$selected]
@@ -448,7 +448,7 @@ $btnCapture.Add_Click({
         try {
             [void](Invoke-DeviceCommand $serial @('pull', $remote, $path) 'Download screenshot')
             if (-not (Test-Path -LiteralPath $path)) { throw 'Il file screenshot non e stato creato.' }
-            Write-Log ('Screenshot salvato: ' + $path)
+            Write-Log ((T 'screenshotSaved') + ' ' + $path)
         } finally {
             & $script:Adb -s $serial shell rm -f $remote | Out-Null
         }
@@ -499,7 +499,7 @@ $btnInstall.Add_Click({
     try {
         $serial = Require-RunningDevice
         $dialog = New-Object System.Windows.Forms.OpenFileDialog
-        $dialog.Title = 'Seleziona APK da installare'
+        $dialog.Title = (T 'chooseApkTitle')
         $dialog.Filter = 'Applicazioni Android (*.apk)|*.apk'
         $dialog.CheckFileExists = $true
         if ($dialog.ShowDialog() -ne [System.Windows.Forms.DialogResult]::OK) { return }
@@ -518,12 +518,12 @@ $btnMeasure.Add_Click({
         $serial = Require-RunningDevice
         $package = [string]$script:PackageCombo.SelectedItem
         if ([string]::IsNullOrWhiteSpace($package)) {
-            throw 'Seleziona prima una applicazione dalla lista (Aggiorna elenco).'
+            throw (T 'chooseAppFirst')
         }
         $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
         try {
             $path = Collect-Report -serial $serial -packageName $package
-            Write-Log ('Report salvato: ' + $path)
+            Write-Log ((T 'reportSaved') + ' ' + $path)
         } finally { $form.Cursor = [System.Windows.Forms.Cursors]::Default }
     } catch { Show-Error $_.Exception.Message }
 })
@@ -538,16 +538,16 @@ $btnReports.Add_Click({
 $btnPlay.Add_Click({
     try {
         if ($script:AvdName -ne 'WEmulDroid_Play_API_35') {
-            throw 'Questo profilo Android non include Play Store. Avvia il profilo Google Play.'
+            throw (T 'playNotAvailable')
         }
         $serial = Require-RunningDevice
         $packagePath = (& $script:Adb -s $serial shell pm path com.android.vending 2>&1 | Out-String).Trim()
         if ($LASTEXITCODE -ne 0 -or $packagePath -notmatch '(?m)^package:') {
-            throw 'Play Store non trovato nel profilo corrente. Reinstalla il profilo Google Play senza cancellare quello standard.'
+            throw (T 'playNotFound')
         }
         $result = (& $script:Adb -s $serial shell am start -a android.intent.action.MAIN -c android.intent.category.LAUNCHER -p com.android.vending 2>&1 | Out-String)
         if ($LASTEXITCODE -ne 0 -or $result -match '(?i)Error:|Exception:') {
-            throw ('Non riesco ad aprire Play Store: ' + $result.Trim())
+            throw ((T 'playOpenFailed') + ' ' + $result.Trim())
         }
         Write-Log 'Comando Play Store inviato. Accedi con il tuo account Google solo nel dispositivo virtuale ufficiale.'
     } catch { Show-Error $_.Exception.Message }
@@ -564,7 +564,7 @@ $btnStop.Add_Click({
         if (-not $serial) { Write-Log 'Nessun dispositivo WEmulDroid attivo.'; return }
         if ($script:FullscreenWindowState) {
             [void](Restore-EmulatorWindow)
-            $btnFullscreen.Text = 'Fullscreen'
+            $btnFullscreen.Text = (T 'fullscreen')
         }
         $result = (& $script:Adb -s $serial emu kill 2>&1 | Out-String)
         if ($LASTEXITCODE -ne 0) { throw ('Arresto non riuscito: ' + $result) }
@@ -613,5 +613,5 @@ $script:LanguageCombo.Add_SelectedIndexChanged({
 Update-WEmulDroidLanguage
 Write-Log ((T 'profile') + ' ' + $script:AvdName)
 Write-Log (T 'ready')
-Write-Log 'Per usare APK di terze parti, rispetta le relative licenze.'
+Write-Log (T 'licenseReminder')
 [void]$form.ShowDialog()

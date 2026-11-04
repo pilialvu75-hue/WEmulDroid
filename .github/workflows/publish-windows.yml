@@ -3,7 +3,11 @@ name: Publish WEmulDroid official ZIP (version-controlled)
 on:
   push:
     branches: [main]
-    paths: [VERSION.txt]
+    paths:
+      - VERSION.txt
+      - tests/Updates.Tests.ps1
+      - src/Updates.ps1
+      - .github/workflows/publish-windows.yml
   workflow_dispatch:
 
 permissions:

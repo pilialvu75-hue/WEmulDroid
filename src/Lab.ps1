@@ -1,4 +1,4 @@
-# WEmulDroid v0.5 - Windows PowerShell 5.1 / WinForms
+# WEmulDroid v0.6 - Windows PowerShell 5.1 / WinForms
 # Independent launcher, no Android runtime binaries bundled.
 [CmdletBinding()]
 param(
@@ -11,6 +11,8 @@ Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 . (Join-Path $PSScriptRoot 'ApkInstall.ps1')
 . (Join-Path $PSScriptRoot 'WindowMode.ps1')
+. (Join-Path $PSScriptRoot 'Snapshots.ps1')
+. (Join-Path $PSScriptRoot 'Diagnostics.ps1')
 
 $script:SdkRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk'
 $script:ReportsRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Reports'
@@ -146,8 +148,8 @@ function Collect-Report([string]$serial, [string]$packageName) {
 }
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'WEmulDroid - Android Desktop Lab v0.5'
-$form.ClientSize = New-Object System.Drawing.Size(810, 766)
+$form.Text = 'WEmulDroid - Android Desktop Lab v0.6'
+$form.ClientSize = New-Object System.Drawing.Size(810, 836)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
 $form.MaximizeBox = $false
@@ -220,17 +222,23 @@ $btnSplitTouch.Enabled = $false
 $tip = New-Object System.Windows.Forms.ToolTip
 $tip.SetToolTip($btnSplitTouch, 'Richiede due puntatori hardware indipendenti. Windows Precision Touchpad puo nascondere i contatti raw. Funzione sperimentale non ancora attiva.')
 
+$btnSnapshotSave = New-LabButton 'Salva snapshot' 20 439
+$btnSnapshotLoad = New-LabButton 'Ripristina snapshot' 213 439
+$btnSnapshotList = New-LabButton 'Elenco snapshot' 406 439
+$btnDiagnostics = New-LabButton 'Diagnostica completa' 599 439
+$script:BaselineSnapshot = 'WEmulDroid_baseline'
+
 
 $logLabel = New-Object System.Windows.Forms.Label
 $logLabel.Text = 'Attivita e diagnostica:'
-$logLabel.SetBounds(20, 459, 750, 26)
+$logLabel.SetBounds(20, 529, 750, 26)
 $form.Controls.Add($logLabel)
 
 $script:LogBox = New-Object System.Windows.Forms.TextBox
 $script:LogBox.Multiline = $true
 $script:LogBox.ReadOnly = $true
 $script:LogBox.ScrollBars = 'Vertical'
-$script:LogBox.SetBounds(20, 489, 770, 248)
+$script:LogBox.SetBounds(20, 559, 770, 248)
 $script:LogBox.Font = New-Object System.Drawing.Font('Consolas', 9)
 $form.Controls.Add($script:LogBox)
 
@@ -243,6 +251,72 @@ function Invoke-DeviceCommand([string]$serial, [string[]]$arguments, [string]$wh
     return $out.Trim()
 }
 
+
+$btnSnapshotList.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        $items = Invoke-WEmulDroidSnapshot -Adb $script:Adb -Serial $serial -Action list
+        if (-not $items) { $items = '(Nessuno snapshot disponibile)' }
+        [void][System.Windows.Forms.MessageBox]::Show(
+            $items, 'Snapshot sul dispositivo selezionato', 'OK', 'Information'
+        )
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnSnapshotSave.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        $msg = "Salvare lo stato attuale del SOLO dispositivo $($script:AvdName) nello snapshot $($script:BaselineSnapshot)?" +
+            [Environment]::NewLine + 'Se esiste gia, il precedente punto di ripristino potrebbe essere sostituito.' +
+            [Environment]::NewLine + 'Gli snapshot possono includere dati personali e accessi al Play Store.'
+        if ([System.Windows.Forms.MessageBox]::Show($msg, 'Conferma salvataggio snapshot', 'YesNo', 'Warning') -ne 'Yes') { return }
+        $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
+        try {
+            $output = Invoke-WEmulDroidSnapshot -Adb $script:Adb -Serial $serial -Action save -Name $script:BaselineSnapshot
+            Write-Log ('Snapshot salvato: ' + $script:BaselineSnapshot + '. ' + $output)
+        } finally { $form.Cursor = [System.Windows.Forms.Cursors]::Default }
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnSnapshotLoad.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        $existing = Invoke-WEmulDroidSnapshot -Adb $script:Adb -Serial $serial -Action list
+        if ($existing -notmatch [regex]::Escape($script:BaselineSnapshot)) {
+            throw ('Snapshot baseline non trovato sul dispositivo: ' + $script:AvdName)
+        }
+        $msg = "ATTENZIONE: ripristinare $($script:BaselineSnapshot) nel SOLO $($script:AvdName)?" +
+            [Environment]::NewLine + 'Tutte le modifiche a dati, app e sessioni successive allo snapshot potrebbero andare perse.' +
+            [Environment]::NewLine + 'Il ripristino non e reversibile se non esiste un altro snapshot.'
+        if ([System.Windows.Forms.MessageBox]::Show($msg, 'Conferma ripristino dati Android', 'YesNo', 'Warning') -ne 'Yes') { return }
+        $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
+        try {
+            $output = Invoke-WEmulDroidSnapshot -Adb $script:Adb -Serial $serial -Action load -Name $script:BaselineSnapshot
+            $script:PackageCombo.Items.Clear()
+            Write-Log ('Ripristino snapshot richiesto: ' + $script:BaselineSnapshot + '. ' + $output)
+            Write-Log 'Attendi che Android torni pronto, poi premi Aggiorna elenco.'
+        } finally { $form.Cursor = [System.Windows.Forms.Cursors]::Default }
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnDiagnostics.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        $pkg = [string]$script:PackageCombo.SelectedItem
+        $warning = 'Raccogliere localmente screenshot, logcat (ultime 120 righe), RAM/CPU e rendering del SOLO emulatore selezionato?' +
+            [Environment]::NewLine + 'Screenshot e log possono contenere dati personali. Non saranno inviati automaticamente.'
+        if ([System.Windows.Forms.MessageBox]::Show($warning, 'Conferma diagnostica locale', 'YesNo', 'Warning') -ne 'Yes') { return }
+        $form.Cursor = [System.Windows.Forms.Cursors]::WaitCursor
+        try {
+            $report = Collect-WEmulDroidDiagnostics -Adb $script:Adb -Serial $serial -ReportsRoot $script:ReportsRoot -PackageName $pkg
+            Write-Log ('Diagnostica ' + $(if ($report.Failures -eq 0) { 'completata' } else { 'parziale' }) +
+                ': ' + $report.Folder)
+            if ($report.Failures -gt 0) {
+                Write-Log ('Operazioni non riuscite: ' + $report.Failures + '. Leggi report.txt.')
+            }
+        } finally { $form.Cursor = [System.Windows.Forms.Cursors]::Default }
+    } catch { Show-Error $_.Exception.Message }
+})
 
 $btnFullscreen.Add_Click({
     try {

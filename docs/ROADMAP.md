@@ -38,6 +38,19 @@
 ## Otto migliorie approvate
 Il programma completo, con priorita e criteri PASS/FAIL, e in [APPROVED_IMPROVEMENTS.md](APPROVED_IMPROVEMENTS.md). Tutte le funzionalita non ancora collaudate restano marcate come tali.
 
+## P0.8 — Aggiornamenti dall'app
+
+- [x] Impostazioni → Aggiornamenti, lingua EN/IT/FR, canali stabile/beta
+- [x] Ricerca release ufficiali, ZIP e hash SHA-256
+- [x] Pacchetto v0.8.0-beta.1 pubblicato come release GitHub
+- [x] Installazione prevista alla chiusura GUI, backup e tentativo rollback
+- [x] CI leggera per sintassi, confronto versioni e packaging
+- [ ] Verificare su Windows download e installazione di un vero aggiornamento più recente
+- [ ] Verificare che SDK/AVD/report/preferenze non vengano modificati
+- [ ] Verificare ripristino e comportamento in caso di aggiornamento interrotto
+
+Dettagli: [UPDATES.md](UPDATES.md). La versione è distribuita come sorgenti PowerShell e non come applicazione Windows firmata.
+
 ## P1 — Gestione input evoluta
 - [ ] Verificare se il touchpad ASUS espone contatti separati leggibili dal software
 - [ ] Esperimento dito 1 da touchpad + dito 2 da mouse, senza driver invasivi

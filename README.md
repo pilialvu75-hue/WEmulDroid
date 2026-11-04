@@ -1,99 +1,67 @@
 # WEmulDroid — Android su Windows
 
-**Prototipo autonomo v0.8.0-beta.1**, indipendente da AI-Orchestrator e da altre applicazioni. Usa [Android Emulator ufficiale](https://developer.android.com/studio/run/emulator) per avviare Android in una finestra Windows, gestire APK autorizzati e raccogliere dati diagnostici.
+**Nuova linea v0.9.0-beta.1 (installer Windows in collaudo).** Progetto indipendente da `Ai-orchestrator-riserva` e `AEmulWin`. Utilizza l'[Android Emulator ufficiale](https://developer.android.com/studio/run/emulator); non redistribuisce immagini Google o Java.
 
-**Stato:** codice presente e controlli sintattici tramite CI; il funzionamento reale su un PC Windows **non è ancora stato verificato**. Nessun APK, immagine Google o binario di terzi viene redistribuito qui.
+## Importante: distribuzione ufficiale
 
-## Primo avvio su Windows 11: ZIP e blocchi di sicurezza
+**La precedente distribuzione ZIP con file .cmd è archiviata, non è più la modalità prevista per nuove installazioni.**
 
-Se Windows mostra **«Controllo intelligente delle app ha bloccato un file»**, non eseguire i `.cmd` direttamente dall'archivio ZIP. Scarica la release ufficiale, verifica la provenienza, **sblocca lo ZIP nelle Proprietà se necessario**, poi usa **Estrai tutto** e apri `Verifica-PC.cmd` dalla cartella estratta.
+Il nuovo sistema usa **un singolo installer Windows .exe** (Inno Setup, installazione per utente) e l'applicazione **WEmulDroid.exe**, con icona e collegamento Desktop, Start Menu, disinstallazione e aggiornamenti Stabile/Beta dall'app.
 
-Non disattivare Smart App Control o Microsoft Defender. WEmulDroid è ancora un prototipo con script non firmati: se Windows continua a bloccarli dopo l'estrazione, serve una soluzione di packaging/firma adeguata, non un aggiramento della protezione.
+**Stato:** compilazione e test automatici Windows reali dell'installer completati, inclusa installazione, secondo installer/upgrade, icona desktop e conservazione SDK/AVD/report. **NON è ancora disponibile un installer ufficiale riconosciuto da Smart App Control.** Manca una firma digitale di editore attendibile, con verifica di tutte le firme su setup, launcher, script e uninstaller. Non pubblicheremo un EXE non firmato presentandolo come sicuro.
 
-**[Guida passo-passo per il blocco Windows 11](docs/WINDOWS_BLOCKED_FIRST_RUN.md)**
+- [Architettura, installazione, firma e checklist di rilascio](docs/INSTALLER_ARCHITECTURE.md)
+- [Build CI del candidato non firmato (solo test)](https://github.com/pilialvu75-hue/WEmulDroid/actions/workflows/windows-installer-ci.yml)
+- [Workflow di release **solo con firme attendibili**](.github/workflows/publish-official-installer.yml)
 
-## Come iniziare (Windows 10/11 64-bit)
+## Come funzionerà la prima installazione
 
-1. Scarica il repository da **Code → Download ZIP** ed estrailo.
-2. Avvia **Verifica-PC.cmd**: controllo di sola lettura per RAM, disco, Java, virtualizzazione e WHPX.
-3. Avvia **Installa-Android.cmd**: scarica gli strumenti ufficiali Google, controlla SHA-256, richiede le licenze e crea l'AVD WEmulDroid_API_35.
-4. Avvia **Prova-Android.cmd**: accende Android e apre **Impostazioni**, app preinstallata. Registra esito, RAM, CPU e rendering.
-5. Avvia **Avvia-Android.cmd** per utilizzare la GUI: installa un APK locale, da cartella o da link HTTPS/GitHub, passa in fullscreen, visualizza app e report e arresta solo l'emulatore di questo laboratorio.
+1. Scaricare il file `WEmulDroid-Setup-vX.Y.Z.exe` da una release ufficiale **firmata** (quando sarà pubblicata).
+2. Aprirlo con Windows 11, verificando l'editore nella scheda **Firme digitali**. Procedere con l'installazione guidata.
+3. Trovare l'icona **WEmulDroid** sul desktop e i due profili (standard e Google Play) nel menu Start.
+4. Avviare l'app dal desktop. Se l'SDK Android non è ancora presente, scegliere **1. Installa strumenti**, che prepara il JDK se necessario, scarica gli strumenti Google con checksum verificato e chiede il consenso alle licenze Android. Questi dati restano salvati fuori dalla cartella del programma.
+5. Usare **2. Avvia Android**, poi testare l'AVD, screenshot e applicazioni; la compatibilità del sistema Android su ASUS va ancora verificata.
 
-Per il primo collaudo **non occorrono APK esterni**. Vedi [guida prima prova](docs/SMOKE_TEST.md).
+Se il PC possiede già Java, SDK e AVD installati dalla beta precedente, l'app userà **le cartelle esistenti** senza cancellarle o reinstallarle.
 
-## Aggiornamenti dall'app — Stabile e Beta
+## Aggiornamenti Stabile / Beta
 
-La prima distribuzione con questo sistema è [WEmulDroid v0.8.0-beta.1](https://github.com/pilialvu75-hue/WEmulDroid/releases/tag/v0.8.0-beta.1).
+**Impostazioni → Aggiornamenti** cerca le nuove release ufficiali dell'installer sul repository GitHub. Il canale stabile è quello predefinito, beta opzionale. Ogni installazione richiede approvazione:
 
-**Link completo ZIP iniziale (una sola estrazione):**
+- HTTPS da GitHub ufficiale e verifica SHA-256.
+- Firma Authenticode valida del nuovo installer, **identica al certificato del launcher già installato**.
+- Download e apertura del nuovo installer; Inno Setup aggiorna i file dell'app, senza sostituire direttamente i sorgenti PowerShell.
+- SDK, immagini Android, AVD, report e preferenze conservati fra versioni.
 
-https://github.com/pilialvu75-hue/WEmulDroid/releases/download/v0.8.0-beta.1/WEmulDroid-v0.8.0-beta.1.zip
+Il nuovo sistema **non utilizza più ZIP di sorgenti per gli aggiornamenti**. Il corretto aggiornamento end-to-end attraverso il menu sul PC dell'utente resta da collaudare dopo la prima release firmata.
 
-Apri **Avvia-Android.cmd** o **Avvia-PlayStore.cmd** → **Impostazioni → Aggiornamenti**. Qui puoi scegliere Stabile/Beta, controllare, scaricare con SHA-256 e applicare la nuova versione dopo conferma. Il processo esterno esegue backup, tenta rollback in caso di errore e non cancella SDK, AVD o report.
+## Progresso delle prove sull'ASUS — 4 novembre 2026
 
-**Nota:** sono pronti i sorgenti e la CI, ma aggiornamenti reali su Windows non sono stati ancora collaudati. Vedi [Guida aggiornamenti](docs/UPDATES.md).
+- `Verifica-PC.cmd` eseguito correttamente: Windows 11, i7-12700H, RAM 15,6 GiB.
+- Virtualizzazione hardware e Windows Hypervisor Platform abilitate.
+- Installazione JDK 17 e Android SDK/AVD completata secondo il test dell'utente.
+- La vecchia GUI v0.8 si è aperta, ma al primo avvio ADB mostrava `* daemon not running; starting now at tcp:5037`, erroneamente interpretato da PowerShell come errore.
+- **Correzione implementata** in `src/AdbProcess.ps1`: controllo di uscita del processo, test regressione Windows PowerShell 5.1 PASS.
+- **Non ancora verificato:** avvio completo del sistema Android su PC fisico dopo la correzione.
 
+## Funzioni dell'app
 
-## Google Play Store ufficiale
+Interfaccia English / Italiano / Français; risoluzioni e fullscreen; mouse, touch simulato, tastiera; audio del PC; profilo Android standard e profilo Google Play separati; import APK da cartella o URL HTTPS/GitHub; snapshot, screenshot, diagnostica e report locali.
 
-È disponibile anche un secondo profilo Android con **Play Store integrato**. Non sostituisce l'emulatore tecnico e non richiede APK di provenienza sconosciuta.
+Limiti: emulatore Android 15 API 35 x86_64, quindi alcune APK esclusivamente ARM64 potrebbero non essere compatibili. Funzionalità touchpad+mouse come due dita autonome ancora da sviluppare e collaudare.
 
-1. Esegui **Installa-PlayStore.cmd** per scaricare l'immagine Google Play dal repository SDK ufficiale.
-2. Esegui **Avvia-PlayStore.cmd**, poi premi **Avvia Android** e **Apri Play Store**.
-3. Accedi a Google direttamente nell'Android emulato, cerca e installa app/giochi compatibili dal negozio.
+## Architettura cartelle
 
-Questo ambiente non è ancora stato verificato su un PC reale. Leggi [guida Google Play e limitazioni](docs/GOOGLE_PLAY.md).
-
-
-## Lingue dell'interfaccia
-
-WEmulDroid ha il menu **Language / Lingua / Langue** con **English, Italiano e Français**. La selezione viene salvata localmente e applicata a pulsanti, etichette, guida touch/audio e principali finestre di conferma (snapshot, importazione APK, diagnostica), per entrambi i profili Android (standard e Google Play). Alcuni log tecnici ed errori di sistema possono ancora apparire in italiano/inglese. La codifica UTF-8 è stata adattata anche a Windows PowerShell 5.1. Il funzionamento sul PC va ancora collaudato.
-
-## Requisiti e limiti
-
-- Windows 10/11 x64, CPU con virtualizzazione attiva, Windows Hypervisor Platform (WHPX), connessione Internet per la prima installazione.
-- Java 17+ (anche il JBR di Android Studio), diversi GB di disco e RAM adeguata.
-- Android 15, API 35, Google APIs x86_64, AVD WEmulDroid_API_35.
-- Il progetto **non modifica Ai-orchestrator-riserva** né il suo codice, build e canali di aggiornamento.
-- La GUI è un prototipo PowerShell + WinForms, non ancora un installer Windows firmato.
-- La GUI offre profili di risoluzione, reset, screenshot e guida touch/audio, ancora da testare su PC reale.
-- Nuovi comandi: fullscreen reversibile, APK da cartella, APK da URL HTTPS o release GitHub; le app non devono necessariamente comparire nel Play Store.
-- In v0.6: pulsanti per salvare, elencare e ripristinare uno snapshot, più diagnostica locale con screenshot, logcat, RAM/CPU e rendering (da collaudare su PC).
-- Il gesto Ctrl+mouse consente un pinch simulato; touchpad+mouse come due dita autonome resta una funzione sperimentale non ancora disponibile.
-- Android x86_64 potrebbe non supportare APK con sole librerie ARM64.
-- Le misure in emulatore NON rappresentano direttamente i consumi di uno smartphone fisico.
-
-## Comandi
-
-| File | Funzione |
-| --- | --- |
-| Verifica-PC.cmd | Diagnosi read-only di prerequisiti Windows |
-| Installa-Android.cmd | Installazione SDK/AVD Google con consenso |
-| Prova-Android.cmd | Test indipendente con Impostazioni Android |
-| Avvia-Android.cmd | Pannello di controllo Android standard |
-| Installa-PlayStore.cmd | Scarica e prepara il secondo profilo ufficiale Google Play |
-| Avvia-PlayStore.cmd | Pannello Android Google Play, con pulsante Apri Play Store |
-
-## Percorsi Windows
-
-- SDK: %LOCALAPPDATA%\WEmulDroid\Sdk
-- Report: %LOCALAPPDATA%\WEmulDroid\Reports
-- AVD: %USERPROFILE%\.android\avd (directory Android standard)
-
-La verifica del PC salva solo il report locale; non modifica configurazioni.
+| Percorso | Contenuto | Rimosso durante upgrade/uninstall |
+|---|---|---|
+| `%LOCALAPPDATA%\Programs\WEmulDroid` | Launcher e codice applicativo | Sostituito in upgrade; rimosso all'uninstall |
+| `%LOCALAPPDATA%\WEmulDroid\Sdk` | Android SDK, adb, emulator | **No** |
+| `%LOCALAPPDATA%\WEmulDroid\Reports` | Report e diagnostica | **No** |
+| `%LOCALAPPDATA%\WEmulDroid\Settings` | Preferenze / lingue | **No** |
+| `%USERPROFILE%\.android\avd` | Dispositivi virtuali Android | **No** |
 
 ## Documentazione
 
-- [Roadmap](docs/ROADMAP.md)
-- [Primo test](docs/SMOKE_TEST.md)
-- [Play Store ufficiale](docs/GOOGLE_PLAY.md)
-- [Schermo, audio, touch e Work](docs/VIDEO_AUDIO_TOUCH_WORK.md)
-- [Fullscreen e installazione APK da PC/GitHub](docs/FULLSCREEN_APK_INPUT.md)
-- [Snapshot e diagnostica locale](docs/SNAPSHOTS_DIAGNOSTICS.md)
-- [Aggiornamenti dall'app (stabile/beta)](docs/UPDATES.md)
-- [Tutte le 8 migliorie approvate](docs/APPROVED_IMPROVEMENTS.md)
-- [Download SDK Android](https://developer.android.com/studio)
-- [Accelerazione su Windows](https://developer.android.com/studio/run/emulator-acceleration)
+[Installer e sicurezza](docs/INSTALLER_ARCHITECTURE.md) · [Roadmap](docs/ROADMAP.md) · [Test](docs/SMOKE_TEST.md) · [Google Play](docs/GOOGLE_PLAY.md) · [Display, audio e touch](docs/VIDEO_AUDIO_TOUCH_WORK.md) · [Snapshot e diagnostica](docs/SNAPSHOTS_DIAGNOSTICS.md) · [Storico aggiornamenti ZIP](docs/UPDATES.md).
 
-Codice launcher sotto licenza MIT; gli strumenti Google e le app di terzi mantengono le rispettive licenze.
+Licenza del codice originale MIT. Componenti Google, Wine e terze parti conservano le proprie licenze. Nessun codice o repository di `Ai-orchestrator-riserva` è stato modificato.

@@ -59,18 +59,56 @@ function Assert-WEmulDroidInstallerSignature {
     [CmdletBinding()]
     param([Parameter(Mandatory)][string]$Installer,
           [Parameter(Mandatory)][string]$InstalledLauncher)
-    if (-not (Test-Path -LiteralPath $Installer -PathType Leaf)) { throw 'Installer is missing.' }
-    if (-not (Test-Path -LiteralPath $InstalledLauncher -PathType Leaf)) { throw 'Signed WEmulDroid launcher missing.' }
+
+    if (-not (Test-Path -LiteralPath $Installer -PathType Leaf)) {
+        throw 'Installer is missing.'
+    }
+    if (-not (Test-Path -LiteralPath $InstalledLauncher -PathType Leaf)) {
+        throw 'Current WEmulDroid launcher is missing.'
+    }
+    $channelFile = Join-Path (Split-Path -Parent $InstalledLauncher) 'CHANNEL.txt'
+    if (-not (Test-Path -LiteralPath $channelFile -PathType Leaf)) {
+        throw 'Installed WEmulDroid has no update channel marker.'
+    }
+    $channel = ([IO.File]::ReadAllText($channelFile)).Trim()
+    if ($channel -notin @('development','production')) {
+        throw 'Unknown installed update channel.'
+    }
+    # The SHA-256 check is repeated before every launch. In development
+    # builds this guards against a changed/incomplete download. It does not
+    # establish a Windows publisher identity.
+    $shaFile = $Installer + '.sha256'
+    if (-not (Test-Path -LiteralPath $shaFile -PathType Leaf)) {
+        throw 'No SHA-256 checksum for downloaded installer.'
+    }
+    $expected = ([IO.File]::ReadAllText($shaFile) -split '\s+')[0].Trim()
+    if ($expected -notmatch '^[0-9a-fA-F]{64}$') {
+        throw 'Invalid release SHA-256.'
+    }
+    $actual = (Get-FileHash -LiteralPath $Installer -Algorithm SHA256).Hash
+    if ($actual -cne $expected.ToUpperInvariant()) {
+        throw 'Installer SHA-256 changed after download.'
+    }
+    $newSignature = Get-AuthenticodeSignature -LiteralPath $Installer
+    if ($channel -eq 'development') {
+        # The user opted into the explicitly labelled unsigned development
+        # channel. No system-wide protection is altered to execute this file.
+        # Official GitHub release URL + SHA-256 + confirmation are required.
+        # A future CA-signed release may be installed from this channel.
+        return $true
+    }
+
+    # Once a CA-signed production version is installed, unsigned installers
+    # and changes of publisher identity must be rejected.
     $installed = Get-AuthenticodeSignature -LiteralPath $InstalledLauncher
     if ($installed.Status -ne 'Valid' -or -not $installed.SignerCertificate) {
-        throw 'Current WEmulDroid is not signed by a trusted publisher.'
+        throw 'Production WEmulDroid launcher lacks a trusted signature.'
     }
-    $new = Get-AuthenticodeSignature -LiteralPath $Installer
-    if ($new.Status -ne 'Valid' -or -not $new.SignerCertificate) {
-        throw 'Downloaded installer has no trusted Authenticode signature.'
+    if ($newSignature.Status -ne 'Valid' -or -not $newSignature.SignerCertificate) {
+        throw 'Downloaded installer lacks a trusted publisher signature.'
     }
-    if ($installed.SignerCertificate.Thumbprint -cne $new.SignerCertificate.Thumbprint) {
-        throw 'Installer publisher certificate differs from installed WEmulDroid.'
+    if ($installed.SignerCertificate.Thumbprint -cne $newSignature.SignerCertificate.Thumbprint) {
+        throw 'Downloaded installer publisher differs from the installed product.'
     }
     return $true
 }

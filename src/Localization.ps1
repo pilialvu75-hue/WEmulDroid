@@ -41,7 +41,8 @@ $script:UiWords = @{
   }
 }
 $script:UiLanguage = 'it'
-$script:LanguageSettingsPath = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Settings\language.txt'
+$script:SettingsBase = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { [IO.Path]::GetTempPath() }
+$script:LanguageSettingsPath = Join-Path $script:SettingsBase 'WEmulDroid\Settings\language.txt'
 
 function Set-WEmulDroidLanguage([string]$lang, [bool]$persist = $true) {
     if ($script:UiLanguages -cnotcontains $lang) { throw 'Unsupported language code.' }

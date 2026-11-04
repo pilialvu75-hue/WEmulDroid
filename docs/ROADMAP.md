@@ -26,8 +26,8 @@
 - [ ] Collaudo video, speaker, microfono e gesti multitouch su Windows
 - [ ] Validare futuro collaudo Work con Computer Use locale, senza accesso implicito al PC
 - [x] CI leggera che verifica la sintassi PowerShell
-- [ ] Esecuzione reale del downloader e dell'installazione su PC Windows
-- [ ] Avvio completo AVD e UI Android visualizzata
+- [x] Esecuzione reale del downloader, JDK 17 e installazione SDK Android su ASUS Windows 11 (screenshot test 4 novembre 2026)
+- [x] Avvio completo AVD Android 15 e schermata iniziale visibile su ASUS (foto test 4 novembre 2026)
 - [ ] Test Impostazioni Android, conferma UI e report RAM/CPU
 - [ ] Primo avvio Google Play Store su Windows, login nel dispositivo virtuale
 - [ ] Verifica download/installazione e avvio app compatibile autorizzata dal Play Store
@@ -50,6 +50,22 @@ Il programma completo, con priorita e criteri PASS/FAIL, e in [APPROVED_IMPROVEM
 - [ ] Verificare ripristino e comportamento in caso di aggiornamento interrotto
 
 Dettagli: [UPDATES.md](UPDATES.md). La versione è distribuita come sorgenti PowerShell e non come applicazione Windows firmata.
+
+## P0.9 — Primo Android avviato e revisione interfaccia
+
+- [x] Windows 11 ASUS i7-12700H: emulatore Android 15 realmente avviato con schermata iniziale visibile
+- [x] Regressione ADB `daemon not running; starting now at tcp:5037` non blocca più l'avvio sul PC reale
+- [x] Installer unico Windows v0.9.0-beta.1 avviato con successo, collegamento Desktop e GUI funzionanti
+- [x] Nuova GUI a schede: Applicazioni/APK, Schermo/Comandi, Diagnostica/Snapshot; lingua senza sovrapposizioni (test WinForms CI)
+- [x] Pulsanti Avvia, Arresta, Aggiorna elenco e Impostazioni sempre visibili
+- [x] Pannello ridotto a icona quando si avvia Android; test sintassi e GUI Windows CI
+- [ ] Collaudare la GUI riorganizzata sul PC reale e confermare facilità d'uso
+- [ ] Verificare aggiornamento **0.9.0-beta.1 → 0.9.0-beta.2** dall'interno dell'app, senza perdita dati
+- [ ] Ridurre ulteriormente la finestra console tecnica senza sacrificare log di avvio o funzionamento Qt
+- [ ] Verificare gli avvisi di caricamento snapshot (il sistema si avvia, gli avvisi da soli non rappresentano fallimento)
+- [ ] Provare APK reali, Google Play, mouse/audio, fullscreen e screenshot su ASUS
+
+Non confondere popup Google Search/tastiera Android del primo avvio con elementi della GUI WEmulDroid. Tenere separati dati dell'AVD, codice applicativo e aggiornamenti.
 
 ## P1 — Gestione input evoluta
 - [ ] Verificare se il touchpad ASUS espone contatti separati leggibili dal software
@@ -77,6 +93,6 @@ Dettagli: [UPDATES.md](UPDATES.md). La versione è distribuita come sorgenti Pow
 - Niente commit di APK, SDK, immagini Google, credenziali e log
 - Non dichiarare funzionamento sul PC o prestazioni senza prove reali
 - Rispettare licenze e permessi delle app di terze parti
-- Finché il PC non è disponibile: migliorie statiche/CI soltanto; collaudo rinviato
+- ASUS Windows 11 ora disponibile: proseguire con collaudi reali, GUI, APK e aggiornamenti senza reinstallare SDK/AVD
 
 **Nota giochi Supercell:** Brawl Stars non è il benchmark iniziale: le condizioni d'uso Supercell limitano l'impiego di emulatori. Per la prima prova usare un gioco consentito e leggero. Vedi [Google Play](GOOGLE_PLAY.md).

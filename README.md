@@ -4,6 +4,14 @@
 
 **Stato:** codice presente e controlli sintattici tramite CI; il funzionamento reale su un PC Windows **non è ancora stato verificato**. Nessun APK, immagine Google o binario di terzi viene redistribuito qui.
 
+## Primo avvio su Windows 11: ZIP e blocchi di sicurezza
+
+Se Windows mostra **«Controllo intelligente delle app ha bloccato un file»**, non eseguire i `.cmd` direttamente dall'archivio ZIP. Scarica la release ufficiale, verifica la provenienza, **sblocca lo ZIP nelle Proprietà se necessario**, poi usa **Estrai tutto** e apri `Verifica-PC.cmd` dalla cartella estratta.
+
+Non disattivare Smart App Control o Microsoft Defender. WEmulDroid è ancora un prototipo con script non firmati: se Windows continua a bloccarli dopo l'estrazione, serve una soluzione di packaging/firma adeguata, non un aggiramento della protezione.
+
+**[Guida passo-passo per il blocco Windows 11](docs/WINDOWS_BLOCKED_FIRST_RUN.md)**
+
 ## Come iniziare (Windows 10/11 64-bit)
 
 1. Scarica il repository da **Code → Download ZIP** ed estrailo.

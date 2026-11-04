@@ -648,6 +648,11 @@ $script:LanguageCombo.Add_SelectedIndexChanged({
 })
 Update-WEmulDroidLanguage
 Write-Log ((T 'profile') + ' ' + $script:AvdName)
-Write-Log (T 'ready')
+if ((Test-Path -LiteralPath $script:Emulator -PathType Leaf) -and
+    (Test-Path -LiteralPath $script:Adb -PathType Leaf)) {
+    Write-Log (T 'readyInstalled')
+} else {
+    Write-Log (T 'ready')
+}
 Write-Log (T 'licenseReminder')
 [void]$form.ShowDialog()

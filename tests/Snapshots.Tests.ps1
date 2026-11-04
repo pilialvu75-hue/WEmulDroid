@@ -1,7 +1,7 @@
 # Tests pure functions only; do not run emulator, ADB or network.
 $ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot '..' 'src' 'Snapshots.ps1')
-. (Join-Path $PSScriptRoot '..' 'src' 'Diagnostics.ps1')
+. (Join-Path (Join-Path $PSScriptRoot '..') 'src\Snapshots.ps1')
+. (Join-Path (Join-Path $PSScriptRoot '..') 'src\Diagnostics.ps1')
 
 foreach ($valid in @('baseline', 'WEmulDroid_baseline', 'a-01_2')) {
     if ((Assert-WEmulDroidSnapshotName $valid) -cne $valid) {

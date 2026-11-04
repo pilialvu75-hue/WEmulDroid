@@ -1,6 +1,6 @@
 # WEmulDroid — Android su Windows
 
-**Prototipo autonomo v0.6**, indipendente da AI-Orchestrator e da altre applicazioni. Usa [Android Emulator ufficiale](https://developer.android.com/studio/run/emulator) per avviare Android in una finestra Windows, gestire APK autorizzati e raccogliere dati diagnostici.
+**Prototipo autonomo v0.7**, indipendente da AI-Orchestrator e da altre applicazioni. Usa [Android Emulator ufficiale](https://developer.android.com/studio/run/emulator) per avviare Android in una finestra Windows, gestire APK autorizzati e raccogliere dati diagnostici.
 
 **Stato:** codice presente e controlli sintattici tramite CI; il funzionamento reale su un PC Windows **non è ancora stato verificato**. Nessun APK, immagine Google o binario di terzi viene redistribuito qui.
 
@@ -24,6 +24,10 @@ Per il primo collaudo **non occorrono APK esterni**. Vedi [guida prima prova](do
 
 Questo ambiente non è ancora stato verificato su un PC reale. Leggi [guida Google Play e limitazioni](docs/GOOGLE_PLAY.md).
 
+
+## Lingue dell'interfaccia
+
+WEmulDroid ha il menu **Language / Lingua / Langue** con **English, Italiano e Français**. La selezione viene salvata localmente e applicata ai pulsanti, alle etichette e alla guida touch/audio, per entrambi i profili Android (standard e Google Play). I log diagnostici tecnici e alcune finestre di errore non sono ancora completamente tradotti; saranno rifiniti dopo il collaudo Windows.
 
 ## Requisiti e limiti
 

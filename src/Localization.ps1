@@ -4,6 +4,7 @@ $script:UiLanguages = @('en', 'it', 'fr')
 $script:UiLanguageNames = @('English', 'Italiano', 'Français')
 $script:UiWords = @{
   en = @{
+    tabApps='Applications / APK';tabDisplay='Display / Touch';tabDiagnostics='Diagnostics / Snapshots';
     title='WEmulDroid | Android on Windows';language='Language';device='Device:';notStarted='not started';
     setup='1. Install tools';start='2. Start Android';refresh='3. Refresh apps';stop='Stop Android';
     install='Install APK';measure='Measure resources';reports='Open reports';play='Open Play Store';
@@ -63,6 +64,7 @@ $script:UiWords = @{
     licenseReminder="Respect licenses when using third-party APK files."
   }
   it = @{
+    tabApps='Applicazioni / APK';tabDisplay='Schermo / Comandi';tabDiagnostics='Diagnostica / Snapshot';
     title='WEmulDroid | Android su Windows';language='Lingua';device='Dispositivo:';notStarted='da avviare';
     setup='1. Installa strumenti';start='2. Avvia Android';refresh='3. Aggiorna elenco';stop='Arresta Android';
     install='Installa APK';measure='Misura risorse';reports='Apri report';play='Apri Play Store';
@@ -122,6 +124,7 @@ $script:UiWords = @{
     licenseReminder="Per gli APK di terze parti rispetta le relative licenze."
   }
   fr = @{
+    tabApps='Applications / APK';tabDisplay='Écran / Commandes';tabDiagnostics='Diagnostic / Instantanés';
     title='WEmulDroid | Android sur Windows';language='Langue';device='Appareil :';notStarted='a demarrer';
     setup='1. Installer les outils';start='2. Demarrer Android';refresh='3. Actualiser les applis';stop='Arreter Android';
     install='Installer APK';measure='Mesurer ressources';reports='Ouvrir rapports';play='Ouvrir Play Store';

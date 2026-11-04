@@ -3,15 +3,16 @@
 $script:UpdateRepository = 'pilialvu75-hue/WEmulDroid'
 $script:UpdateApi = 'https://api.github.com/repos/pilialvu75-hue/WEmulDroid/releases?per_page=20'
 $script:UpdatePrefix = 'https://github.com/pilialvu75-hue/WEmulDroid/releases/download/'
-$script:UpdateRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Updates'
+$script:UpdateBase = if ($env:LOCALAPPDATA) { $env:LOCALAPPDATA } else { [IO.Path]::GetTempPath() }
+$script:UpdateRoot = Join-Path $script:UpdateBase 'WEmulDroid\Updates'
 
 function Compare-WEmulDroidVersion([string]$first, [string]$second) {
     $pattern = '^v?(\d+)\.(\d+)\.(\d+)(?:-(beta|rc)(?:\.(\d+))?)?$'
-    if ($first -notmatch $pattern) { throw "Invalid version: $first" }
+    if (-not ($first -match $pattern)) { throw "Invalid version: $first" }
     $a = @([long]$Matches[1], [long]$Matches[2], [long]$Matches[3])
     $aRank = if ($Matches[4] -eq 'beta') { 0 } elseif ($Matches[4] -eq 'rc') { 1 } else { 2 }
     $aPatch = if ($Matches[5]) { [long]$Matches[5] } else { 0 }
-    if ($second -notmatch $pattern) { throw "Invalid version: $second" }
+    if (-not ($second -match $pattern)) { throw "Invalid version: $second" }
     $b = @([long]$Matches[1], [long]$Matches[2], [long]$Matches[3])
     $bRank = if ($Matches[4] -eq 'beta') { 0 } elseif ($Matches[4] -eq 'rc') { 1 } else { 2 }
     $bPatch = if ($Matches[5]) { [long]$Matches[5] } else { 0 }

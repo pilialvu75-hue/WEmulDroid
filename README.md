@@ -2,13 +2,28 @@
 
 **Nuova linea v0.9.0-beta.1 (installer Windows in collaudo).** Progetto indipendente da `Ai-orchestrator-riserva` e `AEmulWin`. Utilizza l'[Android Emulator ufficiale](https://developer.android.com/studio/run/emulator); non redistribuisce immagini Google o Java.
 
+## Prima prova pratica sull'ASUS — beta di sviluppo
+
+Per non rallentare il progetto, abbiamo predisposto un **installer unico per Windows** utilizzabile come beta di sviluppo senza acquistare ora un certificato di firma.
+
+- **Un solo `.exe`** da una release beta GitHub verificata, senza ZIP o copie manuali di `.ps1`.
+- Installazione guidata per utente, collegamento sul desktop e accesso dal menu Start.
+- Il launcher beta usa `RemoteSigned` per gli script installati localmente, senza cambiare le impostazioni di sicurezza globali.
+- La GUI mantiene i profili Android standard e Google Play e può riutilizzare gli SDK/AVD precedenti.
+- **Impostazioni → Aggiornamenti** cerca installer ufficiali del repository: download HTTPS, verifica SHA-256, conferma prima di ogni installazione.
+- La linea pubblica futura richiederà una firma Authenticode attendibile e i controlli specifici Smart App Control.
+
+**Attenzione:** la beta di sviluppo è **senza firma digitale**; Smart App Control può bloccarla sul tuo PC. Non disattivare le protezioni di Windows per aggirare il blocco. Prima distribuzione e comportamento sull'ASUS devono ancora essere verificati.
+
+[GitHub Releases: beta e installer](https://github.com/pilialvu75-hue/WEmulDroid/releases)
+
 ## Importante: distribuzione ufficiale
 
 **La precedente distribuzione ZIP con file .cmd è archiviata, non è più la modalità prevista per nuove installazioni.**
 
 Il nuovo sistema usa **un singolo installer Windows .exe** (Inno Setup, installazione per utente) e l'applicazione **WEmulDroid.exe**, con icona e collegamento Desktop, Start Menu, disinstallazione e aggiornamenti Stabile/Beta dall'app.
 
-**Stato:** compilazione e test automatici Windows reali dell'installer completati, inclusa installazione, secondo installer/upgrade, icona desktop e conservazione SDK/AVD/report. **NON è ancora disponibile un installer ufficiale riconosciuto da Smart App Control.** Manca una firma digitale di editore attendibile, con verifica di tutte le firme su setup, launcher, script e uninstaller. Non pubblicheremo un EXE non firmato presentandolo come sicuro.
+**Stato:** compilazione e test automatici Windows reali dell'installer completati, inclusa installazione, secondo installer/upgrade, icona desktop e conservazione SDK/AVD/report. **Le beta di sviluppo possono essere installate senza firma; non sono però installer riconosciuti da Smart App Control.** Manca una firma digitale di editore attendibile, con verifica di tutte le firme su setup, launcher, script e uninstaller. Non pubblicheremo un EXE non firmato presentandolo come sicuro.
 
 - [Architettura, installazione, firma e checklist di rilascio](docs/INSTALLER_ARCHITECTURE.md)
 - [Build CI del candidato non firmato (solo test)](https://github.com/pilialvu75-hue/WEmulDroid/actions/workflows/windows-installer-ci.yml)

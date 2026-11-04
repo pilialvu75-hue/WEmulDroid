@@ -85,6 +85,26 @@ jobs:
               -not (Test-Path (Join-Path $reports 'retain-report.txt'))) {
             throw 'Upgrade did not preserve Android runtime data'
           }
+          # Developer channel is deliberately unsigned; official GitHub ZIP
+          # download hashes are rechecked before the setup can run.
+          $channel = (Get-Content -LiteralPath (Join-Path $app 'CHANNEL.txt') -Raw).Trim()
+          if ($channel -ne 'development') { throw "Unexpected installer update channel: $channel" }
+          . (Join-Path $app 'src\InstallerUpdates.ps1')
+          $testInstaller = Join-Path $env:TEMP 'WEmulDroid-Update-Trust-Smoke.exe'
+          Copy-Item -LiteralPath $setup -Destination $testInstaller -Force
+          try {
+            $goodHash=(Get-FileHash -LiteralPath $testInstaller -Algorithm SHA256).Hash
+            Set-Content -LiteralPath ($testInstaller + '.sha256') -Value "$goodHash  WEmulDroid-Update-Trust-Smoke.exe" -Encoding Ascii
+            [void](Assert-WEmulDroidInstallerSignature -Installer $testInstaller -InstalledLauncher (Join-Path $app 'WEmulDroid.exe'))
+            Add-Content -LiteralPath $testInstaller -Value 'corrupted' -Encoding Ascii
+            $rejected=$false
+            try {
+              [void](Assert-WEmulDroidInstallerSignature -Installer $testInstaller -InstalledLauncher (Join-Path $app 'WEmulDroid.exe'))
+            } catch { $rejected=$true }
+            if (-not $rejected) { throw 'Modified installer was not rejected by SHA-256 gate' }
+          } finally {
+            Remove-Item -LiteralPath $testInstaller,($testInstaller + '.sha256') -Force -ErrorAction SilentlyContinue
+          }
           $desktop = [Environment]::GetFolderPath('Desktop')
           $shortcut = Join-Path $desktop 'WEmulDroid.lnk'
           if (-not (Test-Path $shortcut)) { throw 'WEmulDroid desktop icon is missing' }
@@ -103,12 +123,12 @@ jobs:
             throw 'Uninstall deleted SDK/AVD-related data or reports'
           }
           Write-Host 'Installer smoke PASS: per-user install + real beta-to-beta upgrade + desktop icon + uninstall + preserved user data'
-      - name: Archive unsigned developer-only setup (NOT a trusted Windows installer)
+      - name: Archive unsigned development installer (clearly labelled; manual consent)
         uses: actions/upload-artifact@v4
         with:
-          name: WEmulDroid-UNSIGNED-DEVELOPER-BUILD-DO-NOT-INSTALL
+          name: WEmulDroid-Windows-Development-Installer-Unsigned
           path: |
             dist/payload/Output/WEmulDroid-Setup-*.exe
             dist/payload/Output/WEmulDroid-Setup-*.exe.sha256
-          retention-days: 3
+          retention-days: 7
           if-no-files-found: error

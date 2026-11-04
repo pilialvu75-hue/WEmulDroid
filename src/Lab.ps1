@@ -14,6 +14,7 @@ Add-Type -AssemblyName System.Drawing
 . (Join-Path $PSScriptRoot 'Snapshots.ps1')
 . (Join-Path $PSScriptRoot 'Diagnostics.ps1')
 . (Join-Path $PSScriptRoot 'Localization.ps1')
+. (Join-Path $PSScriptRoot 'UpdateDialog.ps1')
 [void](Assert-WEmulDroidTranslations)
 [void](Load-WEmulDroidLanguage)
 
@@ -151,7 +152,7 @@ function Collect-Report([string]$serial, [string]$packageName) {
 }
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'WEmulDroid - Android Desktop Lab v0.7'
+$form.Text = 'WEmulDroid - Android Desktop Lab v0.8'
 $form.ClientSize = New-Object System.Drawing.Size(810, 836)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
@@ -234,6 +235,7 @@ $btnTouchHelp = New-LabButton 'Touch / Audio' 213 320
 $btnFullscreen = New-LabButton 'Fullscreen' 406 320
 $btnApkFolder = New-LabButton 'APK da cartella' 599 320
 $btnApkLink = New-LabButton 'APK da link HTTPS' 20 373
+$btnSettings = New-LabButton 'Impostazioni' 599 373
 $btnSplitTouch = New-LabButton 'Touchpad + mouse (futuro)' 213 373 274
 $btnSplitTouch.Enabled = $false
 $tip = New-Object System.Windows.Forms.ToolTip
@@ -268,6 +270,18 @@ function Invoke-DeviceCommand([string]$serial, [string[]]$arguments, [string]$wh
     return $out.Trim()
 }
 
+
+$btnSettings.Add_Click({
+    try {
+        $root = Split-Path -Parent $PSScriptRoot
+        $launcher = if ($script:AvdName -eq 'WEmulDroid_Play_API_35') {
+            'Avvia-PlayStore.cmd'
+        } else {
+            'Avvia-Android.cmd'
+        }
+        Show-WEmulDroidUpdateSettings -MainForm $form -InstallRoot $root -Launcher $launcher
+    } catch { Show-Error $_.Exception.Message }
+})
 
 $btnSnapshotList.Add_Click({
     try {
@@ -596,6 +610,7 @@ function Update-WEmulDroidLanguage {
     $btnApkFolder.Text = (T 'folder')
     $btnApkLink.Text = (T 'link')
     $btnSplitTouch.Text = (T 'splitTouch')
+    $btnSettings.Text = (T 'settings')
     $btnSnapshotSave.Text = (T 'snapshotSave')
     $btnSnapshotLoad.Text = (T 'snapshotLoad')
     $btnSnapshotList.Text = (T 'snapshotList')

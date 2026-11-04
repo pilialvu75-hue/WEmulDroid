@@ -490,7 +490,10 @@ $btnSetup.Add_Click({
         if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) {
             throw 'Installazione incompleta: Setup-Android.ps1 non trovato.'
         }
-        $arguments = @('-NoProfile', '-ExecutionPolicy', 'AllSigned', '-File', ('"' + $installer + '"'))
+        $channelFile = Join-Path (Split-Path -Parent $PSScriptRoot) 'CHANNEL.txt'
+        $channel = if (Test-Path -LiteralPath $channelFile) { ([IO.File]::ReadAllText($channelFile)).Trim() } else { 'development' }
+        $scriptPolicy = if ($channel -eq 'production') { 'AllSigned' } else { 'RemoteSigned' }
+        $arguments = @('-NoProfile', '-ExecutionPolicy', $scriptPolicy, '-File', ('"' + $installer + '"'))
         if ($script:AvdName -eq 'WEmulDroid_Play_API_35') { $arguments += '-PlayStore' }
         # Interactive setup is permitted only after the user clicks the GUI.
         # It requests explicit acceptance of Google SDK licenses.

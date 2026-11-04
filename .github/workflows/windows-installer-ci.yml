@@ -8,6 +8,7 @@ on:
       - 'src/**'
       - 'tests/**'
       - 'VERSION.txt'
+      - 'README.md'
       - '.github/workflows/windows-installer-ci.yml'
   workflow_dispatch:
 
@@ -132,3 +133,42 @@ jobs:
             dist/payload/Output/WEmulDroid-Setup-*.exe.sha256
           retention-days: 7
           if-no-files-found: error
+
+  publish-development:
+    if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'release-dev:')
+    needs: build-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exactly the installer validated on Windows
+        uses: actions/download-artifact@v4
+        with:
+          name: WEmulDroid-Windows-Development-Installer-Unsigned
+          path: release
+      - name: Create clearly marked beta release after Windows tests PASS
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '\r\n' < VERSION.txt)"
+          [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$ ]] || {
+            echo "::error::Development installers are only published on beta tags"
+            exit 1
+          }
+          EXE="release/WEmulDroid-Setup-$VERSION.exe"
+          HASH="$EXE.sha256"
+          test -s "$EXE"
+          test -s "$HASH"
+          (cd release && sha256sum --check "$(basename "$HASH")")
+          if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::Release $VERSION already published, cannot overwrite"
+            exit 1
+          fi
+          gh release create "$VERSION" "$EXE" "$HASH" \
+            --repo "$GITHUB_REPOSITORY" --prerelease \
+            --title "WEmulDroid $VERSION — Windows development installer (unsigned)" \
+            --notes "Development build tested in Windows Actions: per-user install, in-place upgrade, desktop shortcut, uninstall preserving Android SDK and reports, ADB daemon startup handling and stable/beta version discovery. This EXE is NOT Authenticode signed. It may be blocked by Windows Smart App Control; never disable device protection to run it. User approval is required for installation and every update. This is not a public production release."

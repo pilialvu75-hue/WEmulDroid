@@ -15,7 +15,9 @@ Per non rallentare il progetto, abbiamo predisposto un **installer unico per Win
 
 **Attenzione:** la beta di sviluppo è **senza firma digitale**; Smart App Control può bloccarla sul tuo PC. Non disattivare le protezioni di Windows per aggirare il blocco. Prima distribuzione e comportamento sull'ASUS devono ancora essere verificati.
 
-[GitHub Releases: beta e installer](https://github.com/pilialvu75-hue/WEmulDroid/releases)
+**Primo installer di sviluppo:** `WEmulDroid-Setup-v0.9.0-beta.1.exe`, pubblicato dalla CI Windows soltanto dopo il test di installazione, avvio GUI, aggiornamento, icona desktop e conservazione dati. Se Windows lo blocca, annotare il messaggio: non disattivare Smart App Control.
+
+[Releases WEmulDroid (installer beta)](https://github.com/pilialvu75-hue/WEmulDroid/releases)
 
 ## Importante: distribuzione ufficiale
 

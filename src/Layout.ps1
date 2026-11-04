@@ -9,8 +9,8 @@ function Initialize-WEmulDroidLayout {
     $form.MaximizeBox = $true
 
     $titleLabel.SetBounds(20, 14, 608, 43)
-    $languageLabel.SetBounds(650, 23, 68, 26)
-    $script:LanguageCombo.SetBounds(728, 18, 210, 32)
+    $languageLabel.SetBounds(638, 23, 88, 26)
+    $script:LanguageCombo.SetBounds(734, 18, 204, 32)
     $script:DeviceLabel.SetBounds(22, 65, 685, 26)
     $btnSettings.SetBounds(750, 60, 188, 38)
 

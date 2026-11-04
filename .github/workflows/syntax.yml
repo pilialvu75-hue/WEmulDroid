@@ -55,11 +55,12 @@ jobs:
         shell: pwsh
         run: |
           ./tests/ApkSafety.Tests.ps1
+          ./tests/Snapshots.Tests.ps1
       - name: Guard independent project boundary and required entrypoints
         shell: bash
         run: |
           set -euo pipefail
-          for f in Verifica-PC.cmd Installa-Android.cmd Prova-Android.cmd Avvia-Android.cmd Installa-PlayStore.cmd Avvia-PlayStore.cmd src/Check-Requirements.ps1 src/Setup-Android.ps1 src/Test-Android.ps1 src/Lab.ps1 src/ApkInstall.ps1 src/WindowMode.ps1; do
+          for f in Verifica-PC.cmd Installa-Android.cmd Prova-Android.cmd Avvia-Android.cmd Installa-PlayStore.cmd Avvia-PlayStore.cmd src/Check-Requirements.ps1 src/Setup-Android.ps1 src/Test-Android.ps1 src/Lab.ps1 src/ApkInstall.ps1 src/WindowMode.ps1 src/Snapshots.ps1 src/Diagnostics.ps1; do
             test -s "$f" || { echo "::error::Missing file $f"; exit 1; }
           done
           if grep -RniE 'Ai-orchestrator-riserva|com[.]aiorchestrator|Test-AiOrchestrator|AivexusAndroidLab|Aivexus_API_35' src --include='*.ps1'; then
@@ -71,6 +72,8 @@ jobs:
           grep -Fq 'Install-VerifiedApk' src/Lab.ps1
           grep -Fq 'Get-RemoteApk' src/Lab.ps1
           grep -Fq 'Touchpad + mouse (futuro)' src/Lab.ps1
+          grep -Fq 'Invoke-WEmulDroidSnapshot' src/Lab.ps1
+          grep -Fq 'Collect-WEmulDroidDiagnostics' src/Lab.ps1
       - name: Check Google Play profile separation
         shell: bash
         run: |

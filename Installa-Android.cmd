@@ -1,6 +1,6 @@
 @echo off
 setlocal
-title AIVEXUS Android Desktop Lab - Installazione
+title WEmulDroid - Installazione Android
 powershell.exe -NoProfile -ExecutionPolicy Bypass -File "%~dp0src\Setup-Android.ps1"
 echo.
 if errorlevel 1 (

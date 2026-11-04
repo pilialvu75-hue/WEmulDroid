@@ -1,6 +1,6 @@
 # WEmulDroid — Android su Windows
 
-**Prototipo autonomo v0.7**, indipendente da AI-Orchestrator e da altre applicazioni. Usa [Android Emulator ufficiale](https://developer.android.com/studio/run/emulator) per avviare Android in una finestra Windows, gestire APK autorizzati e raccogliere dati diagnostici.
+**Prototipo autonomo v0.8.0-beta.1**, indipendente da AI-Orchestrator e da altre applicazioni. Usa [Android Emulator ufficiale](https://developer.android.com/studio/run/emulator) per avviare Android in una finestra Windows, gestire APK autorizzati e raccogliere dati diagnostici.
 
 **Stato:** codice presente e controlli sintattici tramite CI; il funzionamento reale su un PC Windows **non è ancora stato verificato**. Nessun APK, immagine Google o binario di terzi viene redistribuito qui.
 
@@ -13,6 +13,19 @@
 5. Avvia **Avvia-Android.cmd** per utilizzare la GUI: installa un APK locale, da cartella o da link HTTPS/GitHub, passa in fullscreen, visualizza app e report e arresta solo l'emulatore di questo laboratorio.
 
 Per il primo collaudo **non occorrono APK esterni**. Vedi [guida prima prova](docs/SMOKE_TEST.md).
+
+## Aggiornamenti dall'app — Stabile e Beta
+
+La prima distribuzione con questo sistema è [WEmulDroid v0.8.0-beta.1](https://github.com/pilialvu75-hue/WEmulDroid/releases/tag/v0.8.0-beta.1).
+
+**Link completo ZIP iniziale (una sola estrazione):**
+
+https://github.com/pilialvu75-hue/WEmulDroid/releases/download/v0.8.0-beta.1/WEmulDroid-v0.8.0-beta.1.zip
+
+Apri **Avvia-Android.cmd** o **Avvia-PlayStore.cmd** → **Impostazioni → Aggiornamenti**. Qui puoi scegliere Stabile/Beta, controllare, scaricare con SHA-256 e applicare la nuova versione dopo conferma. Il processo esterno esegue backup, tenta rollback in caso di errore e non cancella SDK, AVD o report.
+
+**Nota:** sono pronti i sorgenti e la CI, ma aggiornamenti reali su Windows non sono stati ancora collaudati. Vedi [Guida aggiornamenti](docs/UPDATES.md).
+
 
 ## Google Play Store ufficiale
 
@@ -70,6 +83,7 @@ La verifica del PC salva solo il report locale; non modifica configurazioni.
 - [Schermo, audio, touch e Work](docs/VIDEO_AUDIO_TOUCH_WORK.md)
 - [Fullscreen e installazione APK da PC/GitHub](docs/FULLSCREEN_APK_INPUT.md)
 - [Snapshot e diagnostica locale](docs/SNAPSHOTS_DIAGNOSTICS.md)
+- [Aggiornamenti dall'app (stabile/beta)](docs/UPDATES.md)
 - [Tutte le 8 migliorie approvate](docs/APPROVED_IMPROVEMENTS.md)
 - [Download SDK Android](https://developer.android.com/studio)
 - [Accelerazione su Windows](https://developer.android.com/studio/run/emulator-acceleration)

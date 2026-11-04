@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot '..' 'src' 'AdbProcess.ps1')
+. (Join-Path (Join-Path $PSScriptRoot '..') 'src\AdbProcess.ps1')
 
 $program = (Get-Command pwsh -ErrorAction Stop).Source
 $folder = Join-Path ([IO.Path]::GetTempPath()) ('WEmulDroid native smoke ' + [Guid]::NewGuid().ToString('N'))

@@ -1,3 +1,18 @@
+## Primo avvio Android — ADB daemon tcp:5037 (4 novembre 2026)
+
+Sul primo ASUS Windows 11, la GUI v0.8.0-beta.1 si apre correttamente, ma il pulsante **«2. Avvia Android»** può mostrare:
+
+`* daemon not running; starting now at tcp:5037`
+
+**Non è da solo un errore di ADB.** Su Windows PowerShell 5.1, `$ErrorActionPreference='Stop'` insieme a `adb devices 2>&1` poteva trattare il normale messaggio su STDERR come terminante **prima di verificare l'exit code**.
+
+- Correzione sorgente: `src/AdbProcess.ps1` con esecuzione tramite `System.Diagnostics.Process`, lettura simultanea di stdout/stderr ed esito determinato da `ExitCode`.
+- `Get-LabSerial` riconosce il normale messaggio di bootstrap, segnala errori solo con exit code diverso da zero e interroga il nome dell'AVD prima di usare un seriale.
+- Test di regressione: `tests/AdbStartup.Tests.ps1` simula STDERR di avvio del daemon ed errori reali.
+- Correzione destinata a `v0.8.0-beta.2`. La CI è verde, ma il boot reale Android sul PC è ancora da confermare.
+
+Per la vecchia beta1 si può anche provare **OK → «2. Avvia Android»** una seconda volta: se il daemon è già partito, il secondo tentativo può funzionare. Non reinstallare l'SDK. Per la beta2: **Impostazioni → Aggiornamenti → Includi beta → Controlla → Scarica → Installa**. Il processo aggiorna solo i file WEmulDroid, non SDK/AVD.
+
 # Primo collaudo indipendente di WEmulDroid
 
 **Primo obiettivo:** avviare Android su Windows e aprire **Impostazioni**, l'applicazione di sistema preinstallata. Non serve alcun APK esterno.

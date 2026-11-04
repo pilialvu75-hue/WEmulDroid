@@ -15,6 +15,10 @@
 - [x] Fullscreen reversibile sulla finestra dell'AVD selezionato (da collaudare)
 - [x] Importazione APK da cartella locale e link HTTPS/GitHub con consenso, limite e SHA-256 (da collaudare)
 - [x] Test offline delle regole di importazione APK (CI)
+- [x] Funzioni snapshot list/save/load e conferma esplicita in GUI (da collaudare)
+- [x] Diagnostica con report locale e logcat limitato (da collaudare)
+- [x] Test offline dei nomi snapshot e package app
+- [ ] Verificare effettivamente ripristino snapshot e diagnostica su Windows
 - [ ] Verificare fullscreen, ripristino, installazione singola/cartella/link sul PC fisico
 - [ ] Gestione split APK / AAB / XAPK solo se giustificata dai casi d'uso
 - [ ] Collaudo video, speaker, microfono e gesti multitouch su Windows
@@ -28,6 +32,9 @@
 - [ ] Installazione e avvio di una piccola applicazione indipendente x86_64
 - [ ] Verifica Windows PowerShell, WHPX, Java, GPU, spazio su disco
 - [ ] Rifinitura GUI e gestione dei problemi emersi su hardware reale
+
+## Otto migliorie approvate
+Il programma completo, con priorita e criteri PASS/FAIL, e in [APPROVED_IMPROVEMENTS.md](APPROVED_IMPROVEMENTS.md). Tutte le funzionalita non ancora collaudate restano marcate come tali.
 
 ## P1 — Gestione input evoluta
 - [ ] Verificare se il touchpad ASUS espone contatti separati leggibili dal software

@@ -1,0 +1,69 @@
+name: Publish WEmulDroid official ZIP (version-controlled)
+
+on:
+  push:
+    branches: [main]
+    paths: [VERSION.txt]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - name: Validate source scripts and update version
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $version = (Get-Content -LiteralPath VERSION.txt -Raw).Trim()
+          if ($version -notmatch '^v\d+\.\d+\.\d+(?:-(?:beta|rc)(?:\.\d+)?)?$') {
+            throw "Invalid release version: $version"
+          }
+          foreach ($file in (Get-ChildItem -Path src -Filter '*.ps1' -Recurse)) {
+            $tokens = $null
+            $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile(
+              $file.FullName, [ref]$tokens, [ref]$errors)
+            if ($errors.Count -gt 0) { throw "Parser errors in $($file.Name)" }
+          }
+          ./tests/ApkSafety.Tests.ps1
+          ./tests/Snapshots.Tests.ps1
+          ./tests/Localization.Tests.ps1
+          ./tests/Updates.Tests.ps1
+          Write-Host "Release check PASS: $version"
+      - name: Package repository-owned WEmulDroid files
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(tr -d '\r\n' < VERSION.txt)
+          FILE="WEmulDroid-${VERSION}.zip"
+          git archive --format=zip --output="$FILE" HEAD
+          unzip -l "$FILE" | grep -Fq 'VERSION.txt'
+          unzip -l "$FILE" | grep -Fq 'src/Updates.ps1'
+          sha256sum "$FILE" > "$FILE.sha256"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "FILE=$FILE" >> "$GITHUB_ENV"
+      - name: Publish official stable or beta GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "Release already published; never replace its assets automatically."
+            exit 0
+          fi
+          ARGS=()
+          if [[ "$VERSION" == *-beta* || "$VERSION" == *-rc* ]]; then
+            ARGS+=(--prerelease)
+          fi
+          gh release create "$VERSION" "$FILE" "$FILE.sha256" \
+            --repo "$GITHUB_REPOSITORY" "${ARGS[@]}" \
+            --title "WEmulDroid $VERSION" \
+            --notes "Official WEmulDroid source distribution for in-app Settings > Updates. ZIP contains no Android SDK or system image. SHA-256 verified before the local, user-confirmed installation. Windows functionality has NOT been validated on an ASUS PC yet."

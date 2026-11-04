@@ -74,7 +74,7 @@ try {
 
     $backup = Join-Path $logDir ('backup-' + (Get-Date -Format 'yyyyMMdd-HHmmss'))
     New-Item -Path $backup -ItemType Directory -Force | Out-Null
-    Write-UpdateLog ('Installing signed-by-checksum GitHub sources: ' + $expectedTag)
+    Write-UpdateLog ('Installing SHA-256 verified GitHub source package: ' + $expectedTag)
     $files = @(Get-ChildItem -LiteralPath $extract -Recurse -File)
     foreach ($file in $files) {
         $relative = $file.FullName.Substring($extract.Length).TrimStart('\','/')

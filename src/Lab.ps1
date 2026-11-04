@@ -518,7 +518,8 @@ $btnStart.Add_Click({
             throw 'Dispositivo virtuale non presente. Completa prima il comando Installa strumenti.'
         }
         Start-Process -FilePath $script:Emulator -ArgumentList @('-avd', $script:AvdName, '-gpu', 'auto')
-        Write-Log 'Avvio Android richiesto. Attendi la schermata iniziale e premi Aggiorna elenco.'
+        Write-Log 'Avvio Android richiesto. WEmulDroid passa nella barra delle applicazioni; puoi riaprirlo quando vuoi.'
+        $form.WindowState = [System.Windows.Forms.FormWindowState]::Minimized
     } catch { Show-Error $_.Exception.Message }
 })
 

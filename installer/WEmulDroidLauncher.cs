@@ -1,6 +1,7 @@
 // WEmulDroid Windows launcher: stable desktop target for Start Menu, installer
 // and updates. Windows PowerShell 5.1 remains the GUI engine for this prototype.
-// The official distribution signs THIS EXE AND ALL PowerShell scripts.
+// Development installers run local scripts using RemoteSigned. A future signed
+// production build will require AllSigned via the SIGNED_RELEASE define.
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
@@ -40,12 +41,17 @@ internal static class Program
         try
         {
             string quoted = "\"" + file.Replace("\"", "\\\"") + "\"";
+#if SIGNED_RELEASE
+            const string executionPolicy = "AllSigned";
+#else
+            const string executionPolicy = "RemoteSigned";
+#endif
             ProcessStartInfo start = new ProcessStartInfo
             {
                 FileName = Path.Combine(Environment.GetFolderPath(
                     Environment.SpecialFolder.System), "WindowsPowerShell",
                     "v1.0", "powershell.exe"),
-                Arguments = "-NoProfile -STA -ExecutionPolicy AllSigned -File "
+                Arguments = "-NoProfile -STA -ExecutionPolicy " + executionPolicy + " -File "
                     + quoted + " -AvdName " + avd,
                 UseShellExecute = false,
                 CreateNoWindow = true,

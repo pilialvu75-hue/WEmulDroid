@@ -1,6 +1,6 @@
 # WEmulDroid Settings > Updates (Windows PowerShell + WinForms)
 # Download/check only after a user clicks; install only after a second confirmation.
-. (Join-Path $PSScriptRoot 'Updates.ps1')
+. (Join-Path $PSScriptRoot 'InstallerUpdates.ps1')
 
 function Show-WEmulDroidUpdateSettings {
     [CmdletBinding()]
@@ -82,7 +82,7 @@ function Show-WEmulDroidUpdateSettings {
         $check.Enabled = $false
         $dialog.Cursor = [Windows.Forms.Cursors]::WaitCursor
         try {
-            $script:WEmulDroidUpdateCandidate = Find-WEmulDroidUpdate -Current $version -IncludeBeta $beta.Checked
+            $script:WEmulDroidUpdateCandidate = Find-WEmulDroidInstallerUpdate -Current $version -IncludeBeta $beta.Checked
             $download.Enabled = ($null -ne $script:WEmulDroidUpdateCandidate)
             $apply.Enabled = $false
             $status.Text = if ($script:WEmulDroidUpdateCandidate) { (T 'updatesFound') + ' ' + $script:WEmulDroidUpdateCandidate.Tag }
@@ -104,7 +104,7 @@ function Show-WEmulDroidUpdateSettings {
         $download.Enabled = $false
         $dialog.Cursor = [Windows.Forms.Cursors]::WaitCursor
         try {
-            $script:WEmulDroidUpdatePending = Save-WEmulDroidUpdate $script:WEmulDroidUpdateCandidate
+            $script:WEmulDroidUpdatePending = Save-WEmulDroidInstallerUpdate -Release $script:WEmulDroidUpdateCandidate -InstalledLauncher (Join-Path $InstallRoot 'WEmulDroid.exe')
             $apply.Enabled = $true
             $status.Text = (T 'updatesDownloaded') + [Environment]::NewLine + $script:WEmulDroidUpdatePending
         } catch {
@@ -120,19 +120,13 @@ function Show-WEmulDroidUpdateSettings {
         if ([Windows.Forms.MessageBox]::Show($msg, (T 'updatesTitle'),
             'YesNo', 'Warning') -ne 'Yes') { return }
         try {
-            $updater = Join-Path $InstallRoot 'src\Apply-Update.ps1'
-            if (-not (Test-Path -LiteralPath $updater)) { throw 'Updater script missing.' }
-            $args = @(
-                '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File',
-                ('"' + $updater + '"'),
-                '-InstallRoot', ('"' + $InstallRoot + '"'),
-                '-StagedDir', ('"' + $script:WEmulDroidUpdatePending + '"'),
-                '-WaitPid', [string]$PID,
-                '-Launcher', $Launcher
-            )
-            Start-Process -FilePath 'powershell.exe' -ArgumentList $args -WindowStyle Normal
+            $exe = $script:WEmulDroidUpdatePending
+            [void](Assert-WEmulDroidInstallerSignature -Installer $exe -InstalledLauncher (Join-Path $InstallRoot 'WEmulDroid.exe'))
+            # Inno Setup handles in-use files, version replacement and uninstall
+            # registration. No direct writes into the program directory.
+            Start-Process -FilePath $exe -ArgumentList @('/CLOSEAPPLICATIONS','/NORESTART')
             $dialog.Close()
-            $MainForm.Close() # External process waits for this PowerShell process to exit.
+            $MainForm.Close()
         } catch {
             $status.Text = (T 'updatesError') + ' ' + $_.Exception.Message
         }

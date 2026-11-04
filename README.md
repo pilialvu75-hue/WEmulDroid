@@ -27,7 +27,7 @@ Questo ambiente non è ancora stato verificato su un PC reale. Leggi [guida Goog
 
 ## Lingue dell'interfaccia
 
-WEmulDroid ha il menu **Language / Lingua / Langue** con **English, Italiano e Français**. La selezione viene salvata localmente e applicata ai pulsanti, alle etichette e alla guida touch/audio, per entrambi i profili Android (standard e Google Play). I log diagnostici tecnici e alcune finestre di errore non sono ancora completamente tradotti; saranno rifiniti dopo il collaudo Windows.
+WEmulDroid ha il menu **Language / Lingua / Langue** con **English, Italiano e Français**. La selezione viene salvata localmente e applicata a pulsanti, etichette, guida touch/audio e principali finestre di conferma (snapshot, importazione APK, diagnostica), per entrambi i profili Android (standard e Google Play). Alcuni log tecnici ed errori di sistema possono ancora apparire in italiano/inglese. La codifica UTF-8 è stata adattata anche a Windows PowerShell 5.1. Il funzionamento sul PC va ancora collaudato.
 
 ## Requisiti e limiti
 

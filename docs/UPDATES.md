@@ -1,5 +1,27 @@
 # WEmulDroid — Aggiornamenti da Impostazioni
 
+## Riparazione una tantum della beta.1: non trova le versioni beta.2 e beta.3
+
+**Problema reale osservato sull'ASUS il 4 novembre 2026:** con `Versione installata: v0.8.0-beta.1` e `Includi versioni beta` già selezionato, WEmulDroid mostra «Non ci sono versioni più recenti», anche se la release ufficiale esiste.
+
+**Causa tecnica:** il rilevamento delle release non gestiva in modo affidabile l'array JSON ricevuto da GitHub sotto Windows PowerShell 5.1. Corretto in `v0.8.0-beta.3`. Verifica CI sia in PowerShell 7 sia in Windows PowerShell 5.1: PASS. Il passaggio di aggiornamento end-to-end sul vero ASUS resta da confermare.
+
+### Procedura minima, senza reinstallare Android
+
+1. Scarica la [beta.3 ufficiale](https://github.com/pilialvu75-hue/WEmulDroid/releases/tag/v0.8.0-beta.3) o lo ZIP diretto:
+   `https://github.com/pilialvu75-hue/WEmulDroid/releases/download/v0.8.0-beta.3/WEmulDroid-v0.8.0-beta.3.zip`
+2. Verifica provenienza della release e, se presente, usa **Proprietà → Annulla blocco** sullo ZIP, poi **Estrai tutto**.
+3. **Chiudi WEmulDroid.** Apri la cartella estratta della beta.3 e poi la sottocartella **src**.
+4. Copia **solo `Updates.ps1`**.
+5. Apri la cartella **WEmulDroid v0.8.0-beta.1** che stavi già utilizzando, entra nella sottocartella **src** e incolla `Updates.ps1`, confermando **Sostituisci il file**. Non modificare `VERSION.txt` o altri file.
+6. Riapri WEmulDroid dalla **vecchia cartella beta.1** e scegli **Impostazioni → Aggiornamenti → Includi versioni beta → Controlla aggiornamenti**. Ora deve comparire `v0.8.0-beta.3`.
+7. Conferma download e installazione tramite l'app. La procedura prevista crea una copia dei file precedenti e ripristina l'interfaccia dopo averli aggiornati. Se compare un errore, conserva il messaggio e il log; non cancellare cartelle.
+
+Questo ripara soltanto il programma che legge le release e poi consente di **verificare l'aggiornamento interno**. **Android SDK, Java, AVD, APK installate e report non devono essere reinstallati o cancellati.**
+
+**Limite inevitabile:** quando il rilevatore degli aggiornamenti già installato non funziona, la prima correzione necessita di un intervento locale una volta sola. Le versioni successive devono tornare ad aggiornarsi dal menu interno. Se la beta.3 non viene rilevata dopo aver sostituito `src\Updates.ps1`, non proseguire con sostituzioni casuali: riportare il messaggio.
+
+
 ## Primo utilizzo
 La prima distribuzione ufficiale con menu aggiornamenti è [WEmulDroid v0.8.0-beta.1](https://github.com/pilialvu75-hue/WEmulDroid/releases/tag/v0.8.0-beta.1).
 

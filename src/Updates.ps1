@@ -85,7 +85,7 @@ function Save-WEmulDroidUpdate($Release) {
             foreach ($name in $names) {
                 $part = $name.Replace('\','/')
                 if ($part.StartsWith('/') -or $part -match '(?i)(^|/)\.\.(/|$)' -or
-                    $part -match '^[A-Za-z]:' -or $part -contains [char]0) {
+                    $part -match '^[A-Za-z]:' -or $part.Contains([char]0)) {
                     throw 'Unsafe file name in update ZIP.'
                 }
                 if ($part -notmatch '^(src/|docs/|\.github/|[^/]+$)') {

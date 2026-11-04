@@ -1,0 +1,98 @@
+name: WEmulDroid Windows installer build and smoke tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'installer/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'VERSION.txt'
+      - '.github/workflows/windows-installer-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-smoke:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify real Windows PowerShell 5.1 behavior
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          if ($PSVersionTable.PSVersion.Major -ne 5) { throw 'Windows PowerShell 5.1 is required' }
+          .\tests\Updates.Tests.ps1
+          .\tests\InstallerUpdates.Tests.ps1
+          .\tests\AdbStartup.Tests.ps1
+          .\tests\Localization.Tests.ps1
+      - name: Install Inno Setup compiler on build runner if absent
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          $iscc = Join-Path ([Environment]::GetFolderPath('ProgramFilesX86')) 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup --version=6.7.1 --yes --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed' }
+          }
+          if (-not (Test-Path $iscc)) { throw 'ISCC.exe missing after tool setup' }
+      - name: Compile unsigned installer for CI testing ONLY
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          .\installer\Build-Windows.ps1
+      - name: Test installation, desktop shortcut, repeat installation and uninstallation
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          $version = (Get-Content VERSION.txt -Raw).Trim()
+          $setup = Join-Path (Resolve-Path '.\dist\payload\Output').Path ("WEmulDroid-Setup-$version.exe")
+          if (-not (Test-Path -LiteralPath $setup)) { throw 'Setup.exe missing' }
+          if ((Get-AuthenticodeSignature -LiteralPath $setup).Status -eq 'Valid') {
+            throw 'Unsigned CI build unexpectedly carries a production signature'
+          }
+          $app = Join-Path $env:LOCALAPPDATA 'Programs\WEmulDroid'
+          $sdk = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk'
+          $reports = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Reports'
+          New-Item -Path $sdk,$reports -ItemType Directory -Force | Out-Null
+          Set-Content -Path (Join-Path $sdk 'retain-sdk.txt') -Value 'preserve-sdk'
+          Set-Content -Path (Join-Path $reports 'retain-report.txt') -Value 'preserve-report'
+          $arguments = '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-'
+          foreach ($attempt in 1..2) {
+            $process = Start-Process -FilePath $setup -ArgumentList $arguments -Wait -PassThru
+            if ($process.ExitCode -ne 0) { throw "Installer failure: $($process.ExitCode)" }
+            foreach ($entry in @('WEmulDroid.exe','WEmulDroid.ico','VERSION.txt','src\Lab.ps1','src\InstallerUpdates.ps1','src\AdbProcess.ps1')) {
+              if (-not (Test-Path (Join-Path $app $entry))) { throw "Missing installed file: $entry" }
+            }
+            if (-not (Test-Path (Join-Path $sdk 'retain-sdk.txt'))) { throw 'Android SDK data was overwritten' }
+          }
+          $desktop = [Environment]::GetFolderPath('Desktop')
+          $shortcut = Join-Path $desktop 'WEmulDroid.lnk'
+          if (-not (Test-Path $shortcut)) { throw 'WEmulDroid desktop icon is missing' }
+          $shell = New-Object -ComObject WScript.Shell
+          $link = $shell.CreateShortcut($shortcut)
+          if ($link.TargetPath -ine (Join-Path $app 'WEmulDroid.exe')) {
+            throw "Desktop shortcut has incorrect target: $($link.TargetPath)"
+          }
+          $uninstaller = Get-ChildItem -LiteralPath $app -Filter 'unins*.exe' |
+            Sort-Object Name | Select-Object -First 1
+          if (-not $uninstaller) { throw 'Uninstaller not registered' }
+          $proc = Start-Process -FilePath $uninstaller.FullName -ArgumentList $arguments -Wait -PassThru
+          if ($proc.ExitCode -ne 0) { throw "Uninstaller failure: $($proc.ExitCode)" }
+          if (-not (Test-Path (Join-Path $sdk 'retain-sdk.txt')) -or
+              -not (Test-Path (Join-Path $reports 'retain-report.txt'))) {
+            throw 'Uninstall deleted SDK/AVD-related data or reports'
+          }
+          Write-Host 'Installer smoke PASS: per-user install + repeat + desktop + uninstall + preserved user data'
+      - name: Archive unsigned developer-only setup (NOT a trusted Windows installer)
+        uses: actions/upload-artifact@v4
+        with:
+          name: WEmulDroid-UNSIGNED-DEVELOPER-BUILD-DO-NOT-INSTALL
+          path: |
+            dist/payload/Output/WEmulDroid-Setup-*.exe
+            dist/payload/Output/WEmulDroid-Setup-*.exe.sha256
+          retention-days: 3
+          if-no-files-found: error

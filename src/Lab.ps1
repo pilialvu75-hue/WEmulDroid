@@ -57,8 +57,7 @@ function Get-LabSerial {
         $detail = ($result.StdErr + ' ' + $result.StdOut).Trim()
         throw ('adb non risponde (codice ' + $result.ExitCode + '): ' + $detail)
     }
-    # "daemon not running; starting now at tcp:5037" is an expected
-    # first-run message on STDERR, not a failed ADB command.
+    # ADB's first-start progress is written to stderr even on success.
     if ($result.StdErr -match '(?i)daemon not running; starting now') {
         Write-Log 'ADB: primo avvio del servizio completato.'
     }
@@ -67,7 +66,11 @@ function Get-LabSerial {
             $serial = $Matches[1]
             $details = Invoke-WEmulDroidNative -Executable $script:Adb -Arguments @('-s', $serial, 'emu', 'avd', 'name')
             if ($details.ExitCode -eq 0 -and
-                $details.StdOut -match ('(?m)^' + [regex]::Escape($script:AvdName) + '\s*
+                $details.StdOut -match ('(?m)^' + [regex]::Escape($script:AvdName) + '\s*$')) {
+                return $serial
+            }
+        }
+    }
     return $null
 }
 

@@ -43,10 +43,10 @@ function Show-Error([string]$message) {
 
 function Assert-ToolsInstalled {
     if (-not (Test-Path -LiteralPath $script:Emulator)) {
-        throw 'Motore Android non trovato. Esegui Installa-Android.cmd o premi Installa strumenti.'
+        throw 'Motore Android non trovato. premi «Installa strumenti» per configurarlo.'
     }
     if (-not (Test-Path -LiteralPath $script:Adb)) {
-        throw 'adb.exe non trovato. Esegui Installa-Android.cmd.'
+        throw 'adb.exe non trovato. premi «Installa strumenti» per configurarlo.'
     }
 }
 
@@ -159,7 +159,7 @@ function Collect-Report([string]$serial, [string]$packageName) {
 }
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'WEmulDroid - Android Desktop Lab v0.8'
+$form.Text = 'WEmulDroid - Android Desktop Lab v0.9'
 $form.ClientSize = New-Object System.Drawing.Size(810, 836)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
@@ -486,12 +486,16 @@ $btnTouchHelp.Add_Click({
 
 $btnSetup.Add_Click({
     try {
-        $root = Split-Path -Parent $PSScriptRoot
-        $installerName = if ($script:AvdName -eq 'WEmulDroid_Play_API_35') { 'Installa-PlayStore.cmd' } else { 'Installa-Android.cmd' }
-        $installer = Join-Path $root $installerName
-        if (-not (Test-Path -LiteralPath $installer)) { throw ($installerName + ' non trovato.') }
-        Start-Process -FilePath $installer -WorkingDirectory $root
-        Write-Log 'Finestra di installazione aperta; segui le istruzioni e riavvia il laboratorio alla fine.'
+        $installer = Join-Path $PSScriptRoot 'Setup-Android.ps1'
+        if (-not (Test-Path -LiteralPath $installer -PathType Leaf)) {
+            throw 'Installazione incompleta: Setup-Android.ps1 non trovato.'
+        }
+        $arguments = @('-NoProfile', '-ExecutionPolicy', 'AllSigned', '-File', ('"' + $installer + '"'))
+        if ($script:AvdName -eq 'WEmulDroid_Play_API_35') { $arguments += '-PlayStore' }
+        # Interactive setup is permitted only after the user clicks the GUI.
+        # It requests explicit acceptance of Google SDK licenses.
+        Start-Process -FilePath 'powershell.exe' -ArgumentList $arguments
+        Write-Log 'Configurazione Android aperta. Accetta esplicitamente le licenze ufficiali richieste.'
     } catch { Show-Error $_.Exception.Message }
 })
 

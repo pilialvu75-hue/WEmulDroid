@@ -69,6 +69,22 @@ jobs:
             }
             if (-not (Test-Path (Join-Path $sdk 'retain-sdk.txt'))) { throw 'Android SDK data was overwritten' }
           }
+          # Simulate a REAL newer installer from the same AppId. This changes
+          # VERSION.txt only inside the ephemeral GitHub Actions checkout.
+          $newVersion='v0.9.0-beta.2'
+          Set-Content -LiteralPath VERSION.txt -Value $newVersion -Encoding Ascii
+          .\installer\Build-Windows.ps1 -OutputRoot (Join-Path (Get-Location) 'dist-upgrade')
+          $newSetup=Join-Path (Resolve-Path '.\dist-upgrade\payload\Output').Path ("WEmulDroid-Setup-$newVersion.exe")
+          if (-not (Test-Path -LiteralPath $newSetup)) { throw 'Upgrade installer missing' }
+          $upgrade=Start-Process -FilePath $newSetup -ArgumentList $arguments -PassThru -Wait
+          if ($upgrade.ExitCode -ne 0) { throw "Installer upgrade failed: $($upgrade.ExitCode)" }
+          if ((Get-Content -LiteralPath (Join-Path $app 'VERSION.txt') -Raw).Trim() -ne $newVersion) {
+            throw 'Installer upgrade did not replace application version'
+          }
+          if (-not (Test-Path (Join-Path $sdk 'retain-sdk.txt')) -or
+              -not (Test-Path (Join-Path $reports 'retain-report.txt'))) {
+            throw 'Upgrade did not preserve Android runtime data'
+          }
           $desktop = [Environment]::GetFolderPath('Desktop')
           $shortcut = Join-Path $desktop 'WEmulDroid.lnk'
           if (-not (Test-Path $shortcut)) { throw 'WEmulDroid desktop icon is missing' }
@@ -86,7 +102,7 @@ jobs:
               -not (Test-Path (Join-Path $reports 'retain-report.txt'))) {
             throw 'Uninstall deleted SDK/AVD-related data or reports'
           }
-          Write-Host 'Installer smoke PASS: per-user install + repeat + desktop + uninstall + preserved user data'
+          Write-Host 'Installer smoke PASS: per-user install + real beta-to-beta upgrade + desktop icon + uninstall + preserved user data'
       - name: Archive unsigned developer-only setup (NOT a trusted Windows installer)
         uses: actions/upload-artifact@v4
         with:

@@ -12,6 +12,8 @@
 - [x] Interfaccia Play Store separata dal profilo Android tecnico
 - [x] Controlli GUI per profili di risoluzione, ripristino e screenshot
 - [x] Guida rapida per touch e audio
+- [x] Menu English / Italiano / Français, scelta persistente e controlli GUI tradotti (test CI PASS)
+- [ ] Verificare il cambio lingua, il layout dei pulsanti e la persistenza su Windows reale
 - [x] Fullscreen reversibile sulla finestra dell'AVD selezionato (da collaudare)
 - [x] Importazione APK da cartella locale e link HTTPS/GitHub con consenso, limite e SHA-256 (da collaudare)
 - [x] Test offline delle regole di importazione APK (CI)

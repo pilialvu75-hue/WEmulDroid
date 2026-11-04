@@ -12,6 +12,24 @@
 6. Apri il report in %LOCALAPPDATA%\WEmulDroid\Reports.
 7. Solo dopo questa prova, utilizza **Avvia-Android.cmd → Installa APK** con una piccola app indipendente e autorizzata compatibile con x86_64.
 
+## Primo collaudo reale ASUS — 4 novembre 2026
+
+La verifica `Verifica-PC.cmd` è partita dopo aver sbloccato ed estratto lo ZIP. Prima diagnosi reale:
+
+- Windows 11 Home, Intel Core i7-12700H, 15,6 GiB RAM e circa 227,7 GiB di spazio SDK disponibile.
+- Windows segnala un hypervisor già presente, ma **Windows Hypervisor Platform (HypervisorPlatform) risulta InstallState=2 = disabilitata**.
+- Le proprietà CIM mostrano `VirtualizationFirmwareEnabled=no` e `SecondLevelAddressTranslationExtensions=no`. Questi due valori non devono essere interpretati come una mancanza certa del processore quando è già attivo un hypervisor: il Core i7-12700H supporta ufficialmente Intel VT-x e EPT/SLAT.
+- Java, SDK ed ADB non risultano ancora installati/rilevati; normale prima della procedura di installazione.
+
+### Gate prima di installare Android
+1. **Ctrl+Maiusc+Esc → Gestione attività → Prestazioni → CPU**: leggere il campo **Virtualizzazione**.
+2. Se **Abilitata**, aprire `Win+R → optionalfeatures`, selezionare **Piattaforma Hypervisor Windows**, confermare e riavviare. Non modificare BIOS o disattivare Core Isolation senza una prova specifica.
+3. Se **Disabilitata**, non installare ancora SDK: verificare nel firmware UEFI ASUS l'impostazione Intel Virtualization Technology, preservando le altre impostazioni.
+4. Rilanciare `Verifica-PC.cmd` e controllare **Windows Hypervisor Platform = abilitata**. Soltanto dopo l'installazione emulator Google, usare `emulator.exe -accel-check` come prova diretta del funzionamento WHPX.
+5. Non attribuire PASS di compatibilità Android finché l'emulatore non si avvia davvero e l'app Impostazioni non è visibile.
+
+Fonti ufficiali: https://developer.android.com/studio/run/emulator-acceleration ; https://learn.microsoft.com/en-us/windows/win32/cimwin32prov/win32-optionalfeature ; https://www.intel.com/content/www/us/en/products/sku/132228/intel-core-i712700h-processor-24m-cache-up-to-4-70-ghz/specifications.html
+
 ## Criteri
 - PASS tecnico: Android completa il boot; meminfo/cpuinfo/gfxinfo leggibili.
 - PASS funzionale: Impostazioni è visibile e utilizzabile.

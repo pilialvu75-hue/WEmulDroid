@@ -13,6 +13,9 @@ Add-Type -AssemblyName System.Drawing
 . (Join-Path $PSScriptRoot 'WindowMode.ps1')
 . (Join-Path $PSScriptRoot 'Snapshots.ps1')
 . (Join-Path $PSScriptRoot 'Diagnostics.ps1')
+. (Join-Path $PSScriptRoot 'Localization.ps1')
+[void](Assert-WEmulDroidTranslations)
+[void](Load-WEmulDroidLanguage)
 
 $script:SdkRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk'
 $script:ReportsRoot = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Reports'
@@ -148,7 +151,7 @@ function Collect-Report([string]$serial, [string]$packageName) {
 }
 
 $form = New-Object System.Windows.Forms.Form
-$form.Text = 'WEmulDroid - Android Desktop Lab v0.6'
+$form.Text = 'WEmulDroid - Android Desktop Lab v0.7'
 $form.ClientSize = New-Object System.Drawing.Size(810, 836)
 $form.StartPosition = 'CenterScreen'
 $form.FormBorderStyle = 'FixedDialog'
@@ -158,8 +161,22 @@ $form.Font = New-Object System.Drawing.Font('Segoe UI', 10)
 $titleLabel = New-Object System.Windows.Forms.Label
 $titleLabel.Text = 'WEmulDroid | Android su Windows'
 $titleLabel.Font = New-Object System.Drawing.Font('Segoe UI', 15, [System.Drawing.FontStyle]::Bold)
-$titleLabel.SetBounds(20, 15, 760, 40)
+$titleLabel.SetBounds(20, 15, 510, 40)
 $form.Controls.Add($titleLabel)
+
+$languageLabel = New-Object System.Windows.Forms.Label
+$languageLabel.Text = 'Lingua'
+$languageLabel.SetBounds(520, 21, 65, 26)
+$form.Controls.Add($languageLabel)
+
+$script:LanguageCombo = New-Object System.Windows.Forms.ComboBox
+$script:LanguageCombo.DropDownStyle = 'DropDownList'
+$script:LanguageCombo.SetBounds(596, 17, 194, 29)
+foreach ($langName in $script:UiLanguageNames) {
+    [void]$script:LanguageCombo.Items.Add($langName)
+}
+$script:LanguageCombo.SelectedIndex = [array]::IndexOf($script:UiLanguages, $script:UiLanguage)
+$form.Controls.Add($script:LanguageCombo)
 
 $script:DeviceLabel = New-Object System.Windows.Forms.Label
 $script:DeviceLabel.Text = ('Dispositivo: da avviare (' + $script:AvdName + ')')
@@ -325,9 +342,9 @@ $btnFullscreen.Add_Click({
         $msg = Set-EmulatorWindowFullscreen $script:AvdName
         Write-Log $msg
         if ($script:FullscreenWindowState) {
-            $btnFullscreen.Text = 'Esci fullscreen'
+            $btnFullscreen.Text = (T 'exitFullscreen')
         } else {
-            $btnFullscreen.Text = 'Fullscreen'
+            $btnFullscreen.Text = (T 'fullscreen')
         }
     } catch { Show-Error $_.Exception.Message }
 })
@@ -439,26 +456,8 @@ $btnCapture.Add_Click({
 })
 
 $btnTouchHelp.Add_Click({
-    $help = @(
-        'GESTI: clic sinistro = tocco; doppio clic = doppio tocco.'
-        'Tieni premuto e trascina il mouse per simulare swipe e drag.'
-        'CTRL + mouse = due dita speculari (pinch) nell emulatore Google.'
-        'Touchpad + mouse come due dita indipendenti: NON disponibile oggi.'
-        'Richiede accesso ai contatti raw del touchpad e iniezione multitouch.'
-        'Nel pannello questa opzione rimane disabilitata per evitare falsi test.'
-        'Puoi digitare con la tastiera Windows.'
-        ''
-        'AUDIO: la riproduzione usa le casse o cuffie del PC.'
-        'VOLUME: usa i pulsanti laterali della finestra Android.'
-        'MICROFONO: nell emulatore apri Extended controls > Microphone'
-        'e abilita host microphone access solo quando ti serve.'
-        'Il microfono resta disattivato per impostazione predefinita.'
-        ''
-        'WORK: i test grafici richiedono Computer Use locale autorizzato.'
-        'Screenshot e report rimangono sul PC fino a condivisione esplicita.'
-    ) -join [Environment]::NewLine
     [System.Windows.Forms.MessageBox]::Show(
-        $help, 'WEmulDroid - Comandi touch e audio',
+        (T 'touchHelpText'), (T 'touchHelpTitle'),
         [System.Windows.Forms.MessageBoxButtons]::OK,
         [System.Windows.Forms.MessageBoxIcon]::Information
     ) | Out-Null
@@ -575,7 +574,44 @@ $btnStop.Add_Click({
     } catch { Show-Error $_.Exception.Message }
 })
 
-Write-Log ('Profilo selezionato: ' + $script:AvdName)
-Write-Log 'Pronto. Prima installazione: clicca Installa strumenti.'
+function Update-WEmulDroidLanguage {
+    $titleLabel.Text = (T 'title')
+    $languageLabel.Text = (T 'language')
+    $script:DeviceLabel.Text = (T 'device') + ' ' + $script:AvdName
+    $btnSetup.Text = (T 'setup')
+    $btnStart.Text = (T 'start')
+    $btnRefresh.Text = (T 'refresh')
+    $btnStop.Text = (T 'stop')
+    $btnInstall.Text = (T 'install')
+    $btnMeasure.Text = (T 'measure')
+    $btnReports.Text = (T 'reports')
+    $btnPlay.Text = (T 'play')
+    $packageLabel.Text = (T 'package')
+    $screenLabel.Text = (T 'screen')
+    $btnScreen.Text = (T 'screenApply')
+    $btnScreenReset.Text = (T 'screenReset')
+    $btnCapture.Text = (T 'screenshot')
+    $btnTouchHelp.Text = (T 'touchHelp')
+    $btnFullscreen.Text = (T $(if ($script:FullscreenWindowState) { 'exitFullscreen' } else { 'fullscreen' }))
+    $btnApkFolder.Text = (T 'folder')
+    $btnApkLink.Text = (T 'link')
+    $btnSplitTouch.Text = (T 'splitTouch')
+    $btnSnapshotSave.Text = (T 'snapshotSave')
+    $btnSnapshotLoad.Text = (T 'snapshotLoad')
+    $btnSnapshotList.Text = (T 'snapshotList')
+    $btnDiagnostics.Text = (T 'diagnostics')
+    $logLabel.Text = (T 'log')
+}
+
+$script:LanguageCombo.Add_SelectedIndexChanged({
+    $index = $script:LanguageCombo.SelectedIndex
+    if ($index -ge 0) {
+        Set-WEmulDroidLanguage $script:UiLanguages[$index]
+        Update-WEmulDroidLanguage
+    }
+})
+Update-WEmulDroidLanguage
+Write-Log ((T 'profile') + ' ' + $script:AvdName)
+Write-Log (T 'ready')
 Write-Log 'Per usare APK di terze parti, rispetta le relative licenze.'
 [void]$form.ShowDialog()

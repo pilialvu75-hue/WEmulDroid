@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot '..' 'src' 'Localization.ps1')
+. (Join-Path (Join-Path $PSScriptRoot '..') 'src\Localization.ps1')
 if (-not (Assert-WEmulDroidTranslations)) { throw 'Missing translations' }
 if ($script:UiLanguages.Count -ne 3) { throw 'Expected exactly EN, IT and FR' }
 foreach ($language in @('en', 'it', 'fr')) {

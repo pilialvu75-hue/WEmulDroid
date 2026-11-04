@@ -21,10 +21,19 @@ Copy-Item -Path (Join-Path $repo 'docs\*.md') -Destination (Join-Path $payload '
 $ico = Join-Path $payload 'WEmulDroid.ico'
 & (Join-Path $PSScriptRoot 'Make-Icon.ps1') -OutputPath $ico
 
+# All builds preserve the selected channel in the installation directory.
+# Production launcher requires signed PowerShell scripts; beta launcher uses
+# RemoteSigned for files extracted locally by the installer.
+[IO.File]::WriteAllText((Join-Path $payload 'CHANNEL.txt'),
+    $(if ($Signed) { 'production' } else { 'development' }),
+    (New-Object Text.UTF8Encoding($false)))
+$defines = @()
+if ($Signed) { $defines += '/define:SIGNED_RELEASE' }
+
 $framework = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
 if (-not (Test-Path -LiteralPath $framework)) { throw "Windows C# compiler not found: $framework" }
 $launcher = Join-Path $payload 'WEmulDroid.exe'
-& $framework '/nologo' '/target:winexe' '/optimize+' ("/win32icon:$ico") ("/out:$launcher") '/reference:System.Windows.Forms.dll' (Join-Path $PSScriptRoot 'WEmulDroidLauncher.cs')
+& $framework '/nologo' '/target:winexe' '/optimize+' @defines ("/win32icon:$ico") ("/out:$launcher") '/reference:System.Windows.Forms.dll' (Join-Path $PSScriptRoot 'WEmulDroidLauncher.cs')
 if ($LASTEXITCODE -ne 0 -or -not (Test-Path $launcher)) {
     throw 'Cannot compile WEmulDroid desktop launcher.'
 }

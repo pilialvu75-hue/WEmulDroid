@@ -34,9 +34,7 @@ function Select-WEmulDroidRelease {
         [Parameter(Mandatory)][string]$Current,
         [bool]$IncludeBeta = $false
     )
-    # GitHub returns a top-level JSON array. Windows PowerShell 5.1's
-    # Invoke-RestMethod may expose it as ONE array object in the pipeline.
-    # Enumerate decoded entries explicitly, even if the array was nested once.
+    # Accept a JSON release collection or a 5.1 nested array of collections.
     $queue = New-Object System.Collections.Queue
     $queue.Enqueue($ReleaseData)
     $best = $null
@@ -50,7 +48,50 @@ function Select-WEmulDroidRelease {
         if ($release -isnot [psobject]) { continue }
         if ($release.draft -or ($release.prerelease -and -not $IncludeBeta)) { continue }
         $tag = [string]$release.tag_name
-        if ($tag -notmatch '^v?\d+\.\d+\.\d+(?:-(?:beta|rc)(?:\.\d+)?)?
+        if ($tag -notmatch '^v?\d+\.\d+\.\d+(?:-(?:beta|rc)(?:\.\d+)?)?$') { continue }
+        if ((Compare-WEmulDroidVersion $tag $Current) -le 0) { continue }
+        $zipName = 'WEmulDroid-' + $tag + '.zip'
+        $shaName = $zipName + '.sha256'
+        $zipAsset = @($release.assets | Where-Object { $_.name -eq $zipName })
+        $shaAsset = @($release.assets | Where-Object { $_.name -eq $shaName })
+        if ($zipAsset.Count -ne 1 -or $shaAsset.Count -ne 1) { continue }
+        $zipUrl = [string]$zipAsset[0].browser_download_url
+        $shaUrl = [string]$shaAsset[0].browser_download_url
+        if (-not $zipUrl.StartsWith($script:UpdatePrefix, [StringComparison]::Ordinal) -or
+            -not $shaUrl.StartsWith($script:UpdatePrefix, [StringComparison]::Ordinal)) { continue }
+        $item = [pscustomobject]@{
+            Tag=$tag; ZipUrl=$zipUrl; ShaUrl=$shaUrl; IsBeta=[bool]$release.prerelease
+        }
+        if (-not $best -or (Compare-WEmulDroidVersion $item.Tag $best.Tag) -gt 0) {
+            $best = $item
+        }
+    }
+    return $best
+}
+
+function Find-WEmulDroidUpdate([string]$Current, [bool]$IncludeBeta) {
+    [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+    # Explicit JSON decoding prevents Windows PowerShell 5.1's top-level
+    # Invoke-RestMethod JSON arrays from being treated as a single release.
+    $response = Invoke-WebRequest -Uri $script:UpdateApi -UseBasicParsing -Headers @{
+        'User-Agent'='WEmulDroid-Updater/0.2'
+        'Accept'='application/vnd.github+json'
+        'Cache-Control'='no-cache'
+    } -TimeoutSec 25
+    if ([int]$response.StatusCode -ne 200 -or
+        [string]::IsNullOrWhiteSpace([string]$response.Content)) {
+        throw 'GitHub non ha restituito un elenco release valido.'
+    }
+    if ($response.Content.Length -gt 2097152) {
+        throw 'Elenco release troppo grande.'
+    }
+    $parsed = ConvertFrom-Json -InputObject ([string]$response.Content) -ErrorAction Stop
+    $found = Select-WEmulDroidRelease -ReleaseData $parsed -Current $Current -IncludeBeta $IncludeBeta
+    if (-not $found -and @($parsed).Count -eq 0) {
+        throw 'Nessuna release ricevuta da GitHub.'
+    }
+    return $found
+}
 
 function Save-WEmulDroidUpdate($Release) {
     if (-not $Release -or $Release.Tag -notmatch '^v?\d+\.\d+\.\d+(?:-(?:beta|rc)(?:\.\d+)?)?$') {

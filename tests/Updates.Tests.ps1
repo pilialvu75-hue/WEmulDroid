@@ -1,5 +1,5 @@
 $ErrorActionPreference = 'Stop'
-. (Join-Path $PSScriptRoot '..' 'src' 'Updates.ps1')
+. (Join-Path (Join-Path $PSScriptRoot '..') 'src\Updates.ps1')
 
 $cases = @(
     @('v0.8.0-beta.1','v0.7.0',1),

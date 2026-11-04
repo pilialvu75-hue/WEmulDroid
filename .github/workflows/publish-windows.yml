@@ -10,7 +10,22 @@ permissions:
   contents: write
 
 jobs:
+  windows-ps51-updater:
+    runs-on: windows-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify GitHub beta update discovery on Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          if ($PSVersionTable.PSVersion.Major -ne 5) {
+            throw 'This test requires Windows PowerShell 5.1.'
+          }
+          .\tests\Updates.Tests.ps1
+          Write-Host 'Windows PowerShell 5.1 updater regression: PASS'
   package:
+    needs: windows-ps51-updater
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

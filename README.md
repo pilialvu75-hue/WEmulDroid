@@ -1,6 +1,6 @@
 # WEmulDroid — Android su Windows
 
-**Prototipo autonomo v0.5**, indipendente da AI-Orchestrator e da altre applicazioni. Usa [Android Emulator ufficiale](https://developer.android.com/studio/run/emulator) per avviare Android in una finestra Windows, gestire APK autorizzati e raccogliere dati diagnostici.
+**Prototipo autonomo v0.6**, indipendente da AI-Orchestrator e da altre applicazioni. Usa [Android Emulator ufficiale](https://developer.android.com/studio/run/emulator) per avviare Android in una finestra Windows, gestire APK autorizzati e raccogliere dati diagnostici.
 
 **Stato:** codice presente e controlli sintattici tramite CI; il funzionamento reale su un PC Windows **non è ancora stato verificato**. Nessun APK, immagine Google o binario di terzi viene redistribuito qui.
 
@@ -34,6 +34,7 @@ Questo ambiente non è ancora stato verificato su un PC reale. Leggi [guida Goog
 - La GUI è un prototipo PowerShell + WinForms, non ancora un installer Windows firmato.
 - La GUI offre profili di risoluzione, reset, screenshot e guida touch/audio, ancora da testare su PC reale.
 - Nuovi comandi: fullscreen reversibile, APK da cartella, APK da URL HTTPS o release GitHub; le app non devono necessariamente comparire nel Play Store.
+- In v0.6: pulsanti per salvare, elencare e ripristinare uno snapshot, più diagnostica locale con screenshot, logcat, RAM/CPU e rendering (da collaudare su PC).
 - Il gesto Ctrl+mouse consente un pinch simulato; touchpad+mouse come due dita autonome resta una funzione sperimentale non ancora disponibile.
 - Android x86_64 potrebbe non supportare APK con sole librerie ARM64.
 - Le misure in emulatore NON rappresentano direttamente i consumi di uno smartphone fisico.
@@ -64,6 +65,8 @@ La verifica del PC salva solo il report locale; non modifica configurazioni.
 - [Play Store ufficiale](docs/GOOGLE_PLAY.md)
 - [Schermo, audio, touch e Work](docs/VIDEO_AUDIO_TOUCH_WORK.md)
 - [Fullscreen e installazione APK da PC/GitHub](docs/FULLSCREEN_APK_INPUT.md)
+- [Snapshot e diagnostica locale](docs/SNAPSHOTS_DIAGNOSTICS.md)
+- [Tutte le 8 migliorie approvate](docs/APPROVED_IMPROVEMENTS.md)
 - [Download SDK Android](https://developer.android.com/studio)
 - [Accelerazione su Windows](https://developer.android.com/studio/run/emulator-acceleration)
 

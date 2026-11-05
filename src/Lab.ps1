@@ -615,12 +615,12 @@ $btnSetup.Add_Click({
         $channelFile = Join-Path (Split-Path -Parent $PSScriptRoot) 'CHANNEL.txt'
         $channel = if (Test-Path -LiteralPath $channelFile) { ([IO.File]::ReadAllText($channelFile)).Trim() } else { 'development' }
         $scriptPolicy = if ($channel -eq 'production') { 'AllSigned' } else { 'RemoteSigned' }
-        $arguments = @('-NoProfile', '-ExecutionPolicy', $scriptPolicy, '-File', ('"' + $installer + '"'))
-        if ($script:AvdName -eq 'WEmulDroid_Play_API_35') { $arguments += '-PlayStore' }
+        $arguments = @('-NoProfile', '-ExecutionPolicy', $scriptPolicy, '-File', ('"' + $installer + '"'), '-BothProfiles')
+        if ($script:SetupConsentConfirmed) { $arguments += '-ConsentConfirmed' }
         # Interactive setup is permitted only after the user clicks the GUI.
         # It requests explicit acceptance of Google SDK licenses.
         Start-Process -FilePath 'powershell.exe' -ArgumentList $arguments
-        Write-Log 'Configurazione Android aperta. Accetta esplicitamente le licenze ufficiali richieste.'
+        Write-Log (T 'setupAllStarted')
     } catch { Show-Error $_.Exception.Message }
 })
 
@@ -636,6 +636,13 @@ $btnStart.Add_Click({
         $avds = (& $script:Emulator -list-avds | Out-String)
         if ($avds -notmatch ('(?m)^' + [regex]::Escape($script:AvdName) + '\s*$')) {
             throw 'Dispositivo virtuale non presente. Completa prima il comando Installa strumenti.'
+        }
+        # Enable the physical keyboard BEFORE AVD boot; do not hide Gboard.
+        try {
+            $physicalKeyboardPrepared = Enable-WEmulDroidPhysicalKeyboard -AvdName $script:AvdName
+            if ($physicalKeyboardPrepared) { Write-Log (T 'keyboardHardwareReady') }
+        } catch {
+            Write-Log ('Nota tastiera: ' + $_.Exception.Message)
         }
         $startup = Start-WEmulDroidQuietEmulator -EmulatorExe $script:Emulator -AvdName $script:AvdName -ReportsRoot $script:ReportsRoot
         Write-Log ((T 'emulatorLogSaved') + ' ' + $startup.StdErrLog)
@@ -776,6 +783,28 @@ $script:LanguageCombo.Add_SelectedIndexChanged({
     }
 })
 Update-WEmulDroidLanguage
+# After installer launch, offer one coherent setup for BOTH Android profiles.
+# Requires explicit user consent for Google's SDK terms and multi-GB downloads.
+# Never delete already installed SDKs, AVDs or Play Store session data.
+$script:SetupConsentConfirmed = $false
+$form.Add_Shown({
+    try {
+        $avdFiles = @('WEmulDroid_API_35','WEmulDroid_Play_API_35') |
+            ForEach-Object { Get-WEmulDroidAvdConfig $_ }
+        $missing = @($avdFiles | Where-Object { -not (Test-Path -LiteralPath $_ -PathType Leaf) })
+        if ($missing.Count -eq 0) { return }
+        $prompt = (T 'setupAllPrompt')
+        $choice = [System.Windows.Forms.MessageBox]::Show(
+            $prompt, (T 'setupAllTitle'), 'YesNo', 'Question')
+        if ($choice -eq [System.Windows.Forms.DialogResult]::Yes) {
+            $script:SetupConsentConfirmed = $true
+            try { $btnSetup.PerformClick() }
+            finally { $script:SetupConsentConfirmed = $false }
+        } else {
+            Write-Log (T 'setupAllDeclined')
+        }
+    } catch { Write-Log ('Setup iniziale: ' + $_.Exception.Message) }
+})
 Write-Log ((T 'profile') + ' ' + $script:AvdName)
 if ((Test-Path -LiteralPath $script:Emulator -PathType Leaf) -and
     (Test-Path -LiteralPath $script:Adb -PathType Leaf)) {

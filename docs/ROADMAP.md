@@ -114,4 +114,10 @@ Non confondere popup Google Search/tastiera Android del primo avvio con elementi
 - Rispettare licenze e permessi delle app di terze parti
 - ASUS Windows 11 ora disponibile: proseguire con collaudi reali, GUI, APK e aggiornamenti senza reinstallare SDK/AVD
 
-**Nota giochi Supercell:** Brawl Stars non è il benchmark iniziale: le condizioni d'uso Supercell limitano l'impiego di emulatori. Per la prima prova usare un gioco consentito e leggero. Vedi [Google Play](GOOGLE_PLAY.md).
+**Collaudo orientamento / giochi (5 novembre 2026):** l'utente ha scelto Brawl Stars come *stress test tecnico*, non per giocare. Il gioco richiede normalmente l'orientamento landscape: il passaggio a 90 gradi rispetto allo smartphone verticale è atteso. Non confondere questo comportamento con un bug. Sono invece difetti da diagnosticare: immagine o testo che restano ruotati rispetto alla finestra Windows, schermo non adattato, errore "keeps stopping" o "isn't responding". La diagnostica deve separare incompatibilità del gioco, driver GPU/emulatore, eventuale problema di memoria e rotazione forzata da WEmulDroid; senza logs non attribuire la causa. Le condizioni d'uso di Supercell limitano l'impiego di emulatori: non richiedere login all'account di gioco, né dare per garantita la compatibilità. Per escludere errori generali di WEmulDroid confrontare un'app di gioco che autorizzi l'emulazione. Vedi [Google Play](GOOGLE_PLAY.md).
+
+- [x] Modalità **Compatibilità giochi** nel pannello Schermo/Comandi: ripristina rotazione automatica e dimensioni Android originali, senza wipe di APK, account o AVD.
+- [x] Fullscreen non deve modificare in alcun modo `wm size`, `wm density`, `wm user-rotation`. Sono comandi separati, espliciti e reversibili.
+- [x] Diagnostica dei crash: ultimi eventi del buffer `logcat -b crash` e stato rotazione, salvati solo localmente con consenso.
+- [ ] Verifica sul vero ASUS dei giochi landscape, delle schermate ANR/crash, dei driver grafici e del fit senza bande nere.
+

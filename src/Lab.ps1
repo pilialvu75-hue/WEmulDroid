@@ -251,6 +251,7 @@ $btnScreenReset = New-LabButton 'Ripristina' 599 267
 $btnCapture = New-LabButton 'Screenshot' 20 320
 $btnTouchHelp = New-LabButton 'Touch / Audio' 213 320
 $btnFullscreen = New-LabButton 'Fullscreen' 406 320
+$btnFullscreen.Tag = 'smart'
 $btnCenter = New-LabButton 'Centra Android' 20 485
 $btnFit = New-LabButton 'Adatta finestra al monitor' 406 485
 $btnApkFolder = New-LabButton 'APK da cartella' 599 320

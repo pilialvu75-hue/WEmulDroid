@@ -21,7 +21,13 @@ function Initialize-WEmulDroidLayout {
     $btnStop.SetBounds(719, 114, 219, 44)
 
     $script:WorkTabs = New-Object System.Windows.Forms.TabControl
-    $script:WorkTabs.SetBounds(20, 178, 918, 308)
+    # Android navigation and PC keyboard remain visible above all tabs.
+    $btnHome.SetBounds(20, 168, 218, 40)
+    $btnBack.SetBounds(253, 168, 218, 40)
+    $btnPcKeyboard.SetBounds(486, 168, 218, 40)
+    $btnColdBoot.SetBounds(719, 168, 219, 40)
+
+    $script:WorkTabs.SetBounds(20, 224, 918, 270)
     $script:WorkTabs.Anchor = [System.Windows.Forms.AnchorStyles]::Top -bor
         [System.Windows.Forms.AnchorStyles]::Left -bor
         [System.Windows.Forms.AnchorStyles]::Right

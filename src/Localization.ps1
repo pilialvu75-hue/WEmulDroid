@@ -146,7 +146,7 @@ $script:UiWords = @{
     home='Accueil';back='Retour';keyboardPc='Clavier PC';keyboardAndroid='Clavier Android';coldBoot='Démarrage à froid';
     homeDone='Commande Accueil envoyée à Android.';backDone='Commande Retour envoyée à Android.';
     keyboardPcDone='Clavier du PC activé. Cliquez dans un champ Android et tapez sur votre clavier.';
-    keyboardAndroidDone='Clavier Android à l’écran réactivé.';
+    keyboardAndroidDone='Clavier virtuel Android réactivé.';
     keyboardRestart='Le clavier physique a été activé pour cet appareil. Arrêtez et redémarrez Android une fois pour appliquer le changement.';
     coldBootStopFirst='Arrêtez Android avant un démarrage à froid. Les applications et données seront conservées.';
     coldBootConfirm='Démarrer Android sans charger le dernier instantané ? Cela peut corriger un écran noir/gris sans effacer les applications ni les données.';

@@ -5,6 +5,7 @@ $script:UiLanguageNames = @('English', 'Italiano', 'Français')
 $script:UiWords = @{
   en = @{
     tabApps='Applications / APK';tabDisplay='Display / Touch';tabDiagnostics='Diagnostics / Snapshots';
+    centerAndroid='Center Android';centered='Android window centered on your monitor.';centerNotFound='Android window not visible yet. Start Android first.';centerError='Unable to center Android:';
     home='Home';back='Back';keyboardPc='PC keyboard';keyboardAndroid='Android keyboard';coldBoot='Cold boot';
     homeDone='Android Home key sent.';backDone='Android Back key sent.';
     keyboardPcDone='PC keyboard enabled; click a text field in the emulator and type on your computer.';
@@ -74,6 +75,7 @@ $script:UiWords = @{
   }
   it = @{
     tabApps='Applicazioni / APK';tabDisplay='Schermo / Comandi';tabDiagnostics='Diagnostica / Snapshot';
+    centerAndroid='Centra Android';centered='Finestra Android centrata sullo schermo.';centerNotFound='Finestra Android non ancora visibile. Avvia prima Android.';centerError='Impossibile centrare Android:';
     home='Home';back='Indietro';keyboardPc='Tastiera PC';keyboardAndroid='Tastiera Android';coldBoot='Avvio pulito';
     homeDone='Comando Home inviato ad Android.';backDone='Comando Indietro inviato ad Android.';
     keyboardPcDone='Tastiera PC abilitata. Clicca un campo di testo dentro Android e scrivi con la tastiera ASUS.';
@@ -143,6 +145,7 @@ $script:UiWords = @{
   }
   fr = @{
     tabApps='Applications / APK';tabDisplay='Écran / Commandes';tabDiagnostics='Diagnostic / Instantanés';
+    centerAndroid='Centrer Android';centered='Fenêtre Android centrée sur votre écran.';centerNotFound='Fenêtre Android pas encore visible. Démarrez Android.';centerError='Impossible de centrer Android :';
     home='Accueil';back='Retour';keyboardPc='Clavier PC';keyboardAndroid='Clavier Android';coldBoot='Démarrage à froid';
     homeDone='Commande Accueil envoyée à Android.';backDone='Commande Retour envoyée à Android.';
     keyboardPcDone='Clavier du PC activé. Cliquez dans un champ Android et tapez sur votre clavier.';

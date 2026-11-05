@@ -64,8 +64,18 @@ jobs:
             throw 'Setup and launcher must have the same trusted signing certificate'
           }
           if ((Get-AuthenticodeSignature -LiteralPath '.\dist\payload\WEmulDroid.exe').Status -ne 'Valid') { throw 'Unsigned launcher' }
-          foreach ($ps1 in (Get-ChildItem '.\dist\payload\src\*.ps1')) {
-            if ((Get-AuthenticodeSignature -LiteralPath $ps1.FullName).Status -ne 'Valid') { throw "Unsigned script $($ps1.Name)" }
+          # A signed script from another publisher must not enter the release.
+          $trustedThumbprint=$setupSignature.SignerCertificate.Thumbprint
+          $scripts=@(Get-ChildItem '.\dist\payload\src\*.ps1')
+          if ($scripts.Count -eq 0) { throw 'No PowerShell runtime scripts in signed package' }
+          foreach ($ps1 in $scripts) {
+            $scriptSignature=Get-AuthenticodeSignature -LiteralPath $ps1.FullName
+            if ($scriptSignature.Status -ne 'Valid' -or -not $scriptSignature.SignerCertificate) {
+              throw "Unsigned or untrusted script $($ps1.Name)"
+            }
+            if ($scriptSignature.SignerCertificate.Thumbprint -ne $trustedThumbprint) {
+              throw "Script publisher differs from signed installer: $($ps1.Name)"
+            }
           }
       - name: Test signed install, desktop shortcut and signed uninstaller
         shell: powershell

@@ -13,9 +13,23 @@ if ($version -notmatch '^v[0-9]+\.[0-9]+\.[0-9]+(?:-(?:beta|rc)\.[0-9]+)?$') {
     throw "Installer version is invalid: $version"
 }
 $displayVersion = $version.Substring(1)
-# Windows file versions have four numeric components (each <= 65535).
-# Reserve build 1..29999 for beta, 30001..60000 for rc, 65535 for stable.
-if ($version -notmatch '^v([0-9]+)\.([0-9]+)\.([0-9]+)(?:-(beta|rc)\.([0-9]+))?foreach ($name in @('VERSION.txt','README.md','LICENSE')) {
+# Windows version metadata has four numeric components, each at most 65535.
+# beta maps to 1..29999; rc to 30001..60000; stable to 65535.
+if ($version -notmatch '^v([0-9]+)\.([0-9]+)\.([0-9]+)(?:-(beta|rc)\.([0-9]+))?$') {
+    throw "Cannot derive Windows version metadata: $version"
+}
+$parts = @([int]$Matches[1], [int]$Matches[2], [int]$Matches[3])
+foreach ($part in $parts) {
+    if ($part -lt 0 -or $part -gt 65535) { throw 'Windows version component exceeds 65535.' }
+}
+$stage = $Matches[4]
+$sequence = if ($Matches[5]) { [int]$Matches[5] } else { 0 }
+if ($stage -and ($sequence -lt 1 -or $sequence -gt 29999)) {
+    throw 'Windows prerelease sequence must be between 1 and 29999.'
+}
+$revision = if ($stage -eq 'beta') { $sequence } elseif ($stage -eq 'rc') { 30000 + $sequence } else { 65535 }
+$winFileVersion = ($parts + @($revision)) -join '.'
+foreach ($name in @('VERSION.txt','README.md','LICENSE')) {
     Copy-Item -LiteralPath (Join-Path $repo $name) -Destination $payload -Force
 }
 Copy-Item -Path (Join-Path $repo 'src\*.ps1') -Destination (Join-Path $payload 'src') -Force

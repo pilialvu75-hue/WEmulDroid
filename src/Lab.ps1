@@ -10,6 +10,7 @@ Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 . (Join-Path $PSScriptRoot 'AdbProcess.ps1')
+. (Join-Path $PSScriptRoot 'GuestControls.ps1')
 . (Join-Path $PSScriptRoot 'ApkInstall.ps1')
 . (Join-Path $PSScriptRoot 'WindowMode.ps1')
 . (Join-Path $PSScriptRoot 'Snapshots.ps1')
@@ -204,6 +205,11 @@ $btnSetup = New-LabButton '1. Installa strumenti' 20 100
 $btnStart = New-LabButton '2. Avvia Android' 213 100
 $btnRefresh = New-LabButton '3. Aggiorna elenco' 406 100
 $btnStop = New-LabButton 'Arresta Android' 599 100
+$btnHome = New-LabButton 'Home Android' 20 162
+$btnBack = New-LabButton 'Indietro' 213 162
+$btnPcKeyboard = New-LabButton 'Tastiera PC' 406 162
+$btnColdBoot = New-LabButton 'Avvio pulito' 599 162
+$script:PcKeyboardMode = $false
 
 $btnInstall = New-LabButton 'Installa APK' 20 162
 $btnMeasure = New-LabButton 'Misura risorse' 213 162
@@ -479,6 +485,55 @@ $btnCapture.Add_Click({
     } catch { Show-Error $_.Exception.Message }
 })
 
+$btnHome.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        [void](Invoke-WEmulDroidGuestControl -Adb $script:Adb -Serial $serial -Action home)
+        Write-Log (T 'homeDone')
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnBack.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        [void](Invoke-WEmulDroidGuestControl -Adb $script:Adb -Serial $serial -Action back)
+        Write-Log (T 'backDone')
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnPcKeyboard.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        if (-not $script:PcKeyboardMode) {
+            $rebootNeeded = Enable-WEmulDroidPhysicalKeyboard -AvdName $script:AvdName
+            [void](Invoke-WEmulDroidGuestControl -Adb $script:Adb -Serial $serial -Action 'keyboard-pc')
+            $script:PcKeyboardMode = $true
+            $btnPcKeyboard.Text = (T 'keyboardAndroid')
+            Write-Log (T 'keyboardPcDone')
+            if ($rebootNeeded) {
+                [System.Windows.Forms.MessageBox]::Show((T 'keyboardRestart'), (T 'keyboardPc'), 'OK', 'Information') | Out-Null
+            }
+        } else {
+            [void](Invoke-WEmulDroidGuestControl -Adb $script:Adb -Serial $serial -Action 'keyboard-android')
+            $script:PcKeyboardMode = $false
+            $btnPcKeyboard.Text = (T 'keyboardPc')
+            Write-Log (T 'keyboardAndroidDone')
+        }
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnColdBoot.Add_Click({
+    try {
+        Assert-ToolsInstalled
+        if (Get-LabSerial) { throw (T 'coldBootStopFirst') }
+        $question = (T 'coldBootConfirm')
+        if ([System.Windows.Forms.MessageBox]::Show($question, (T 'coldBoot'), 'YesNo', 'Question') -ne 'Yes') { return }
+        $startup = Start-WEmulDroidQuietEmulator -EmulatorExe $script:Emulator -AvdName $script:AvdName -ReportsRoot $script:ReportsRoot -ColdBoot
+        Write-Log ((T 'coldBootStarted') + ' ' + $startup.StdErrLog)
+        $form.WindowState = [System.Windows.Forms.FormWindowState]::Minimized
+    } catch { Show-Error $_.Exception.Message }
+})
+
 $btnTouchHelp.Add_Click({
     [System.Windows.Forms.MessageBox]::Show(
         (T 'touchHelpText'), (T 'touchHelpTitle'),
@@ -517,7 +572,8 @@ $btnStart.Add_Click({
         if ($avds -notmatch ('(?m)^' + [regex]::Escape($script:AvdName) + '\s*$')) {
             throw 'Dispositivo virtuale non presente. Completa prima il comando Installa strumenti.'
         }
-        Start-Process -FilePath $script:Emulator -ArgumentList @('-avd', $script:AvdName, '-gpu', 'auto')
+        $startup = Start-WEmulDroidQuietEmulator -EmulatorExe $script:Emulator -AvdName $script:AvdName -ReportsRoot $script:ReportsRoot
+        Write-Log ((T 'emulatorLogSaved') + ' ' + $startup.StdErrLog)
         Write-Log 'Avvio Android richiesto. WEmulDroid passa nella barra delle applicazioni; puoi riaprirlo quando vuoi.'
         $form.WindowState = [System.Windows.Forms.FormWindowState]::Minimized
     } catch { Show-Error $_.Exception.Message }
@@ -617,6 +673,10 @@ function Update-WEmulDroidLanguage {
     $btnStart.Text = (T 'start')
     $btnRefresh.Text = (T 'refresh')
     $btnStop.Text = (T 'stop')
+    $btnHome.Text = (T 'home')
+    $btnBack.Text = (T 'back')
+    $btnPcKeyboard.Text = (T $(if ($script:PcKeyboardMode) { 'keyboardAndroid' } else { 'keyboardPc' }))
+    $btnColdBoot.Text = (T 'coldBoot')
     $btnInstall.Text = (T 'install')
     $btnMeasure.Text = (T 'measure')
     $btnReports.Text = (T 'reports')

@@ -207,9 +207,10 @@ $btnRefresh = New-LabButton '3. Aggiorna elenco' 406 100
 $btnStop = New-LabButton 'Arresta Android' 599 100
 $btnHome = New-LabButton 'Home Android' 20 162
 $btnBack = New-LabButton 'Indietro' 213 162
-$btnPcKeyboard = New-LabButton 'Tastiera PC' 406 162
+$btnPcKeyboard = New-LabButton 'Tastiera PC + Android' 406 162
 $btnColdBoot = New-LabButton 'Avvio pulito' 599 162
-$script:PcKeyboardMode = $false
+$btnToggleSoftKeyboard = New-LabButton 'Nascondi tastiera Android' 213 485
+$script:SoftKeyboardHidden = $false
 
 $btnInstall = New-LabButton 'Installa APK' 20 162
 $btnMeasure = New-LabButton 'Misura risorse' 213 162
@@ -547,22 +548,40 @@ $btnBack.Add_Click({
 
 $btnPcKeyboard.Add_Click({
     try {
+        # SAFETY: Never disable Android's on-screen keyboard simply because
+        # hardware input is enabled. The user must always be able to sign in
+        # without needing an ADB text-injection command.
         $serial = Require-RunningDevice
-        if (-not $script:PcKeyboardMode) {
-            $rebootNeeded = Enable-WEmulDroidPhysicalKeyboard -AvdName $script:AvdName
-            [void](Invoke-WEmulDroidGuestControl -Adb $script:Adb -Serial $serial -Action 'keyboard-pc')
-            $script:PcKeyboardMode = $true
-            $btnPcKeyboard.Text = (T 'keyboardAndroid')
-            Write-Log (T 'keyboardPcDone')
-            if ($rebootNeeded) {
-                [System.Windows.Forms.MessageBox]::Show((T 'keyboardRestart'), (T 'keyboardPc'), 'OK', 'Information') | Out-Null
-            }
-        } else {
-            [void](Invoke-WEmulDroidGuestControl -Adb $script:Adb -Serial $serial -Action 'keyboard-android')
-            $script:PcKeyboardMode = $false
-            $btnPcKeyboard.Text = (T 'keyboardPc')
-            Write-Log (T 'keyboardAndroidDone')
+        $restartNeeded = Enable-WEmulDroidPhysicalKeyboard -AvdName $script:AvdName
+        [void](Invoke-WEmulDroidGuestControl -Adb $script:Adb -Serial $serial -Action 'keyboard-android')
+        $script:SoftKeyboardHidden = $false
+        $btnToggleSoftKeyboard.Text = (T 'keyboardHideSoft')
+        Write-Log (T 'keyboardBothDone')
+        if ($restartNeeded) {
+            [System.Windows.Forms.MessageBox]::Show(
+                (T 'keyboardRestart'), (T 'keyboardPcBoth'), 'OK', 'Information') | Out-Null
         }
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnToggleSoftKeyboard.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        if ($script:SoftKeyboardHidden) {
+            [void](Invoke-WEmulDroidGuestControl -Adb $script:Adb -Serial $serial -Action 'keyboard-android')
+            $script:SoftKeyboardHidden = $false
+            Write-Log (T 'keyboardAndroidDone')
+        } else {
+            $question = (T 'keyboardHideConfirm')
+            if ([System.Windows.Forms.MessageBox]::Show($question, (T 'keyboardHideSoft'),
+                    'YesNo','Question') -ne 'Yes') { return }
+            [void](Invoke-WEmulDroidGuestControl -Adb $script:Adb -Serial $serial -Action 'keyboard-pc')
+            $script:SoftKeyboardHidden = $true
+            Write-Log (T 'keyboardSoftHidden')
+        }
+        $btnToggleSoftKeyboard.Text = (T $(if ($script:SoftKeyboardHidden) {
+            'keyboardShowSoft'
+        } else { 'keyboardHideSoft' }))
     } catch { Show-Error $_.Exception.Message }
 })
 
@@ -723,7 +742,8 @@ function Update-WEmulDroidLanguage {
     $btnStop.Text = (T 'stop')
     $btnHome.Text = (T 'home')
     $btnBack.Text = (T 'back')
-    $btnPcKeyboard.Text = (T $(if ($script:PcKeyboardMode) { 'keyboardAndroid' } else { 'keyboardPc' }))
+    $btnPcKeyboard.Text = (T 'keyboardPcBoth')
+    $btnToggleSoftKeyboard.Text = (T $(if ($script:SoftKeyboardHidden) { 'keyboardShowSoft' } else { 'keyboardHideSoft' }))
     $btnColdBoot.Text = (T 'coldBoot')
     $btnInstall.Text = (T 'install')
     $btnMeasure.Text = (T 'measure')

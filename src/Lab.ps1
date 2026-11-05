@@ -425,7 +425,19 @@ $btnCenter.Add_Click({
 $btnFullscreen.Add_Click({
     try {
         $serial = Require-RunningDevice
-        # Il nome AVD/seriale viene verificato prima di intervenire sulla finestra.
+        # On first fullscreen entry, ensure a landscape tablet actually has
+        # a matching guest aspect ratio, otherwise Qt letterboxes a tall
+        # portrait framebuffer in a widescreen host window.
+        if (-not $script:FullscreenWindowState -and
+            $script:ScreenCombo.SelectedIndex -ge 2) {
+            $working = [System.Windows.Forms.Screen]::FromControl($form).WorkingArea
+            $profile = Get-WEmulDroidScreenProfile -Index $script:ScreenCombo.SelectedIndex -MonitorArea $working
+            foreach ($command in @(Get-WEmulDroidScreenCommands -Profile $profile)) {
+                [void](Invoke-DeviceCommand $serial $command.Arguments $command.Label)
+            }
+            Write-Log ((T 'screenProfileApplied') + ' ' + $profile.Width + 'x' + $profile.Height)
+        }
+        # Only the exact selected AVD's Qt emulator window is modified.
         $msg = Set-EmulatorWindowFullscreen $script:AvdName
         Write-Log $msg
         if ($script:FullscreenWindowState) {

@@ -254,6 +254,7 @@ $btnFullscreen = New-LabButton 'Fullscreen' 406 320
 $btnFullscreen.Tag = 'smart'
 $btnCenter = New-LabButton 'Centra Android' 20 485
 $btnFit = New-LabButton 'Adatta finestra al monitor' 406 485
+$btnGamesMode = New-LabButton 'Compatibilita giochi' 20 535
 $btnApkFolder = New-LabButton 'APK da cartella' 599 320
 $btnApkLink = New-LabButton 'APK da link HTTPS' 20 373
 $btnSettings = New-LabButton 'Impostazioni' 599 373
@@ -552,6 +553,29 @@ $btnScreen.Add_Click({
     } catch { Show-Error $_.Exception.Message }
 })
 
+$btnGamesMode.Add_Click({
+    try {
+        # Let games choose their native portrait/landscape orientation.
+        # This never wipes AVD data, installed applications, or accounts.
+        $serial = Require-RunningDevice
+        $confirm = [System.Windows.Forms.MessageBox]::Show(
+            (T 'gamesModeConfirm'), (T 'gamesMode'), 'YesNo', 'Question')
+        if ($confirm -ne [System.Windows.Forms.DialogResult]::Yes) { return }
+        [void](Invoke-DeviceCommand $serial @('shell','wm','user-rotation','free') 'Rotazione automatica giochi')
+        [void](Invoke-DeviceCommand $serial @('shell','wm','size','reset') 'Risoluzione predefinita giochi')
+        [void](Invoke-DeviceCommand $serial @('shell','wm','density','reset') 'Densita predefinita giochi')
+        if ($script:FullscreenWindowState) {
+            [void](Restore-EmulatorWindow)
+            $btnFullscreen.Text = (T 'fullscreen')
+        }
+        $script:ScreenCombo.SelectedIndex = 0
+        $area = [System.Windows.Forms.Screen]::FromControl($form).WorkingArea
+        $profile = Get-WEmulDroidScreenProfile -Index 0 -MonitorArea $area
+        [void](Set-WEmulDroidWindowFitted -AvdName $script:AvdName -GuestAspect ([double]$profile.Width / $profile.Height) -OwnerForm $form)
+        Write-Log (T 'gamesModeDone')
+    } catch { Show-Error $_.Exception.Message }
+})
+
 $btnScreenReset.Add_Click({
     try {
         $serial = Require-RunningDevice
@@ -836,6 +860,7 @@ function Update-WEmulDroidLanguage {
     $btnFullscreen.Text = (T $(if ($script:FullscreenWindowState) { 'exitFullscreen' } else { 'fullscreen' }))
     $btnCenter.Text = (T 'centerAndroid')
     $btnFit.Text = (T 'screenFitWindow')
+    $btnGamesMode.Text = (T 'gamesMode')
     $btnApkFolder.Text = (T 'folder')
     $btnApkLink.Text = (T 'link')
     $btnSplitTouch.Text = (T 'splitTouch')

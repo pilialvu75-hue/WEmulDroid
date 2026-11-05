@@ -67,6 +67,35 @@ function Collect-WEmulDroidDiagnostics {
         $results.Add('ERROR logcat: ' + $_.Exception.Message)
     }
 
+    # Native Android crash-buffer only (bounded). A short ordinary logcat
+    # tail might miss the fatal exception when an app repeatedly restarts.
+    # Do not upload, filter by package automatically, or collect full history.
+    try {
+        $crashes = (& $Adb -s $Serial logcat -b crash -d -t 200 2>&1 | Out-String)
+        if ($LASTEXITCODE -ne 0) { throw 'Crash buffer not available.' }
+        [IO.File]::WriteAllText((Join-Path $outFolder 'logcat-crashes.txt'),
+            $crashes, (New-Object Text.UTF8Encoding($false)))
+    } catch {
+        $failures++
+        $results.Add('ERROR crash buffer: ' + $_.Exception.Message)
+    }
+
+    # Record window rotation and rendering backend with read-only commands.
+    foreach ($check in @(
+        @{Name='Rotation state';Args=@('shell','wm','user-rotation')},
+        @{Name='EGL renderer';Args=@('shell','getprop','ro.hardware.egl')}
+    )) {
+        try {
+            $output = (& $Adb -s $Serial @($check.Args) 2>&1 | Out-String).Trim()
+            if ($LASTEXITCODE -ne 0) { throw ('ADB exit code ' + $LASTEXITCODE) }
+            $results.Add('== ' + $check.Name + ' ==')
+            $results.Add($output)
+        } catch {
+            $failures++
+            $results.Add('ERROR ' + $check.Name + ': ' + $_.Exception.Message)
+        }
+    }
+
     # Safe binary screenshot via screencap + adb pull rather than PowerShell stdout redirection.
     $remote = '/sdcard/Download/wemuldroid-diagnostic.png'
     $imagePath = Join-Path $outFolder 'screenshot.png'

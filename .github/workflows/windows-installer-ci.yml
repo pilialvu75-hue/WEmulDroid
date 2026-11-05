@@ -34,6 +34,7 @@ jobs:
           .\tests\GuestControls.Tests.ps1
           .\tests\SetupAndKeyboard.Tests.ps1
           .\tests\WindowCenter.Tests.ps1
+          .\tests\ScreenProfiles.Tests.ps1
       - name: Install Inno Setup compiler on build runner if absent
         shell: powershell
         run: |
@@ -69,7 +70,7 @@ jobs:
           foreach ($attempt in 1..2) {
             $process = Start-Process -FilePath $setup -ArgumentList $arguments -Wait -PassThru
             if ($process.ExitCode -ne 0) { throw "Installer failure: $($process.ExitCode)" }
-            foreach ($entry in @('WEmulDroid.exe','WEmulDroid.ico','VERSION.txt','src\Lab.ps1','src\InstallerUpdates.ps1','src\AdbProcess.ps1','src\Layout.ps1','src\GuestControls.ps1')) {
+            foreach ($entry in @('WEmulDroid.exe','WEmulDroid.ico','VERSION.txt','src\Lab.ps1','src\InstallerUpdates.ps1','src\AdbProcess.ps1','src\Layout.ps1','src\GuestControls.ps1','src\ScreenProfiles.ps1')) {
               if (-not (Test-Path (Join-Path $app $entry))) { throw "Missing installed file: $entry" }
             }
             if (-not (Test-Path (Join-Path $sdk 'retain-sdk.txt'))) { throw 'Android SDK data was overwritten' }

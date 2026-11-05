@@ -293,12 +293,21 @@ function Start-WEmulDroidAutoCenter {
             # Qt may resize/reposition the window during the first few seconds.
             if ($script:CenterTimerTicks -lt 3) { return }
             try {
-                if (Set-WEmulDroidWindowCentered -AvdName $script:AvdName -OwnerForm $form) {
+                # Qt can reposition/resize the virtual device AGAIN while
+                # loading Android. Recenter periodically until boot stabilizes.
+                # Do not touch the emulator when the user chose fullscreen.
+                if (($script:CenterTimerTicks % 4) -eq 3 -and
+                    -not $script:FullscreenWindowState) {
+                    if (Set-WEmulDroidWindowCentered -AvdName $script:AvdName) {
+                        if (-not $script:CenterSucceeded) {
+                            Write-Log (T 'centered')
+                            $script:CenterSucceeded = $true
+                        }
+                    }
+                }
+                if ($script:CenterTimerTicks -ge 33) {
                     $script:CenterTimer.Stop()
-                    Write-Log (T 'centered')
-                } elseif ($script:CenterTimerTicks -ge 45) {
-                    $script:CenterTimer.Stop()
-                    Write-Log (T 'centerNotFound')
+                    if (-not $script:CenterSucceeded) { Write-Log (T 'centerNotFound') }
                 }
             } catch {
                 $script:CenterTimer.Stop()
@@ -308,6 +317,7 @@ function Start-WEmulDroidAutoCenter {
     }
     $script:CenterTimer.Stop()
     $script:CenterTimerTicks = 0
+    $script:CenterSucceeded = $false
     $script:CenterTimer.Start()
 }
 

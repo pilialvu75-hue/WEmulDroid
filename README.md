@@ -19,6 +19,8 @@ Per non rallentare il progetto, abbiamo predisposto un **installer unico per Win
 
 [Releases WEmulDroid (installer beta)](https://github.com/pilialvu75-hue/WEmulDroid/releases)
 
+**Percorso di firma attendibile:** [opzioni, requisiti SignPath Foundation e condizioni per una nuova release](docs/CODE_SIGNING_OPTIONS.md). La candidatura e la firma non sono ancora state effettuate; non disabilitare Smart App Control per utilizzare gli installer non firmati.
+
 ## Importante: distribuzione ufficiale
 
 **La precedente distribuzione ZIP con file .cmd è archiviata, non è più la modalità prevista per nuove installazioni.**

@@ -1,64 +1,43 @@
-# WEmulDroid — Aggiornamenti da Impostazioni
+# WEmulDroid — Aggiornamenti Windows (stato: 6 novembre 2026)
 
-## Riparazione una tantum della beta.1: non trova le versioni beta.2 e beta.3
+## Procedura attuale
 
-**Problema reale osservato sull'ASUS il 4 novembre 2026:** con `Versione installata: v0.8.0-beta.1` e `Includi versioni beta` già selezionato, WEmulDroid mostra «Non ci sono versioni più recenti», anche se la release ufficiale esiste.
+WEmulDroid e un'app Windows distribuita tramite installer Inno Setup, non piu tramite ZIP con launcher CMD. La procedura corrente e **Impostazioni > Aggiornamenti > Includi beta (facoltativo) > Controlla > Scarica > Installa**. Controllo e download avvengono soltanto dopo un'interazione dell'utente e l'installazione richiede un'ulteriore conferma. L'app scarica l'installer e il suo checksum dalla sezione release ufficiali GitHub; la verifica SHA-256 non equivale a una firma digitale riconosciuta da Windows.
 
-**Causa tecnica:** il rilevamento delle release non gestiva in modo affidabile l'array JSON ricevuto da GitHub sotto Windows PowerShell 5.1. Corretto in `v0.8.0-beta.3`. Verifica CI sia in PowerShell 7 sia in Windows PowerShell 5.1: PASS. Il passaggio di aggiornamento end-to-end sul vero ASUS resta da confermare.
+L'installazione conserva i dati persistenti fuori dal programma: SDK Android, AVD, applicazioni, dati Play Store, configurazioni e report. Non disinstallare o cancellare queste cartelle per risolvere un problema dell'updater.
 
-### Procedura minima, senza reinstallare Android
+## Collaudo ASUS: beta.6 -> beta.7
 
-1. Scarica la [beta.3 ufficiale](https://github.com/pilialvu75-hue/WEmulDroid/releases/tag/v0.8.0-beta.3) o lo ZIP diretto:
-   `https://github.com/pilialvu75-hue/WEmulDroid/releases/download/v0.8.0-beta.3/WEmulDroid-v0.8.0-beta.3.zip`
-2. Verifica provenienza della release e, se presente, usa **Proprietà → Annulla blocco** sullo ZIP, poi **Estrai tutto**.
-3. **Chiudi WEmulDroid.** Apri la cartella estratta della beta.3 e poi la sottocartella **src**.
-4. Copia **solo `Updates.ps1`**.
-5. Apri la cartella **WEmulDroid v0.8.0-beta.1** che stavi già utilizzando, entra nella sottocartella **src** e incolla `Updates.ps1`, confermando **Sostituisci il file**. Non modificare `VERSION.txt` o altri file.
-6. Riapri WEmulDroid dalla **vecchia cartella beta.1** e scegli **Impostazioni → Aggiornamenti → Includi versioni beta → Controlla aggiornamenti**. Ora deve comparire `v0.8.0-beta.3`.
-7. Conferma download e installazione tramite l'app. La procedura prevista crea una copia dei file precedenti e ripristina l'interfaccia dopo averli aggiornati. Se compare un errore, conserva il messaggio e il log; non cancellare cartelle.
+Il 5 novembre 2026, ore 23:11:34, Windows CodeIntegrity/Operational ha registrato eventi **3077** e **3033** che indicano un blocco sul file di staging `%LOCALAPPDATA%\WEmulDroid\Updates\installer-pending\WEmulDroid-Setup-v0.9.0-beta.7.exe`, con processo PowerShell. Il file non rispettava i requisiti richiesti dai criteri di firma/integrita del codice Windows.
 
-Questo ripara soltanto il programma che legge le release e poi consente di **verificare l'aggiornamento interno**. **Android SDK, Java, AVD, APK installate e report non devono essere reinstallati o cancellati.**
+Questo prova il blocco della policy e la presenza del file, **non** dimostra da solo quale istruzione PowerShell abbia scatenato l'evento e non prova che il file possa essere eseguito con successo da un percorso diverso. La beta.7 pubblicata e non firmata. Non disattivare Smart App Control, WDAC, antivirus o controlli di sicurezza per installarla.
 
-**Limite inevitabile:** quando il rilevatore degli aggiornamenti già installato non funziona, la prima correzione necessita di un intervento locale una volta sola. Le versioni successive devono tornare ad aggiornarsi dal menu interno. Se la beta.3 non viene rilevata dopo aver sostituito `src\Updates.ps1`, non proseguire con sostituzioni casuali: riportare il messaggio.
+## Correzioni gia sul ramo main, non presenti nella beta.6 installata
 
+- `1606f868`: messaggi distinti per ricerca, download e installazione quando Windows segnala un blocco.
+- `9f9cf532`: nel canale *development*, dopo il controllo SHA-256, non viene piu invocato `Get-AuthenticodeSignature` sull'installer unsigned; il controllo firma continua nel canale *production*.
+- `e9132aec`: test di regressione che simula l'eccezione CodeIntegrity durante il controllo Authenticode, verifica il rifiuto per hash modificato e preserva il gate delle firme in produzione.
+- `1683d4a2`: test integrato nel workflow Windows; CI PASS al run https://github.com/pilialvu75-hue/WEmulDroid/actions/runs/42131613134.
 
-## Primo utilizzo
-La prima distribuzione ufficiale con menu aggiornamenti è [WEmulDroid v0.8.0-beta.1](https://github.com/pilialvu75-hue/WEmulDroid/releases/tag/v0.8.0-beta.1).
+La correzione **non** e una prova di compatibilita con Smart App Control sull'ASUS. Il rilascio gia pubblicato beta.7 non e stato modificato e non va sovrascritto. Non pubblicare una nuova beta solo perche il test CI e verde.
 
-Il file ZIP va **scaricato ed estratto una sola volta** nella cartella scelta sul PC. Questo è il bootstrap iniziale; WEmulDroid non è un APK e non utilizza il PackageInstaller Android.
+## Diagnosi in caso di nuovo errore
 
-Link diretto:
-https://github.com/pilialvu75-hue/WEmulDroid/releases/download/v0.8.0-beta.1/WEmulDroid-v0.8.0-beta.1.zip
+1. Leggere la fase mostrata nell'app (*Controlla*, *Scarica* o *Installa*); non dedurre la fase soltanto dall'evento Windows.
+2. Controllare in sola lettura il Visualizzatore eventi > Registri applicazioni e servizi > Microsoft > Windows > CodeIntegrity > Operational. Annotare orario, ID evento e nome del file senza copiare informazioni private non necessarie.
+3. Distinguere *download fallito*, *verifica SHA-256 fallita*, *verifica firma produzione fallita*, *blocco CodeIntegrity* e *Start-Process negato*. Un SHA-256 corretto non certifica l'idoneita all'esecuzione.
+4. Se il blocco permane, non aggirare la policy: utilizzare una filiera attendibile di firma/distribuzione e validare l'installer su un vero dispositivo con protezioni attive.
 
-## Da questo momento: Impostazioni → Aggiornamenti
+## Test obbligatori prima di dichiarare risolto
 
-1. Avvia **Avvia-Android.cmd** o **Avvia-PlayStore.cmd**.
-2. Premi **Impostazioni** e apri **Aggiornamenti**.
-3. Scegli il canale: **Stabile** (predefinito) oppure abilita le **Beta**.
-4. Premi **Controlla aggiornamenti**. Solo a questo punto avviene la chiamata GitHub.
-5. Quando trovi una versione più recente, premi **Scarica aggiornamento** e conferma.
-6. WEmulDroid verifica l'hash SHA-256 del pacchetto ufficiale.
-7. Premi **Installa aggiornamento** e conferma: la GUI si chiude, un processo separato ne attende l'uscita, salva copie dei file precedenti, installa la nuova versione e prova a riavviare l'app.
-8. In caso di errore viene tentato il ripristino dei file precedenti. Consultare il log locale.
+- [x] Test CI Windows dell'updater e della conservazione dati su runner.
+- [x] Test con errore simulato di Authenticode nel canale sviluppo e verifica della policy in produzione.
+- [ ] Installazione e aggiornamento sull'ASUS con policy Windows attiva.
+- [ ] Conferma SDK, AVD, Play Store e APK preservati dopo aggiornamento.
+- [ ] Test fullscreen, rotazione, giochi e misurazione RAM/CPU/GPU sull'ASUS.
 
-Il download riguarda soltanto i file di **WEmulDroid**, non Android SDK, immagini di sistema o app installate nell'emulatore. I profili Android, le impostazioni di lingua, i rapporti e i dispositivi virtuali sono salvati fuori dal repository e **non vengono cancellati**.
+Documenti di riferimento: [Architettura installer](INSTALLER_ARCHITECTURE.md), [opzioni firma](CODE_SIGNING_OPTIONS.md), [issue P0](https://github.com/pilialvu75-hue/WEmulDroid/issues/5).
 
-## Indirizzi di controllo
+## Storico: vecchie beta ZIP
 
-- Repository consentito: **pilialvu75-hue/WEmulDroid**.
-- Le release devono contenere due asset coerenti: `WEmulDroid-vX.Y.Z[-beta.N].zip` e il relativo `.sha256`.
-- Il programma rifiuta versioni inferiori e URL che non appartengono al percorso release del repository.
-- I pacchetti sono sorgenti PowerShell/Windows e non eseguibili firmati digitalmente: SHA-256 dimostra che i byte scaricati corrispondono alla release GitHub, **non** che Microsoft abbia firmato il codice.
-- La distribuzione GitHub è creata da un workflow dopo test PowerShell leggeri; non comprende componenti Google né APK esterni.
-
-## Collaudo da eseguire sull'ASUS
-
-- [x] Release ufficiale v0.8.0-beta.1, ZIP e checksum pubblicati.
-- [x] Test di parsing PowerShell e confronti versioni stabile/beta superati in CI.
-- [ ] Avvio reale dell'interfaccia su Windows 11 e apertura del sottomenu.
-- [ ] Prova versione più recente (beta o stabile), download, verifica e installazione.
-- [ ] Conferma del riavvio dell'app e della conservazione di SDK, AVD, report e impostazioni.
-- [ ] Simulazione interruzione download e rollback da copia di backup.
-- [ ] Test con directory contenenti spazi, antivirus e account standard Windows.
-
-**Stato attuale:** implementato e verificato staticamente, NON ancora collaudato end-to-end su un PC reale.
+Le istruzioni per `v0.8.0-beta.1` e `beta.3` basate su file `.cmd` e sostituzione manuale di `Updates.ps1` sono **obsolete** per le versioni installer `v0.9.x` e **non devono essere utilizzate** sulla beta.6 dell'ASUS. Non sostituire manualmente gli script dell'installazione corrente.

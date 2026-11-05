@@ -138,3 +138,57 @@ function Set-WEmulDroidWindowCentered {
     }
     return $true
 }
+
+
+# Resize a normal Qt emulator window to use the monitor without
+# stretching pixels or modifying another application's window.
+function Get-WEmulDroidFittedBounds {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][System.Drawing.Rectangle]$WorkingArea,
+        [Parameter(Mandatory)][ValidateRange(0.45,3.0)][double]$GuestAspect
+    )
+    if ($WorkingArea.Width -lt 640 -or $WorkingArea.Height -lt 480) {
+        throw 'Monitor area too small to fit Android.'
+    }
+    # Approximate Windows title bar / emulator side-toolbar allowances.
+    # Qt retains the device's own aspect ratio when the outer window resizes.
+    $toolbar = 66
+    $chrome = 46
+    $maxGuestWidth = [Math]::Max(320, $WorkingArea.Width - $toolbar - 36)
+    $maxGuestHeight = [Math]::Max(300, $WorkingArea.Height - $chrome - 28)
+    $guestWidth = [int][Math]::Floor([Math]::Min($maxGuestWidth, $maxGuestHeight * $GuestAspect))
+    $guestHeight = [int][Math]::Floor($guestWidth / $GuestAspect)
+    $outerWidth = $guestWidth + $toolbar
+    $outerHeight = $guestHeight + $chrome
+    $left = $WorkingArea.Left + [int][Math]::Floor(($WorkingArea.Width - $outerWidth) / 2)
+    $top = $WorkingArea.Top + [int][Math]::Floor(($WorkingArea.Height - $outerHeight) / 2)
+    return [System.Drawing.Rectangle]::new($left,$top,$outerWidth,$outerHeight)
+}
+
+function Set-WEmulDroidWindowFitted {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$AvdName,
+        [Parameter(Mandatory)][ValidateRange(0.45,3.0)][double]$GuestAspect,
+        [System.Windows.Forms.Form]$OwnerForm
+    )
+    if ($script:FullscreenWindowState) { return $false }
+    $matches = @([WEmulDroidNativeWindow]::FindEmulatorWindow($AvdName))
+    if ($matches.Count -eq 0) { return $false }
+    if ($matches.Count -ne 1) {
+        throw 'Ambiguous Android Emulator window. Other windows were not modified.'
+    }
+    $hwnd = $matches[0]
+    $screen = if ($OwnerForm) {
+        [System.Windows.Forms.Screen]::FromControl($OwnerForm)
+    } else {
+        [System.Windows.Forms.Screen]::FromHandle($hwnd)
+    }
+    $target = Get-WEmulDroidFittedBounds -WorkingArea $screen.WorkingArea -GuestAspect $GuestAspect
+    if (-not [WEmulDroidNativeWindow]::SetWindowPos($hwnd,[IntPtr]::Zero,
+        $target.Left,$target.Top,$target.Width,$target.Height,0x0014)) {
+        throw 'Qt Android window could not be resized. No AVD data was changed.'
+    }
+    return $true
+}

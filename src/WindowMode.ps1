@@ -80,3 +80,61 @@ function Restore-EmulatorWindow {
     }
     return 'Finestra Android ripristinata al formato originale.'
 }
+
+
+# Center the selected emulator inside the usable monitor area. This calculation
+# is pure so CI can test off-screen/oversized windows without Android hardware.
+function Get-WEmulDroidCenteredBounds {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][System.Drawing.Rectangle]$WindowBounds,
+        [Parameter(Mandatory)][System.Drawing.Rectangle]$WorkingArea
+    )
+    if ($WorkingArea.Width -lt 240 -or $WorkingArea.Height -lt 240) {
+        throw 'The usable monitor area is too small for Android.'
+    }
+    # Reserve margin so window title and close controls remain reachable.
+    $margin = 12
+    $maxWidth = $WorkingArea.Width - ($margin * 2)
+    $maxHeight = $WorkingArea.Height - ($margin * 2)
+    $width = [Math]::Min([Math]::Max(1, $WindowBounds.Width), $maxWidth)
+    $height = [Math]::Min([Math]::Max(1, $WindowBounds.Height), $maxHeight)
+    $left = $WorkingArea.Left + [int][Math]::Floor(($WorkingArea.Width - $width) / 2)
+    $top = $WorkingArea.Top + [int][Math]::Floor(($WorkingArea.Height - $height) / 2)
+    return [System.Drawing.Rectangle]::new($left, $top, $width, $height)
+}
+
+function Set-WEmulDroidWindowCentered {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][string]$AvdName,
+        [System.Windows.Forms.Form]$OwnerForm
+    )
+    # Never change another app, another emulator profile, or fullscreen mode.
+    if ($script:FullscreenWindowState) { return $false }
+    $matches = @([WEmulDroidNativeWindow]::FindEmulatorWindow($AvdName))
+    if ($matches.Count -eq 0) { return $false }
+    if ($matches.Count -ne 1) {
+        throw 'Più finestre Android corrispondono al dispositivo selezionato. Nessuna finestra modificata.'
+    }
+    $handle = $matches[0]
+    $bounds = [WEmulDroidNativeWindow+Rect]::new()
+    if (-not [WEmulDroidNativeWindow]::GetWindowRect($handle, [ref]$bounds)) {
+        throw 'Impossibile leggere la posizione della finestra Android.'
+    }
+    $windowRectangle = [System.Drawing.Rectangle]::new(
+        $bounds.Left, $bounds.Top, $bounds.Right - $bounds.Left, $bounds.Bottom - $bounds.Top)
+    $screen = if ($OwnerForm) {
+        [System.Windows.Forms.Screen]::FromControl($OwnerForm)
+    } else {
+        [System.Windows.Forms.Screen]::FromHandle($handle)
+    }
+    $target = Get-WEmulDroidCenteredBounds -WindowBounds $windowRectangle -WorkingArea $screen.WorkingArea
+    # 0x0014 = SWP_NOZORDER | SWP_NOACTIVATE: do not steal focus or
+    # unexpectedly put this Android window above the user's other apps.
+    if (-not [WEmulDroidNativeWindow]::SetWindowPos($handle, [IntPtr]::Zero,
+            $target.Left, $target.Top, $target.Width, $target.Height, 0x0014)) {
+        throw 'Windows non ha consentito di centrare la finestra Android.'
+    }
+    return $true
+}

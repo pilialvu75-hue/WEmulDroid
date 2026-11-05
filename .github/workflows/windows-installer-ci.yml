@@ -60,6 +60,163 @@ jobs:
           $version = (Get-Content VERSION.txt -Raw).Trim()
           $setup = Join-Path (Resolve-Path '.\dist\payload\Output').Path ("WEmulDroid-Setup-$version.exe")
           if (-not (Test-Path -LiteralPath $setup)) { throw 'Setup.exe missing' }
+          # Release tags must map to accurate Windows setup file-version metadata.
+          $fileInfo = [Diagnostics.FileVersionInfo]::GetVersionInfo($setup)
+          if ($version -notmatch '^v([0-9]+)\.([0-9]+)\.([0-9]+)-beta\.([0-9]+)          if ((Get-AuthenticodeSignature -LiteralPath $setup).Status -eq 'Valid') {
+            throw 'Unsigned CI build unexpectedly carries a production signature'
+          }
+          $app = Join-Path $env:LOCALAPPDATA 'Programs\WEmulDroid'
+          $sdk = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk'
+          $reports = Join-Path $env:LOCALAPPDATA 'WEmulDroid\Reports'
+          New-Item -Path $sdk,$reports -ItemType Directory -Force | Out-Null
+          Set-Content -Path (Join-Path $sdk 'retain-sdk.txt') -Value 'preserve-sdk'
+          Set-Content -Path (Join-Path $reports 'retain-report.txt') -Value 'preserve-report'
+          $arguments = '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-'
+          foreach ($attempt in 1..2) {
+            $process = Start-Process -FilePath $setup -ArgumentList $arguments -Wait -PassThru
+            if ($process.ExitCode -ne 0) { throw "Installer failure: $($process.ExitCode)" }
+            foreach ($entry in @('WEmulDroid.exe','WEmulDroid.ico','VERSION.txt','src\Lab.ps1','src\InstallerUpdates.ps1','src\AdbProcess.ps1','src\Layout.ps1','src\GuestControls.ps1','src\ScreenProfiles.ps1')) {
+              if (-not (Test-Path (Join-Path $app $entry))) { throw "Missing installed file: $entry" }
+            }
+            if (-not (Test-Path (Join-Path $sdk 'retain-sdk.txt'))) { throw 'Android SDK data was overwritten' }
+          }
+          # Simulate a REAL newer installer from the same AppId. This changes
+          # VERSION.txt only inside the ephemeral GitHub Actions checkout.
+          # A genuine higher-version installer is created even when the source
+          # release is beta.2, beta.3, etc. Never downgrade or re-install same tag.
+          if ($version -notmatch '^(v[0-9]+\.[0-9]+\.[0-9]+-beta\.)([0-9]+)$') {
+            throw "Expected development beta version; got $version"
+          }
+          $newVersion = $Matches[1] + ([int]$Matches[2] + 1)
+          Set-Content -LiteralPath VERSION.txt -Value $newVersion -Encoding Ascii
+          .\installer\Build-Windows.ps1 -OutputRoot (Join-Path (Get-Location) 'dist-upgrade')
+          $newSetup=Join-Path (Resolve-Path '.\dist-upgrade\payload\Output').Path ("WEmulDroid-Setup-$newVersion.exe")
+          if (-not (Test-Path -LiteralPath $newSetup)) { throw 'Upgrade installer missing' }
+          $upgrade=Start-Process -FilePath $newSetup -ArgumentList $arguments -PassThru -Wait
+          if ($upgrade.ExitCode -ne 0) { throw "Installer upgrade failed: $($upgrade.ExitCode)" }
+          if ((Get-Content -LiteralPath (Join-Path $app 'VERSION.txt') -Raw).Trim() -ne $newVersion) {
+            throw 'Installer upgrade did not replace application version'
+          }
+          if (-not (Test-Path (Join-Path $sdk 'retain-sdk.txt')) -or
+              -not (Test-Path (Join-Path $reports 'retain-report.txt'))) {
+            throw 'Upgrade did not preserve Android runtime data'
+          }
+          # Developer channel is deliberately unsigned; official GitHub ZIP
+          # download hashes are rechecked before the setup can run.
+          $channel = (Get-Content -LiteralPath (Join-Path $app 'CHANNEL.txt') -Raw).Trim()
+          if ($channel -ne 'development') { throw "Unexpected installer update channel: $channel" }
+          . (Join-Path $app 'src\InstallerUpdates.ps1')
+          $testInstaller = Join-Path $env:TEMP 'WEmulDroid-Update-Trust-Smoke.exe'
+          Copy-Item -LiteralPath $setup -Destination $testInstaller -Force
+          try {
+            $goodHash=(Get-FileHash -LiteralPath $testInstaller -Algorithm SHA256).Hash
+            Set-Content -LiteralPath ($testInstaller + '.sha256') -Value "$goodHash  WEmulDroid-Update-Trust-Smoke.exe" -Encoding Ascii
+            [void](Assert-WEmulDroidInstallerSignature -Installer $testInstaller -InstalledLauncher (Join-Path $app 'WEmulDroid.exe'))
+            Add-Content -LiteralPath $testInstaller -Value 'corrupted' -Encoding Ascii
+            $rejected=$false
+            try {
+              [void](Assert-WEmulDroidInstallerSignature -Installer $testInstaller -InstalledLauncher (Join-Path $app 'WEmulDroid.exe'))
+            } catch { $rejected=$true }
+            if (-not $rejected) { throw 'Modified installer was not rejected by SHA-256 gate' }
+          } finally {
+            Remove-Item -LiteralPath $testInstaller,($testInstaller + '.sha256') -Force -ErrorAction SilentlyContinue
+          }
+          $desktop = [Environment]::GetFolderPath('Desktop')
+          $shortcut = Join-Path $desktop 'WEmulDroid.lnk'
+          if (-not (Test-Path $shortcut)) { throw 'WEmulDroid desktop icon is missing' }
+          $shell = New-Object -ComObject WScript.Shell
+          $link = $shell.CreateShortcut($shortcut)
+          if ($link.TargetPath -ine (Join-Path $app 'WEmulDroid.exe')) {
+            throw "Desktop shortcut has incorrect target: $($link.TargetPath)"
+          }
+          # Smoke the ACTUAL installed desktop launcher and verify that it
+          # starts a live PowerShell GUI process without any user settings.
+          $appLauncher = Join-Path $app 'WEmulDroid.exe'
+          $launcherProcess = Start-Process -FilePath $appLauncher -PassThru
+          try {
+            Start-Sleep -Seconds 4
+            $launcherProcess.Refresh()
+            if ($launcherProcess.HasExited) {
+              throw "Installed WEmulDroid launcher exited unexpectedly: $($launcherProcess.ExitCode)"
+            }
+            $powershellChild = @(Get-CimInstance Win32_Process -Filter "ParentProcessId=$($launcherProcess.Id)" |
+              Where-Object { $_.Name -ieq 'powershell.exe' })
+            if ($powershellChild.Count -lt 1) {
+              throw 'Installed launcher failed to open the PowerShell desktop GUI'
+            }
+            Write-Host 'Installed GUI launcher startup PASS'
+          } finally {
+            $childProcesses = @(Get-CimInstance Win32_Process -Filter "ParentProcessId=$($launcherProcess.Id)")
+            foreach ($child in $childProcesses) {
+              Stop-Process -Id $child.ProcessId -Force -ErrorAction SilentlyContinue
+            }
+            Stop-Process -Id $launcherProcess.Id -Force -ErrorAction SilentlyContinue
+          }
+          $uninstaller = Get-ChildItem -LiteralPath $app -Filter 'unins*.exe' |
+            Sort-Object Name | Select-Object -First 1
+          if (-not $uninstaller) { throw 'Uninstaller not registered' }
+          $proc = Start-Process -FilePath $uninstaller.FullName -ArgumentList $arguments -Wait -PassThru
+          if ($proc.ExitCode -ne 0) { throw "Uninstaller failure: $($proc.ExitCode)" }
+          if (-not (Test-Path (Join-Path $sdk 'retain-sdk.txt')) -or
+              -not (Test-Path (Join-Path $reports 'retain-report.txt'))) {
+            throw 'Uninstall deleted SDK/AVD-related data or reports'
+          }
+          Write-Host 'Installer smoke PASS: per-user install + real beta-to-beta upgrade + desktop icon + uninstall + preserved user data'
+      - name: Archive unsigned development installer (clearly labelled; manual consent)
+        uses: actions/upload-artifact@v4
+        with:
+          name: WEmulDroid-Windows-Development-Installer-Unsigned
+          path: |
+            dist/payload/Output/WEmulDroid-Setup-*.exe
+            dist/payload/Output/WEmulDroid-Setup-*.exe.sha256
+          retention-days: 7
+          if-no-files-found: error
+
+  publish-development:
+    if: github.event_name == 'push' && startsWith(github.event.head_commit.message, 'release-dev:')
+    needs: build-smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Download exactly the installer validated on Windows
+        uses: actions/download-artifact@v4
+        with:
+          name: WEmulDroid-Windows-Development-Installer-Unsigned
+          path: release
+      - name: Create clearly marked beta release after Windows tests PASS
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          VERSION="$(tr -d '\r\n' < VERSION.txt)"
+          [[ "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+-beta\.[0-9]+$ ]] || {
+            echo "::error::Development installers are only published on beta tags"
+            exit 1
+          }
+          EXE="release/WEmulDroid-Setup-$VERSION.exe"
+          HASH="$EXE.sha256"
+          test -s "$EXE"
+          test -s "$HASH"
+          (cd release && sha256sum --check "$(basename "$HASH")")
+          if gh release view "$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "::error::Release $VERSION already published, cannot overwrite"
+            exit 1
+          fi
+          gh release create "$VERSION" "$EXE" "$HASH" \
+            --repo "$GITHUB_REPOSITORY" --prerelease \
+            --title "WEmulDroid $VERSION — Windows development installer (unsigned)" \
+            --notes "Development build tested in Windows Actions: per-user install, in-place upgrade, desktop shortcut, uninstall preserving Android SDK and reports, ADB daemon startup handling and stable/beta version discovery. This EXE is NOT Authenticode signed. It may be blocked by Windows Smart App Control; never disable device protection to run it. User approval is required for installation and every update. This is not a public production release."
+) {
+            throw 'Unexpected development version format'
+          }
+          $expectedFileVersion = "$($Matches[1]).$($Matches[2]).$($Matches[3]).$($Matches[4])"
+          if ($fileInfo.FileVersion -ne $expectedFileVersion) {
+            throw "Installer Windows file version mismatch: $($fileInfo.FileVersion) != $expectedFileVersion"
+          }
           if ((Get-AuthenticodeSignature -LiteralPath $setup).Status -eq 'Valid') {
             throw 'Unsigned CI build unexpectedly carries a production signature'
           }

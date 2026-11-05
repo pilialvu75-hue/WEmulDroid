@@ -2,6 +2,25 @@
 # Download/check only after a user clicks; install only after a second confirmation.
 . (Join-Path $PSScriptRoot 'InstallerUpdates.ps1')
 
+# Report the Windows policy failure without implying a network or GitHub outage.
+# The phase is supplied by the UI action; no security policy is changed here.
+function Format-WEmulDroidUpdateError {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][ValidateSet('check','download','install')][string]$Phase,
+        [Parameter(Mandatory)][string]$Message
+    )
+    $phaseName = switch ($Phase) {
+        'check' { 'Ricerca aggiornamenti' }
+        'download' { 'Download/verifica aggiornamento' }
+        'install' { 'Avvio installer' }
+    }
+    if ($Message -match '(?i)(criterio di controllo dell.applicazione|application control policy|code integrity policy|enterprise signing level|app control policy|0x800711c7)') {
+        return "$phaseName - Blocco di sicurezza Windows (Smart App Control / Code Integrity). Il file potrebbe non soddisfare i requisiti di firma. Apri Visualizzatore eventi > Registri applicazioni e servizi > Microsoft > Windows > CodeIntegrity > Operational e controlla gli eventi 3077/3033 allo stesso orario. Non disattivare le protezioni Windows. Dettaglio: $Message"
+    }
+    return "$phaseName - $Message"
+}
+
 function Show-WEmulDroidUpdateSettings {
     [CmdletBinding()]
     param(
@@ -88,7 +107,7 @@ function Show-WEmulDroidUpdateSettings {
             $status.Text = if ($script:WEmulDroidUpdateCandidate) { (T 'updatesFound') + ' ' + $script:WEmulDroidUpdateCandidate.Tag }
                            else { T 'updatesNoNew' }
         } catch {
-            $status.Text = (T 'updatesError') + ' ' + $_.Exception.Message
+            $status.Text = (T 'updatesError') + ' ' + (Format-WEmulDroidUpdateError -Phase 'check' -Message $_.Exception.Message)
         } finally {
             $check.Enabled = $true
             $dialog.Cursor = [Windows.Forms.Cursors]::Default
@@ -108,7 +127,7 @@ function Show-WEmulDroidUpdateSettings {
             $apply.Enabled = $true
             $status.Text = (T 'updatesDownloaded') + [Environment]::NewLine + $script:WEmulDroidUpdatePending
         } catch {
-            $status.Text = (T 'updatesError') + ' ' + $_.Exception.Message
+            $status.Text = (T 'updatesError') + ' ' + (Format-WEmulDroidUpdateError -Phase 'download' -Message $_.Exception.Message)
             $download.Enabled = $true
         } finally { $dialog.Cursor = [Windows.Forms.Cursors]::Default }
     })
@@ -128,7 +147,7 @@ function Show-WEmulDroidUpdateSettings {
             $dialog.Close()
             $MainForm.Close()
         } catch {
-            $status.Text = (T 'updatesError') + ' ' + $_.Exception.Message
+            $status.Text = (T 'updatesError') + ' ' + (Format-WEmulDroidUpdateError -Phase 'install' -Message $_.Exception.Message)
         }
     })
 

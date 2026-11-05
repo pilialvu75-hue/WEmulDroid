@@ -27,7 +27,7 @@ function Initialize-WEmulDroidLayout {
     $btnPcKeyboard.SetBounds(486, 168, 218, 40)
     $btnColdBoot.SetBounds(719, 168, 219, 40)
 
-    $script:WorkTabs.SetBounds(20, 224, 918, 270)
+    $script:WorkTabs.SetBounds(20, 224, 918, 295)
     $script:WorkTabs.Anchor = [System.Windows.Forms.AnchorStyles]::Top -bor
         [System.Windows.Forms.AnchorStyles]::Left -bor
         [System.Windows.Forms.AnchorStyles]::Right
@@ -97,8 +97,8 @@ function Initialize-WEmulDroidLayout {
         $entry[0].SetBounds($entry[1], $entry[2], $entry[3], 42)
     }
 
-    $logLabel.SetBounds(22, 511, 880, 29)
-    $script:LogBox.SetBounds(20, 540, 918, 151)
+    $logLabel.SetBounds(22, 542, 880, 29)
+    $script:LogBox.SetBounds(20, 570, 918, 121)
     $script:LogBox.Anchor = [System.Windows.Forms.AnchorStyles]::Left -bor
         [System.Windows.Forms.AnchorStyles]::Right -bor
         [System.Windows.Forms.AnchorStyles]::Bottom -bor

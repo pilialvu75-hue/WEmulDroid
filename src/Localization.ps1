@@ -24,6 +24,8 @@ $script:UiWords = @{
     setup='1. Install tools';start='2. Start Android';refresh='3. Refresh apps';stop='Stop Android';
     install='Install APK';measure='Measure resources';reports='Open reports';play='Open Play Store';
     package='Installed app to inspect:';screen='Android display:';screenApply='Apply display';screenReset='Reset display';
+    screenPhoneLite='Phone lightweight 720 x 1280 (320 dpi)';screenPhoneHigh='Phone high 1080 x 2400 (420 dpi)';screenTablet1610='Tablet landscape 1280 x 800 (200 dpi)';screenTablet169='Tablet wide 1600 x 900 (240 dpi)';screenTabletAuto='Tablet auto - fit to monitor';
+    screenProfileApplied='Android display profile applied:';screenProfileNotice='Tablet uses landscape orientation. Window follows Android device aspect ratio; fullscreen cannot add pixels to the monitor.';screenProfileRestored='Original Android resolution, density and automatic rotation restored.';
     screenshot='Screenshot';touchHelp='Touch / Audio';fullscreen='Fullscreen';exitFullscreen='Exit fullscreen';
     folder='APK from folder';link='APK from HTTPS link';splitTouch='Touchpad + mouse (future)';
     snapshotSave='Save snapshot';snapshotLoad='Restore snapshot';snapshotList='List snapshots';
@@ -99,6 +101,8 @@ $script:UiWords = @{
     setup='1. Installa strumenti';start='2. Avvia Android';refresh='3. Aggiorna elenco';stop='Arresta Android';
     install='Installa APK';measure='Misura risorse';reports='Apri report';play='Apri Play Store';
     package='App installata da analizzare:';screen='Schermo Android:';screenApply='Applica schermo';screenReset='Ripristina';
+    screenPhoneLite='Telefono leggero 720 x 1280 (320 dpi)';screenPhoneHigh='Telefono HD 1080 x 2400 (420 dpi)';screenTablet1610='Tablet orizzontale 1280 x 800 (200 dpi)';screenTablet169='Tablet panoramico 1600 x 900 (240 dpi)';screenTabletAuto='Tablet automatico - adatta al monitor';
+    screenProfileApplied='Profilo schermo Android applicato:';screenProfileNotice='Tablet in orizzontale: la finestra mantiene le proporzioni Android. Il fullscreen non aumenta i pixel del monitor.';screenProfileRestored='Risoluzione, densita e rotazione automatica Android ripristinate.';
     screenshot='Screenshot';touchHelp='Touch / Audio';fullscreen='Fullscreen';exitFullscreen='Esci fullscreen';
     folder='APK da cartella';link='APK da link HTTPS';splitTouch='Touchpad + mouse (futuro)';
     snapshotSave='Salva snapshot';snapshotLoad='Ripristina snapshot';snapshotList='Elenco snapshot';
@@ -174,6 +178,8 @@ $script:UiWords = @{
     setup='1. Installer les outils';start='2. Demarrer Android';refresh='3. Actualiser les applis';stop='Arreter Android';
     install='Installer APK';measure='Mesurer ressources';reports='Ouvrir rapports';play='Ouvrir Play Store';
     package='Application a analyser :';screen='Ecran Android :';screenApply='Appliquer ecran';screenReset='Reinitialiser';
+    screenPhoneLite='Telephone leger 720 x 1280 (320 dpi)';screenPhoneHigh='Telephone HD 1080 x 2400 (420 dpi)';screenTablet1610='Tablette paysage 1280 x 800 (200 dpi)';screenTablet169='Tablette large 1600 x 900 (240 dpi)';screenTabletAuto='Tablette auto - adaptee au moniteur';
+    screenProfileApplied="Profil d'affichage Android applique :";screenProfileNotice="Tablette en mode paysage : la fenetre conserve les proportions Android. Le plein ecran n'augmente pas les pixels de l'ecran.";screenProfileRestored="Resolution, densite et rotation automatique Android restaurees.";
     screenshot='Capture ecran';touchHelp='Tactile / Audio';fullscreen='Plein ecran';exitFullscreen='Quitter plein ecran';
     folder='APK du dossier';link='APK via lien HTTPS';splitTouch='Pave tactile + souris (futur)';
     snapshotSave='Sauver snapshot';snapshotLoad='Restaurer snapshot';snapshotList='Liste snapshots';

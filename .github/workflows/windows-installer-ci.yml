@@ -35,6 +35,7 @@ jobs:
           .\tests\SetupAndKeyboard.Tests.ps1
           .\tests\WindowCenter.Tests.ps1
           .\tests\ScreenProfiles.Tests.ps1
+          .\tests\WindowFit.Tests.ps1
       - name: Install Inno Setup compiler on build runner if absent
         shell: powershell
         run: |

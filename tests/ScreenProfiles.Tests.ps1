@@ -6,7 +6,7 @@ function Assert-Size([int]$index,[int]$w,[int]$h,[int]$dpi,[string]$orientation)
     $profile=Get-WEmulDroidScreenProfile -Index $index
     if ($profile.Width -ne $w -or $profile.Height -ne $h -or
         $profile.Dpi -ne $dpi -or $profile.Orientation -ne $orientation) {
-        throw "Wrong dimensions for screen preset $index: $($profile | Out-String)"
+        throw "Wrong dimensions for screen preset ${index}: $($profile | Out-String)"
     }
     $commands=@(Get-WEmulDroidScreenCommands -Profile $profile)
     if ($commands.Count -ne 3) { throw "Expected 3 wm commands for profile $index" }

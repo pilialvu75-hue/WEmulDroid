@@ -60,9 +60,16 @@ jobs:
           $version = (Get-Content VERSION.txt -Raw).Trim()
           $setup = Join-Path (Resolve-Path '.\dist\payload\Output').Path ("WEmulDroid-Setup-$version.exe")
           if (-not (Test-Path -LiteralPath $setup)) { throw 'Setup.exe missing' }
-          # Release tags must map to accurate Windows setup file-version metadata.
+          # Verify Windows EXE metadata matches the release's beta version.
           $fileInfo = [Diagnostics.FileVersionInfo]::GetVersionInfo($setup)
-          if ($version -notmatch '^v([0-9]+)\.([0-9]+)\.([0-9]+)-beta\.([0-9]+)          if ((Get-AuthenticodeSignature -LiteralPath $setup).Status -eq 'Valid') {
+          if ($version -notmatch '^v([0-9]+)\.([0-9]+)\.([0-9]+)-beta\.([0-9]+)$') {
+            throw 'Unexpected development version format'
+          }
+          $expectedFileVersion = "$($Matches[1]).$($Matches[2]).$($Matches[3]).$($Matches[4])"
+          if ($fileInfo.FileVersion -ne $expectedFileVersion) {
+            throw "Installer Windows file version mismatch: $($fileInfo.FileVersion) != $expectedFileVersion"
+          }
+          if ((Get-AuthenticodeSignature -LiteralPath $setup).Status -eq 'Valid') {
             throw 'Unsigned CI build unexpectedly carries a production signature'
           }
           $app = Join-Path $env:LOCALAPPDATA 'Programs\WEmulDroid'

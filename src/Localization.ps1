@@ -7,6 +7,7 @@ $script:UiWords = @{
     tabApps='Applications / APK';tabDisplay='Display / Touch';tabDiagnostics='Diagnostics / Snapshots';
     centerAndroid='Center Android';centered='Android window centered on your monitor.';centerNotFound='Android window not visible yet. Start Android first.';centerError='Unable to center Android:';
     home='Home';back='Back';keyboardPc='PC keyboard';keyboardAndroid='Android keyboard';coldBoot='Cold boot';
+    setupAllTitle='Set up Android and Google Play';setupAllPrompt='Set up the standard Android and official Google Play devices now? WEmulDroid will download several GB directly from Google. This requires Internet access and review/acceptance of Google SDK licenses. Existing devices and data will be preserved. Terms: https://developer.android.com/studio/terms';setupAllDeclined='Automatic setup postponed. You can choose Install tools later.';setupAllStarted='Preparing standard Android and Google Play together. Accept the SDK licenses in the setup window.';keyboardHardwareReady='Physical PC keyboard enabled for next Android boot; Gboard remains available.';
     keyboardPcBoth='PC + Android keyboards';keyboardHideSoft='Hide Android keyboard';keyboardShowSoft='Show Android keyboard';
     keyboardBothDone='PC hardware keyboard enabled; Android on-screen keyboard remains available for sign-in.';
     keyboardHideConfirm='Hide the Android on-screen keyboard? Only choose Yes after confirming that typing on the PC works. You can restore it here.';
@@ -81,6 +82,7 @@ $script:UiWords = @{
     tabApps='Applicazioni / APK';tabDisplay='Schermo / Comandi';tabDiagnostics='Diagnostica / Snapshot';
     centerAndroid='Centra Android';centered='Finestra Android centrata sullo schermo.';centerNotFound='Finestra Android non ancora visibile. Avvia prima Android.';centerError='Impossibile centrare Android:';
     home='Home';back='Indietro';keyboardPc='Tastiera PC';keyboardAndroid='Tastiera Android';coldBoot='Avvio pulito';
+    setupAllTitle='Prepara Android e Google Play';setupAllPrompt='Configurare ora Android standard e Google Play ufficiale? WEmulDroid scaricherà diversi GB direttamente da Google. Servono Internet e accettazione delle licenze Android SDK. I dispositivi e dati già presenti restano intatti. Termini: https://developer.android.com/studio/terms';setupAllDeclined='Configurazione automatica rinviata. Puoi scegliere Installa strumenti quando vuoi.';setupAllStarted='Preparazione unica di Android standard e Google Play. Accetta le licenze SDK nella finestra di installazione.';keyboardHardwareReady='Tastiera fisica del PC abilitata per il prossimo avvio. Gboard rimane disponibile.';
     keyboardPcBoth='Tastiera PC + Android';keyboardHideSoft='Nascondi tastiera Android';keyboardShowSoft='Mostra tastiera Android';
     keyboardBothDone='Tastiera fisica configurata e tastiera Android disponibile per autenticarsi.';
     keyboardHideConfirm='Nascondere la tastiera Android? Conferma solo dopo aver provato a scrivere con la tastiera ASUS. Potrai ripristinarla qui.';
@@ -155,6 +157,7 @@ $script:UiWords = @{
     tabApps='Applications / APK';tabDisplay='Écran / Commandes';tabDiagnostics='Diagnostic / Instantanés';
     centerAndroid='Centrer Android';centered='Fenêtre Android centrée sur votre écran.';centerNotFound='Fenêtre Android pas encore visible. Démarrez Android.';centerError='Impossible de centrer Android :';
     home='Accueil';back='Retour';keyboardPc='Clavier PC';keyboardAndroid='Clavier Android';coldBoot='Démarrage à froid';
+    setupAllTitle='Installer Android et Google Play';setupAllPrompt='Installer maintenant Android standard et Google Play officiel ? WEmulDroid téléchargera plusieurs Go directement depuis Google. Internet et acceptation des licences SDK sont nécessaires. Les appareils et leurs données seront conservés. Conditions : https://developer.android.com/studio/terms';setupAllDeclined='Installation automatique reportée. Vous pouvez choisir Installer les outils plus tard.';setupAllStarted='Préparation des deux profils Android et Google Play. Acceptez les licences SDK dans la fenêtre de configuration.';keyboardHardwareReady='Clavier PC activé pour le prochain démarrage. Gboard reste disponible.';
     keyboardPcBoth='Claviers PC + Android';keyboardHideSoft='Masquer le clavier Android';keyboardShowSoft='Afficher le clavier Android';
     keyboardBothDone='Clavier physique configuré et clavier Android conservé pour la connexion.';
     keyboardHideConfirm='Masquer le clavier Android ? Acceptez seulement si le clavier PC fonctionne. Vous pouvez le réactiver ici.';

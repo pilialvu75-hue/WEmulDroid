@@ -252,6 +252,7 @@ $btnCapture = New-LabButton 'Screenshot' 20 320
 $btnTouchHelp = New-LabButton 'Touch / Audio' 213 320
 $btnFullscreen = New-LabButton 'Fullscreen' 406 320
 $btnCenter = New-LabButton 'Centra Android' 20 485
+$btnFit = New-LabButton 'Adatta finestra al monitor' 406 485
 $btnApkFolder = New-LabButton 'APK da cartella' 599 320
 $btnApkLink = New-LabButton 'APK da link HTTPS' 20 373
 $btnSettings = New-LabButton 'Impostazioni' 599 373
@@ -412,6 +413,19 @@ $btnDiagnostics.Add_Click({
 })
 
 
+$btnFit.Add_Click({
+    try {
+        $serial = Require-RunningDevice
+        $working = [System.Windows.Forms.Screen]::FromControl($form).WorkingArea
+        $profile = Get-WEmulDroidScreenProfile -Index $script:ScreenCombo.SelectedIndex -MonitorArea $working
+        if (Set-WEmulDroidWindowFitted -AvdName $script:AvdName -GuestAspect ([double]$profile.Width/$profile.Height) -OwnerForm $form) {
+            Write-Log (T 'screenWindowFitted')
+        } else {
+            Write-Log (T 'screenFitUnavailable')
+        }
+    } catch { Show-Error $_.Exception.Message }
+})
+
 $btnCenter.Add_Click({
     try {
         if (Set-WEmulDroidWindowCentered -AvdName $script:AvdName -OwnerForm $form) {
@@ -436,6 +450,9 @@ $btnFullscreen.Add_Click({
                 [void](Invoke-DeviceCommand $serial $command.Arguments $command.Label)
             }
             Write-Log ((T 'screenProfileApplied') + ' ' + $profile.Width + 'x' + $profile.Height)
+            # Establish a monitor-fit window before entering borderless
+            # fullscreen, so exiting fullscreen restores a useful tablet size.
+            [void](Set-WEmulDroidWindowFitted -AvdName $script:AvdName -GuestAspect ([double]$profile.Width/$profile.Height) -OwnerForm $form)
         }
         # Only the exact selected AVD's Qt emulator window is modified.
         $msg = Set-EmulatorWindowFullscreen $script:AvdName
@@ -524,9 +541,12 @@ $btnScreen.Add_Click({
         Write-Log ((T 'screenProfileApplied') + ' ' + $profile.Name + ': ' +
             $profile.Width + 'x' + $profile.Height + ' @ ' + $profile.Dpi + ' dpi.')
         Write-Log (T 'screenProfileNotice')
-        # Android Emulator keeps the Qt window proportions. Recenter after
-        # guest rotation; do not attempt to stretch or distort the pixels.
-        if (-not $script:FullscreenWindowState) { Start-WEmulDroidAutoCenter }
+        # Qt may initially retain a tiny virtual-screen window even when
+        # Android uses tablet resolution. Fit the host window as well.
+        if (-not $script:FullscreenWindowState) {
+            [void](Set-WEmulDroidWindowFitted -AvdName $script:AvdName -GuestAspect ([double]$profile.Width/$profile.Height) -OwnerForm $form)
+            Start-WEmulDroidAutoCenter
+        }
     } catch { Show-Error $_.Exception.Message }
 })
 
@@ -812,6 +832,7 @@ function Update-WEmulDroidLanguage {
     $btnTouchHelp.Text = (T 'touchHelp')
     $btnFullscreen.Text = (T $(if ($script:FullscreenWindowState) { 'exitFullscreen' } else { 'fullscreen' }))
     $btnCenter.Text = (T 'centerAndroid')
+    $btnFit.Text = (T 'screenFitWindow')
     $btnApkFolder.Text = (T 'folder')
     $btnApkLink.Text = (T 'link')
     $btnSplitTouch.Text = (T 'splitTouch')

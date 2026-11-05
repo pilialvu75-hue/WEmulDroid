@@ -19,7 +19,7 @@ $script:LogBox.Multiline = $true
 
 $buttonNames = @(
     'btnSettings','btnSetup','btnStart','btnRefresh','btnStop',
-    'btnHome','btnBack','btnPcKeyboard','btnColdBoot',
+    'btnHome','btnBack','btnPcKeyboard','btnColdBoot','btnToggleSoftKeyboard',
     'btnInstall','btnApkFolder','btnApkLink','btnPlay',
     'btnScreen','btnScreenReset','btnCapture','btnTouchHelp','btnFullscreen',
     'btnSplitTouch','btnCenter','btnMeasure','btnReports','btnDiagnostics',
@@ -63,7 +63,7 @@ try {
         }
     }
     foreach ($button in @($btnScreen,$btnScreenReset,$btnCapture,
-        $btnTouchHelp,$btnFullscreen,$btnSplitTouch,$btnCenter)) {
+        $btnTouchHelp,$btnFullscreen,$btnSplitTouch,$btnCenter,$btnToggleSoftKeyboard)) {
         if ($button.Parent -ne $script:DisplayTab) {
             throw 'Display control is missing from the Display tab.'
         }

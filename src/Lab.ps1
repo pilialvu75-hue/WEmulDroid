@@ -247,6 +247,7 @@ $btnScreenReset = New-LabButton 'Ripristina' 599 267
 $btnCapture = New-LabButton 'Screenshot' 20 320
 $btnTouchHelp = New-LabButton 'Touch / Audio' 213 320
 $btnFullscreen = New-LabButton 'Fullscreen' 406 320
+$btnCenter = New-LabButton 'Centra Android' 20 485
 $btnApkFolder = New-LabButton 'APK da cartella' 599 320
 $btnApkLink = New-LabButton 'APK da link HTTPS' 20 373
 $btnSettings = New-LabButton 'Impostazioni' 599 373
@@ -276,6 +277,38 @@ $script:LogBox.Font = New-Object System.Drawing.Font('Consolas', 9)
 $form.Controls.Add($script:LogBox)
 
 Initialize-WEmulDroidLayout
+
+
+# Android Emulator remembers old window positions, including off-screen ones.
+# Poll only during first launch. Never alter other apps or fullscreen mode.
+$script:CenterTimer = $null
+$script:CenterTimerTicks = 0
+function Start-WEmulDroidAutoCenter {
+    if (-not $script:CenterTimer) {
+        $script:CenterTimer = New-Object System.Windows.Forms.Timer
+        $script:CenterTimer.Interval = 1500
+        $script:CenterTimer.Add_Tick({
+            $script:CenterTimerTicks++
+            # Qt may resize/reposition the window during the first few seconds.
+            if ($script:CenterTimerTicks -lt 3) { return }
+            try {
+                if (Set-WEmulDroidWindowCentered -AvdName $script:AvdName -OwnerForm $form) {
+                    $script:CenterTimer.Stop()
+                    Write-Log (T 'centered')
+                } elseif ($script:CenterTimerTicks -ge 45) {
+                    $script:CenterTimer.Stop()
+                    Write-Log (T 'centerNotFound')
+                }
+            } catch {
+                $script:CenterTimer.Stop()
+                Write-Log ((T 'centerError') + ' ' + $_.Exception.Message)
+            }
+        })
+    }
+    $script:CenterTimer.Stop()
+    $script:CenterTimerTicks = 0
+    $script:CenterTimer.Start()
+}
 
 
 function Invoke-DeviceCommand([string]$serial, [string[]]$arguments, [string]$what) {
@@ -361,6 +394,17 @@ $btnDiagnostics.Add_Click({
                 Write-Log ('Operazioni non riuscite: ' + $report.Failures + '. Leggi report.txt.')
             }
         } finally { $form.Cursor = [System.Windows.Forms.Cursors]::Default }
+    } catch { Show-Error $_.Exception.Message }
+})
+
+
+$btnCenter.Add_Click({
+    try {
+        if (Set-WEmulDroidWindowCentered -AvdName $script:AvdName -OwnerForm $form) {
+            Write-Log (T 'centered')
+        } else {
+            throw (T 'centerNotFound')
+        }
     } catch { Show-Error $_.Exception.Message }
 })
 
@@ -530,6 +574,7 @@ $btnColdBoot.Add_Click({
         if ([System.Windows.Forms.MessageBox]::Show($question, (T 'coldBoot'), 'YesNo', 'Question') -ne 'Yes') { return }
         $startup = Start-WEmulDroidQuietEmulator -EmulatorExe $script:Emulator -AvdName $script:AvdName -ReportsRoot $script:ReportsRoot -ColdBoot
         Write-Log ((T 'coldBootStarted') + ' ' + $startup.StdErrLog)
+        Start-WEmulDroidAutoCenter
         $form.WindowState = [System.Windows.Forms.FormWindowState]::Minimized
     } catch { Show-Error $_.Exception.Message }
 })
@@ -566,6 +611,7 @@ $btnStart.Add_Click({
         $existing = Get-LabSerial
         if ($existing) {
             Write-Log ('Android e gia avviato: ' + $existing)
+            Start-WEmulDroidAutoCenter
             return
         }
         $avds = (& $script:Emulator -list-avds | Out-String)
@@ -574,6 +620,7 @@ $btnStart.Add_Click({
         }
         $startup = Start-WEmulDroidQuietEmulator -EmulatorExe $script:Emulator -AvdName $script:AvdName -ReportsRoot $script:ReportsRoot
         Write-Log ((T 'emulatorLogSaved') + ' ' + $startup.StdErrLog)
+        Start-WEmulDroidAutoCenter
         Write-Log 'Avvio Android richiesto. WEmulDroid passa nella barra delle applicazioni; puoi riaprirlo quando vuoi.'
         $form.WindowState = [System.Windows.Forms.FormWindowState]::Minimized
     } catch { Show-Error $_.Exception.Message }
@@ -642,6 +689,7 @@ $btnPlay.Add_Click({
 })
 
 $form.Add_FormClosing({
+    if ($script:CenterTimer) { $script:CenterTimer.Stop(); $script:CenterTimer.Dispose() }
     if ($script:FullscreenWindowState) {
         try { [void](Restore-EmulatorWindow) } catch {}
     }
@@ -688,6 +736,7 @@ function Update-WEmulDroidLanguage {
     $btnCapture.Text = (T 'screenshot')
     $btnTouchHelp.Text = (T 'touchHelp')
     $btnFullscreen.Text = (T $(if ($script:FullscreenWindowState) { 'exitFullscreen' } else { 'fullscreen' }))
+    $btnCenter.Text = (T 'centerAndroid')
     $btnApkFolder.Text = (T 'folder')
     $btnApkLink.Text = (T 'link')
     $btnSplitTouch.Text = (T 'splitTouch')

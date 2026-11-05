@@ -1,6 +1,6 @@
 # WEmulDroid — Android su Windows
 
-**Nuova linea v0.9.0-beta.1 (installer Windows in collaudo).** Progetto indipendente da `Ai-orchestrator-riserva` e `AEmulWin`. Utilizza l'[Android Emulator ufficiale](https://developer.android.com/studio/run/emulator); non redistribuisce immagini Google o Java.
+**Linea 0.9: installer Windows di sviluppo e Android 15/Google Play ufficiale.** Progetto indipendente da `Ai-orchestrator-riserva` e `AEmulWin`. Utilizza l'[Android Emulator ufficiale](https://developer.android.com/studio/run/emulator); non redistribuisce immagini Google o Java.
 
 ## Prima prova pratica sull'ASUS — beta di sviluppo
 
@@ -15,7 +15,7 @@ Per non rallentare il progetto, abbiamo predisposto un **installer unico per Win
 
 **Attenzione:** la beta di sviluppo è **senza firma digitale**; Smart App Control può bloccarla sul tuo PC. Non disattivare le protezioni di Windows per aggirare il blocco. Prima distribuzione e comportamento sull'ASUS devono ancora essere verificati.
 
-**Primo installer di sviluppo:** `WEmulDroid-Setup-v0.9.0-beta.1.exe`, pubblicato dalla CI Windows soltanto dopo il test di installazione, avvio GUI, aggiornamento, icona desktop e conservazione dati. Se Windows lo blocca, annotare il messaggio: non disattivare Smart App Control.
+**Installer di sviluppo:** distribuito tramite GitHub Releases dopo i test Windows; non firmato digitalmente. Se Windows lo blocca, annotare il messaggio: non disattivare Smart App Control.
 
 [Releases WEmulDroid (installer beta)](https://github.com/pilialvu75-hue/WEmulDroid/releases)
 
@@ -31,15 +31,17 @@ Il nuovo sistema usa **un singolo installer Windows .exe** (Inno Setup, installa
 - [Build CI del candidato non firmato (solo test)](https://github.com/pilialvu75-hue/WEmulDroid/actions/workflows/windows-installer-ci.yml)
 - [Workflow di release **solo con firme attendibili**](.github/workflows/publish-official-installer.yml)
 
-## Come funzionerà la prima installazione
+## Primo avvio: Android e Play Store pronti insieme
 
-1. Scaricare il file `WEmulDroid-Setup-vX.Y.Z.exe` da una release ufficiale **firmata** (quando sarà pubblicata).
-2. Aprirlo con Windows 11, verificando l'editore nella scheda **Firme digitali**. Procedere con l'installazione guidata.
-3. Trovare l'icona **WEmulDroid** sul desktop e i due profili (standard e Google Play) nel menu Start.
-4. Avviare l'app dal desktop. Se l'SDK Android non è ancora presente, scegliere **1. Installa strumenti**, che prepara il JDK se necessario, scarica gli strumenti Google con checksum verificato e chiede il consenso alle licenze Android. Questi dati restano salvati fuori dalla cartella del programma.
-5. Usare **2. Avvia Android**, poi testare l'AVD, screenshot e applicazioni; la compatibilità del sistema Android su ASUS va ancora verificata.
+1. Installa il singolo `WEmulDroid-Setup-vX.Y.Z-beta.N.exe` da GitHub Releases (beta di sviluppo non firmata; Windows Smart App Control potrebbe bloccarla).
+2. Al primo avvio dall'icona Desktop, WEmulDroid controlla **entrambi** i profili: Android standard e `WEmulDroid_Play_API_35`.
+3. Se manca un profilo, propone **una sola configurazione guidata**: dopo il consenso scarica SDK, emulatore e immagini Android ufficiali direttamente da Google. Devi esaminare e accettare le licenze Android SDK e servono diversi GB e Internet. La verifica SHA-256 del downloader resta obbligatoria.
+4. I dispositivi già esistenti non vengono cancellati o ricreati; il programma preserva Java, APK, accessi Play Store e dati AVD.
+5. Per Play Store apri il collegamento **WEmulDroid - Google Play** in Start: il primo accesso all'account Google è personale e avviene **dentro Android**, mai tramite ADB o l'app Windows.
+6. Per la tastiera premi **Tastiera PC + Android**: abilita la tastiera fisica e mantiene Gboard sullo schermo. Se viene richiesto, arresta e riavvia Android una volta per applicare `hw.keyboard=yes`. Nella scheda Schermo/Comandi puoi nascondere la tastiera Android **solo dopo** aver testato quella fisica.
+7. **Home**, **Indietro**, **Centra Android** e **Avvio pulito** restano disponibili. Il centraggio viene ripetuto durante il primo avvio perché Qt può riposizionare la finestra più volte.
 
-Se il PC possiede già Java, SDK e AVD installati dalla beta precedente, l'app userà **le cartelle esistenti** senza cancellarle o reinstallarle.
+La procedura di installazione automatica e i controlli della tastiera hanno test di regressione su PowerShell Windows 5.1. **Il login Google, la digitazione reale con tastiera ASUS e il centraggio finale richiedono ancora collaudo sul tuo PC.**
 
 ## Aggiornamenti Stabile / Beta
 
@@ -59,7 +61,7 @@ Il nuovo sistema **non utilizza più ZIP di sorgenti per gli aggiornamenti**. Il
 - Installazione JDK 17 e Android SDK/AVD completata secondo il test dell'utente.
 - La vecchia GUI v0.8 si è aperta, ma al primo avvio ADB mostrava `* daemon not running; starting now at tcp:5037`, erroneamente interpretato da PowerShell come errore.
 - **Correzione implementata** in `src/AdbProcess.ps1`: controllo di uscita del processo, test regressione Windows PowerShell 5.1 PASS.
-- **Non ancora verificato:** avvio completo del sistema Android su PC fisico dopo la correzione.
+- **Confermato il 5 novembre 2026:** Android standard e Play Store si avviano sul vero ASUS; login Google raggiunto. Rimangono da collaudare la tastiera fisica/virtuale e la stabilità della schermata Android.
 
 ## Funzioni dell'app
 

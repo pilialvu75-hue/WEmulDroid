@@ -7,6 +7,9 @@
 #ifndef Payload
   #error "Payload define is required"
 #endif
+#ifndef WinFileVersion
+  #error "WinFileVersion define is required"
+#endif
 
 #define ProductName "WEmulDroid"
 #define ProductId "{{41C91813-1E2B-4587-A72B-5EF618CD76AE}"
@@ -15,7 +18,7 @@
 AppId={#ProductId}
 AppName={#ProductName}
 AppVersion={#AppVersion}
-VersionInfoVersion=0.9.0.1
+VersionInfoVersion={#WinFileVersion}
 AppVerName={#ProductName} {#AppVersion}
 AppPublisher=WEmulDroid
 AppPublisherURL=https://github.com/pilialvu75-hue/WEmulDroid

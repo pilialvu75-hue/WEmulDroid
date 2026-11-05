@@ -2,12 +2,23 @@
 [CmdletBinding()]
 param(
     [string]$SdkRoot = (Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk'),
-    [switch]$PlayStore
+    [switch]$PlayStore,
+    [switch]$BothProfiles,
+    [switch]$ConsentConfirmed
 )
 $ErrorActionPreference = 'Stop'
 $ProgressPreference = 'SilentlyContinue'
-$avdName = if ($PlayStore) { 'WEmulDroid_Play_API_35' } else { 'WEmulDroid_API_35' }
-$imagePackage = if ($PlayStore) { 'system-images;android-35;google_apis_playstore;x86_64' } else { 'system-images;android-35;google_apis;x86_64' }
+if ($PlayStore -and $BothProfiles) { throw 'Choose PlayStore or BothProfiles, not both.' }
+$requestedProfiles = @(
+    if ($BothProfiles -or -not $PlayStore) {
+        [pscustomobject]@{ Name='WEmulDroid_API_35'; Package='system-images;android-35;google_apis;x86_64'; Play=$false }
+    }
+    if ($BothProfiles -or $PlayStore) {
+        [pscustomobject]@{ Name='WEmulDroid_Play_API_35'; Package='system-images;android-35;google_apis_playstore;x86_64'; Play=$true }
+    }
+)
+$imagePackages = @($requestedProfiles | ForEach-Object { $_.Package })
+. (Join-Path $PSScriptRoot 'GuestControls.ps1')
 $toolsUrl = 'https://dl.google.com/android/repository/commandlinetools-win-15859902_latest.zip'
 $toolsSha256 = '90ae805d20434428bffcb699c290860f19bb5f66a67e6b330067e3de801fb04a'
 
@@ -43,21 +54,23 @@ function Assert-ExitCode([string]$step) {
 }
 
 Write-Host '==================================================' -ForegroundColor Cyan
-Write-Host (' WEmulDroid - Setup Android 15 ' + $(if ($PlayStore) { '(Google Play)' } else { '(standard)' })) -ForegroundColor Cyan
+Write-Host (' WEmulDroid - Setup Android 15 ' + $(if ($BothProfiles) { '(standard + Google Play)' } elseif ($PlayStore) { '(Google Play)' } else { '(standard)' })) -ForegroundColor Cyan
 Write-Host '==================================================' -ForegroundColor Cyan
 Write-Host ''
 Write-Host "SDK dedicato: $SdkRoot"
 Write-Host 'I componenti vengono scaricati direttamente da Google.'
-if ($PlayStore) {
+if ($PlayStore -or $BothProfiles) {
     Write-Host 'Questa immagine Android contiene Google Play Store e Google Play Services.'
     Write-Host 'L accesso al Play Store avverra direttamente dentro il dispositivo virtuale.'
 }
 Write-Host 'Leggi i termini Android SDK: https://developer.android.com/studio/terms'
 Write-Host "Saranno scaricati diversi GB di dati. Verifica lo spazio disponibile."
-$answer = Read-Host "Dopo avere letto i termini, vuoi continuare? Digita SI"
-if ($answer -ne 'SI') {
-    Write-Host 'Installazione annullata senza modificare il sistema.'
-    exit 1
+if (-not $ConsentConfirmed) {
+    $answer = Read-Host "Dopo avere letto i termini, vuoi continuare? Digita SI"
+    if ($answer -ne 'SI') {
+        Write-Host 'Installazione annullata senza modificare il sistema.'
+        exit 1
+    }
 }
 
 try {
@@ -115,7 +128,7 @@ try {
 
     Write-Host ''
     Write-Host 'Installazione emulator, platform-tools e immagine Android 15 (x86_64)...'
-    & $sdkManager "--sdk_root=$SdkRoot" 'platform-tools' 'emulator' $imagePackage
+    & $sdkManager "--sdk_root=$SdkRoot" 'platform-tools' 'emulator' @imagePackages
     Assert-ExitCode 'Installazione pacchetti Android'
 
     $emulator = Join-Path $SdkRoot 'emulator\emulator.exe'
@@ -124,22 +137,29 @@ try {
     if (-not (Test-Path -LiteralPath $avdManager)) { throw 'avdmanager.bat non trovato.' }
 
     $avds = (& $emulator -list-avds | Out-String)
-    if ($avds -notmatch ('(?m)^' + [regex]::Escape($avdName) + '\s*$')) {
-        Write-Host "Creazione dispositivo virtuale $avdName..."
-        'no' | & $avdManager create avd -n $avdName -k $imagePackage -d 'pixel_6'
-        Assert-ExitCode 'Creazione AVD'
-    } else {
-        Write-Host "Dispositivo virtuale gia presente: $avdName"
-    }
-    if ($PlayStore) {
-        $avdConfig = Join-Path $env:USERPROFILE ('.android\avd\' + $avdName + '.avd\config.ini')
-        if (Test-Path -LiteralPath $avdConfig) {
+    foreach ($profile in $requestedProfiles) {
+        $avdName = [string]$profile.Name
+        $imagePackage = [string]$profile.Package
+        if ($avds -notmatch ('(?m)^' + [regex]::Escape($avdName) + '\s*$')) {
+            Write-Host "Creazione dispositivo virtuale $avdName..."
+            'no' | & $avdManager create avd -n $avdName -k $imagePackage -d 'pixel_6'
+            Assert-ExitCode 'Creazione AVD'
+        } else {
+            Write-Host "Dispositivo virtuale gia presente: $avdName"
+        }
+        $avdConfig = Get-WEmulDroidAvdConfig $avdName
+        if (-not (Test-Path -LiteralPath $avdConfig)) {
+            throw "Configurazione AVD non trovata: $avdName"
+        }
+        if ($profile.Play) {
             $configContent = Get-Content -LiteralPath $avdConfig -Raw
             if ($configContent -notmatch 'google_apis_playstore') {
-                throw 'Il dispositivo esiste ma non risulta basato su immagine Google Play. Non modifico ne sovrascrivo i dati.'
+                throw 'Il dispositivo Play esiste ma non usa immagine Google Play. Dati preservati, nessuna sovrascrittura.'
             }
         }
-        Write-Host 'Per aprire il Play Store usa Avvia-PlayStore.cmd e accedi dal dispositivo virtuale.'
+        # Hardware keyboard for NEXT boot; Android on-screen keyboard stays available.
+        [void](Enable-WEmulDroidPhysicalKeyboard -AvdName $avdName)
+        Write-Host "Dispositivo pronto: $avdName (tastiera fisica abilitata)" -ForegroundColor Green
     }
 
     Write-Host ''
@@ -149,7 +169,7 @@ try {
         Write-Warning 'Accelerazione non disponibile. Attiva Windows Hypervisor Platform nelle funzionalita Windows e riavvia il PC. Controlla anche la virtualizzazione nel BIOS/UEFI.'
     }
     Write-Host ''
-    Write-Host 'Setup terminato. Avvia Avvia-Android.cmd.' -ForegroundColor Green
+    Write-Host 'Setup Android completo. Usa WEmulDroid sul desktop per avviare i dispositivi.' -ForegroundColor Green
     exit 0
 }
 catch {

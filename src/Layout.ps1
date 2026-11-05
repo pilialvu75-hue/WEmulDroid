@@ -81,7 +81,7 @@ function Initialize-WEmulDroidLayout {
     $script:DisplayTab.Controls.Add($btnFit)
     $btnFit.SetBounds(514, 158, 367, 42)
     $script:DisplayTab.Controls.Add($btnGamesMode)
-    $btnGamesMode.SetBounds(22, 210, 308, 40)
+    $btnGamesMode.SetBounds(22, 203, 308, 36)
 
     # Diagnostics and destructive snapshot actions are separate from daily use.
     $diagnosticControls = @(

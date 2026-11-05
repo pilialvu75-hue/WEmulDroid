@@ -78,6 +78,8 @@ function Initialize-WEmulDroidLayout {
     $btnCenter.SetBounds(22, 158, 202, 42)
     $script:DisplayTab.Controls.Add($btnToggleSoftKeyboard)
     $btnToggleSoftKeyboard.SetBounds(241, 158, 255, 42)
+    $script:DisplayTab.Controls.Add($btnFit)
+    $btnFit.SetBounds(514, 158, 367, 42)
 
     # Diagnostics and destructive snapshot actions are separate from daily use.
     $diagnosticControls = @(

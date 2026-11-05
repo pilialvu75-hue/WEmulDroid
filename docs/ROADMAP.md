@@ -66,6 +66,8 @@ Dettagli: [UPDATES.md](UPDATES.md). La versione è distribuita come sorgenti Pow
 - [ ] Verificare sul vero ASUS che la tastiera PC sia riconosciuta, che quella Android si nasconda e che il boot pulito recuperi lo schermo nero/grigio
 - [ ] Confermare che la finestra console non appaia nella nuova beta; i log devono comunque rimanere consultabili
 - [ ] Verificare gli avvisi di caricamento snapshot (il sistema si avvia, gli avvisi da soli non rappresentano fallimento)
+- [x] Correzione geometria finestra Android: centraggio automatico nel monitor attivo, riduzione se eccede area utile, pulsante manuale «Centra Android» (test Windows PowerShell 5.1 PASS)
+- [ ] Verifica effettiva su ASUS del centraggio automatico della finestra Android, anche dopo riavvio e fullscreen
 - [ ] Provare APK reali, Google Play, mouse/audio, fullscreen e screenshot su ASUS
 
 Non confondere popup Google Search/tastiera Android del primo avvio con elementi della GUI WEmulDroid. Tenere separati dati dell'AVD, codice applicativo e aggiornamenti.

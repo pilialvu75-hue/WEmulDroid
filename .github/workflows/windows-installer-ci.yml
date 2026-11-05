@@ -66,7 +66,7 @@ jobs:
             throw 'Unexpected development version format'
           }
           $expectedFileVersion = "$($Matches[1]).$($Matches[2]).$($Matches[3]).$($Matches[4])"
-          if ($fileInfo.FileVersion -ne $expectedFileVersion) {
+          if ($fileInfo.FileVersion.Trim() -ne $expectedFileVersion) {
             throw "Installer Windows file version mismatch: $($fileInfo.FileVersion) != $expectedFileVersion"
           }
           if ((Get-AuthenticodeSignature -LiteralPath $setup).Status -eq 'Valid') {

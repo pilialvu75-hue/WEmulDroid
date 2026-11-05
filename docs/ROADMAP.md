@@ -61,7 +61,10 @@ Dettagli: [UPDATES.md](UPDATES.md). La versione è distribuita come sorgenti Pow
 - [x] Pannello ridotto a icona quando si avvia Android; test sintassi e GUI Windows CI
 - [ ] Collaudare la GUI riorganizzata sul PC reale e confermare facilità d'uso
 - [ ] Verificare aggiornamento **0.9.0-beta.1 → 0.9.0-beta.2** dall'interno dell'app, senza perdita dati
-- [ ] Ridurre ulteriormente la finestra console tecnica senza sacrificare log di avvio o funzionamento Qt
+- [x] Avvio quieto dell'emulatore: stdout/stderr su report locali, senza console tecnica invadente (CI Windows PASS; verifica GUI Qt sul vero ASUS da completare)
+- [x] Comandi Android sempre visibili: Home, Indietro, Tastiera PC / Android, Avvio pulito senza snapshot; test ADB e config AVD
+- [ ] Verificare sul vero ASUS che la tastiera PC sia riconosciuta, che quella Android si nasconda e che il boot pulito recuperi lo schermo nero/grigio
+- [ ] Confermare che la finestra console non appaia nella nuova beta; i log devono comunque rimanere consultabili
 - [ ] Verificare gli avvisi di caricamento snapshot (il sistema si avvia, gli avvisi da soli non rappresentano fallimento)
 - [ ] Provare APK reali, Google Play, mouse/audio, fullscreen e screenshot su ASUS
 

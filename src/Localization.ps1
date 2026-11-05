@@ -7,6 +7,10 @@ $script:UiWords = @{
     tabApps='Applications / APK';tabDisplay='Display / Touch';tabDiagnostics='Diagnostics / Snapshots';
     centerAndroid='Center Android';centered='Android window centered on your monitor.';centerNotFound='Android window not visible yet. Start Android first.';centerError='Unable to center Android:';
     home='Home';back='Back';keyboardPc='PC keyboard';keyboardAndroid='Android keyboard';coldBoot='Cold boot';
+    keyboardPcBoth='PC + Android keyboards';keyboardHideSoft='Hide Android keyboard';keyboardShowSoft='Show Android keyboard';
+    keyboardBothDone='PC hardware keyboard enabled; Android on-screen keyboard remains available for sign-in.';
+    keyboardHideConfirm='Hide the Android on-screen keyboard? Only choose Yes after confirming that typing on the PC works. You can restore it here.';
+    keyboardSoftHidden='Android on-screen keyboard hidden by explicit request.';
     homeDone='Android Home key sent.';backDone='Android Back key sent.';
     keyboardPcDone='PC keyboard enabled; click a text field in the emulator and type on your computer.';
     keyboardAndroidDone='On-screen Android keyboard enabled again.';
@@ -77,6 +81,10 @@ $script:UiWords = @{
     tabApps='Applicazioni / APK';tabDisplay='Schermo / Comandi';tabDiagnostics='Diagnostica / Snapshot';
     centerAndroid='Centra Android';centered='Finestra Android centrata sullo schermo.';centerNotFound='Finestra Android non ancora visibile. Avvia prima Android.';centerError='Impossibile centrare Android:';
     home='Home';back='Indietro';keyboardPc='Tastiera PC';keyboardAndroid='Tastiera Android';coldBoot='Avvio pulito';
+    keyboardPcBoth='Tastiera PC + Android';keyboardHideSoft='Nascondi tastiera Android';keyboardShowSoft='Mostra tastiera Android';
+    keyboardBothDone='Tastiera fisica configurata e tastiera Android disponibile per autenticarsi.';
+    keyboardHideConfirm='Nascondere la tastiera Android? Conferma solo dopo aver provato a scrivere con la tastiera ASUS. Potrai ripristinarla qui.';
+    keyboardSoftHidden='Tastiera Android nascosta su richiesta esplicita.';
     homeDone='Comando Home inviato ad Android.';backDone='Comando Indietro inviato ad Android.';
     keyboardPcDone='Tastiera PC abilitata. Clicca un campo di testo dentro Android e scrivi con la tastiera ASUS.';
     keyboardAndroidDone='Tastiera virtuale Android riabilitata.';
@@ -147,6 +155,10 @@ $script:UiWords = @{
     tabApps='Applications / APK';tabDisplay='Écran / Commandes';tabDiagnostics='Diagnostic / Instantanés';
     centerAndroid='Centrer Android';centered='Fenêtre Android centrée sur votre écran.';centerNotFound='Fenêtre Android pas encore visible. Démarrez Android.';centerError='Impossible de centrer Android :';
     home='Accueil';back='Retour';keyboardPc='Clavier PC';keyboardAndroid='Clavier Android';coldBoot='Démarrage à froid';
+    keyboardPcBoth='Claviers PC + Android';keyboardHideSoft='Masquer le clavier Android';keyboardShowSoft='Afficher le clavier Android';
+    keyboardBothDone='Clavier physique configuré et clavier Android conservé pour la connexion.';
+    keyboardHideConfirm='Masquer le clavier Android ? Acceptez seulement si le clavier PC fonctionne. Vous pouvez le réactiver ici.';
+    keyboardSoftHidden='Clavier Android masqué sur demande explicite.';
     homeDone='Commande Accueil envoyée à Android.';backDone='Commande Retour envoyée à Android.';
     keyboardPcDone='Clavier du PC activé. Cliquez dans un champ Android et tapez sur votre clavier.';
     keyboardAndroidDone='Clavier virtuel Android réactivé.';

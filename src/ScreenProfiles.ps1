@@ -53,8 +53,8 @@ function Get-WEmulDroidScreenCommands {
         throw 'Invalid orientation.'
     }
     return @(
-        ,@('shell','wm','size',[string]$Profile.Size)
-        ,@('shell','wm','density',[string]$Profile.Dpi)
-        ,@('shell','wm','user-rotation','lock',$rotation)
+        [pscustomobject]@{ Arguments=@('shell','wm','size',[string]$Profile.Size); Label='resolution' }
+        [pscustomobject]@{ Arguments=@('shell','wm','density',[string]$Profile.Dpi); Label='density' }
+        [pscustomobject]@{ Arguments=@('shell','wm','user-rotation','lock',$rotation); Label='rotation' }
     )
 }

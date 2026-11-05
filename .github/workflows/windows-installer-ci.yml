@@ -32,6 +32,7 @@ jobs:
           .\tests\Localization.Tests.ps1
           .\tests\Layout.Tests.ps1
           .\tests\GuestControls.Tests.ps1
+          .\tests\WindowCenter.Tests.ps1
       - name: Install Inno Setup compiler on build runner if absent
         shell: powershell
         run: |

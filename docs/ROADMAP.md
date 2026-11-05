@@ -86,6 +86,17 @@ Non confondere popup Google Search/tastiera Android del primo avvio con elementi
 - [ ] Collaudo su ASUS di Play Store tablet in orizzontale e fullscreen con adattamento effettivo dell'immagine (i test CI verificano geometria/installer, non rendering Qt sul dispositivo reale)
 - [ ] Misurare fluidità, testo, RAM/GPU e comportamento dopo l'uscita da fullscreen; nessuna regressione smartphone
 
+## P0.11 — Collaudo ASUS e memoria (unico fronte successivo)
+
+1. Installare dalla funzione **Impostazioni → Aggiornamenti** la beta correttiva successiva alla 0.9.0-beta.6. Nessuna cancellazione AVD/SDK, Play Store o account; non disattivare Smart App Control.
+2. Verificare sull'ASUS: pulsante **Compatibilità giochi** visibile, rotazione automatica del gioco senza `wm user-rotation lock` forzato dal fullscreen, visualizzazione senza bande nere superflue, finestre non deformate, ripristino fullscreen.
+3. In caso di crash o ANR, usare **Diagnostica completa** con consenso esplicito (screenshot, RAM Android, crash-buffer e rotazione); distinguere incompatibilità del singolo gioco da difetto generale. Brawl Stars è solo stress test di rotazione/grafica, non prova obbligatoria di compatibilità.
+4. **Analisi memoria ASUS:** hardware già documentato: VivoBook 16X FX3605ZV-RP209W, i7-12700H, 16 GB DDR4 (15,6 GB utilizzabili), RTX 4060 Laptop 8 GB VRAM. In verifiche Windows precedenti erano disponibili circa 4,7 GB con carico elevato, circa 8,4 GB dopo alleggerimento. Questi valori NON sono misurazioni di WEmulDroid: raccogliere nuova baseline prima di proporre un upgrade.
+5. Rilevare RAM Windows usata/disponibile/commit prima di avvio, dopo avvio AVD e con app di test; GPU VRAM, processi emulator/qemu e consumo Android `dumpsys meminfo`; confrontare cold boot e warm boot con profili identici. Provare solo modifiche reversibili a `hw.ramSize`, risoluzione e processi residenti, con backup configurazione. Non ridurre memoria a caso né confondere VRAM dedicata con RAM di sistema.
+6. Verificare espandibilità RAM fisica **dello SKU esatto** prima di ogni acquisto; non aprire il portatile per prova prima di aver verificato documentazione/garanzia. Misurare il beneficio atteso: se la RAM non è satura, cercare invece cause grafiche/driver e incompatibilità x86_64.
+
+**Gate di completamento:** WEmulDroid operativo e ripetibile sul vero ASUS con Play Store, display smartphone/tablet corretto e diagnostica utile; senza crash di sistema riproducibili. In assenza di collaudo reale non dichiarare stabilità 1.0 né supporto garantito di giochi specifici. Non aprire Ads Kill o Freebox Secure durante questo gate.
+
 ## P1 — Gestione input evoluta
 - [ ] Verificare se il touchpad ASUS espone contatti separati leggibili dal software
 - [ ] Esperimento dito 1 da touchpad + dito 2 da mouse, senza driver invasivi

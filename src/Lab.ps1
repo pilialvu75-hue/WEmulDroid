@@ -440,21 +440,10 @@ $btnCenter.Add_Click({
 $btnFullscreen.Add_Click({
     try {
         $serial = Require-RunningDevice
-        # On first fullscreen entry, ensure a landscape tablet actually has
-        # a matching guest aspect ratio, otherwise Qt letterboxes a tall
-        # portrait framebuffer in a widescreen host window.
-        if (-not $script:FullscreenWindowState -and
-            $script:ScreenCombo.SelectedIndex -ge 2) {
-            $working = [System.Windows.Forms.Screen]::FromControl($form).WorkingArea
-            $profile = Get-WEmulDroidScreenProfile -Index $script:ScreenCombo.SelectedIndex -MonitorArea $working
-            foreach ($command in @(Get-WEmulDroidScreenCommands -Profile $profile)) {
-                [void](Invoke-DeviceCommand $serial $command.Arguments $command.Label)
-            }
-            Write-Log ((T 'screenProfileApplied') + ' ' + $profile.Width + 'x' + $profile.Height)
-            # Establish a monitor-fit window before entering borderless
-            # fullscreen, so exiting fullscreen restores a useful tablet size.
-            [void](Set-WEmulDroidWindowFitted -AvdName $script:AvdName -GuestAspect ([double]$profile.Width/$profile.Height) -OwnerForm $form)
-        }
+        # Fullscreen must ONLY change the host Qt window. In particular it
+        # must never force wm size / density / user-rotation: games may choose
+        # their own orientation and overriding it can rotate them sideways.
+        # Display profiles remain available via the explicit Applica schermo button.
         # Smartphone portrait or mismatched monitor aspect must not paint
         # the unused desktop black. Fit just the useful Android window.
         if (-not $script:FullscreenWindowState) {

@@ -43,6 +43,21 @@ Il nuovo sistema usa **un singolo installer Windows .exe** (Inno Setup, installa
 
 La procedura di installazione automatica e i controlli della tastiera hanno test di regressione su PowerShell Windows 5.1. **Il login Google, la digitazione reale con tastiera ASUS e il centraggio finale richiedono ancora collaudo sul tuo PC.**
 
+## Smartphone, tablet e fullscreen intelligente
+
+Dalla scheda **Schermo / Comandi** puoi scegliere:
+
+- **Telefono leggero / HD**: risoluzioni verticali. Il comando «Fullscreen intelligente» usa una finestra stretta e proporzionata, lasciando visibile il desktop invece di coprirlo con bande nere.
+- **Tablet 16:10**: `1280x800` orizzontale, 200 dpi.
+- **Tablet 16:9**: `1600x900` orizzontale, 240 dpi.
+- **Tablet automatico**: adatta la risoluzione al monitor (senza calcolare più pixel del necessario).
+
+Premi **Applica schermo**, quindi **Adatta finestra al monitor** per adeguare anche la finestra Qt. Per proporzioni tablet compatibili con lo schermo è disponibile «Fullscreen intelligente». Quando il formato differisce, l'app preferisce una finestra proporzionata, senza occupare inutilmente il resto del desktop. **Ripristina** riporta dimensioni, densità e rotazione alle impostazioni originali Android.
+
+Il vecchio «Tablet 1600x2560 @ 320 dpi» non era un vero tablet landscape: impostava un'immagine verticale molto grande e il Play Store rimaneva minuscolo nella finestra. Le modifiche alla risoluzione non cancellano app o account, ma possono rendere instabili alcuni giochi: in quel caso premi **Ripristina**.
+
+**Collaudo reale ancora richiesto:** Google Play Store e giochi tablet landscape sul PC ASUS. I test CI verificano calcoli, opzioni e installer Windows ma non possono garantire il comportamento grafico Qt sul tuo monitor.
+
 ## Aggiornamenti Stabile / Beta
 
 **Impostazioni → Aggiornamenti** cerca le nuove release ufficiali dell'installer sul repository GitHub. Il canale stabile è quello predefinito, beta opzionale. Ogni installazione richiede approvazione:

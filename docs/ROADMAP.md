@@ -29,7 +29,7 @@
 - [x] Esecuzione reale del downloader, JDK 17 e installazione SDK Android su ASUS Windows 11 (screenshot test 4 novembre 2026)
 - [x] Avvio completo AVD Android 15 e schermata iniziale visibile su ASUS (foto test 4 novembre 2026)
 - [ ] Test Impostazioni Android, conferma UI e report RAM/CPU
-- [ ] Primo avvio Google Play Store su Windows, login nel dispositivo virtuale
+- [x] Google Play Store ufficiale avviato sull'ASUS, schermata di autenticazione Google raggiunta (5 novembre 2026). **Non memorizzare credenziali in WEmulDroid**.
 - [ ] Verifica download/installazione e avvio app compatibile autorizzata dal Play Store
 - [ ] Installazione e avvio di una piccola applicazione indipendente x86_64
 - [ ] Verifica Windows PowerShell, WHPX, Java, GPU, spazio su disco
@@ -60,14 +60,18 @@ Dettagli: [UPDATES.md](UPDATES.md). La versione è distribuita come sorgenti Pow
 - [x] Pulsanti Avvia, Arresta, Aggiorna elenco e Impostazioni sempre visibili
 - [x] Pannello ridotto a icona quando si avvia Android; test sintassi e GUI Windows CI
 - [ ] Collaudare la GUI riorganizzata sul PC reale e confermare facilità d'uso
-- [ ] Verificare aggiornamento **0.9.0-beta.1 → 0.9.0-beta.2** dall'interno dell'app, senza perdita dati
+- [x] Aggiornamento beta.1 → beta.2 confermato con schermata utente, nonostante Windows abbia bloccato un tentativo di riavvio automatico dell'eseguibile non firmato
 - [x] Avvio quieto dell'emulatore: stdout/stderr su report locali, senza console tecnica invadente (CI Windows PASS; verifica GUI Qt sul vero ASUS da completare)
 - [x] Comandi Android sempre visibili: Home, Indietro, Tastiera PC / Android, Avvio pulito senza snapshot; test ADB e config AVD
-- [ ] Verificare sul vero ASUS che la tastiera PC sia riconosciuta, che quella Android si nasconda e che il boot pulito recuperi lo schermo nero/grigio
+- [ ] Verificare sul vero ASUS la **tastiera PC** e il ripristino Gboard per il login: nuovo comando principale permette entrambe; nascondere Gboard solo su richiesta esplicita. Test regressione Windows PASS.
 - [ ] Confermare che la finestra console non appaia nella nuova beta; i log devono comunque rimanere consultabili
 - [ ] Verificare gli avvisi di caricamento snapshot (il sistema si avvia, gli avvisi da soli non rappresentano fallimento)
 - [x] Correzione geometria finestra Android: centraggio automatico nel monitor attivo, riduzione se eccede area utile, pulsante manuale «Centra Android» (test Windows PowerShell 5.1 PASS)
 - [ ] Verifica effettiva su ASUS del centraggio automatico della finestra Android, anche dopo riavvio e fullscreen
+- [x] Riprova del centraggio durante i primi ~50 s del boot per contrastare il riposizionamento Qt (sintassi e test geometria Windows)
+- [x] Unico setup guidato di Android standard e Google Play ufficiale dopo consenso esplicito, nessuna sovrascrittura di AVD esistenti (CI Windows)
+- [ ] Collaudo reale di prima installazione completa su Windows vergine (download SDK+2 immagini, licenze Google e Google Play)
+- [ ] Verifica reale Google Play login senza keyboard lockout sulla prossima beta
 - [ ] Provare APK reali, Google Play, mouse/audio, fullscreen e screenshot su ASUS
 
 Non confondere popup Google Search/tastiera Android del primo avvio con elementi della GUI WEmulDroid. Tenere separati dati dell'AVD, codice applicativo e aggiornamenti.

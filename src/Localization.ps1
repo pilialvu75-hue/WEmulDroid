@@ -25,6 +25,7 @@ $script:UiWords = @{
     install='Install APK';measure='Measure resources';reports='Open reports';play='Open Play Store';
     package='Installed app to inspect:';screen='Android display:';screenApply='Apply display';screenReset='Reset display';
     screenPhoneLite='Phone lightweight 720 x 1280 (320 dpi)';screenPhoneHigh='Phone high 1080 x 2400 (420 dpi)';screenTablet1610='Tablet landscape 1280 x 800 (200 dpi)';screenTablet169='Tablet wide 1600 x 900 (240 dpi)';screenTabletAuto='Tablet auto - fit to monitor';
+    screenFitWindow='Fit window to desktop';screenWindowFitted='Android window fitted to monitor without extra black areas.';screenFitUnavailable='Android window is not available for resizing yet.';screenSmartFit='Portrait or nonmatching aspect: kept desktop visible instead of black fullscreen.';
     screenProfileApplied='Android display profile applied:';screenProfileNotice='Tablet uses landscape orientation. Window follows Android device aspect ratio; fullscreen cannot add pixels to the monitor.';screenProfileRestored='Original Android resolution, density and automatic rotation restored.';
     screenshot='Screenshot';touchHelp='Touch / Audio';fullscreen='Fullscreen';exitFullscreen='Exit fullscreen';
     folder='APK from folder';link='APK from HTTPS link';splitTouch='Touchpad + mouse (future)';
@@ -102,6 +103,7 @@ $script:UiWords = @{
     install='Installa APK';measure='Misura risorse';reports='Apri report';play='Apri Play Store';
     package='App installata da analizzare:';screen='Schermo Android:';screenApply='Applica schermo';screenReset='Ripristina';
     screenPhoneLite='Telefono leggero 720 x 1280 (320 dpi)';screenPhoneHigh='Telefono HD 1080 x 2400 (420 dpi)';screenTablet1610='Tablet orizzontale 1280 x 800 (200 dpi)';screenTablet169='Tablet panoramico 1600 x 900 (240 dpi)';screenTabletAuto='Tablet automatico - adatta al monitor';
+    screenFitWindow='Adatta finestra al monitor';screenWindowFitted='Finestra Android adattata senza superfici nere inutilizzate.';screenFitUnavailable='Finestra Android non ancora disponibile per il ridimensionamento.';screenSmartFit='Schermo verticale o proporzioni diverse: desktop mantenuto visibile, niente fullscreen nero.';
     screenProfileApplied='Profilo schermo Android applicato:';screenProfileNotice='Tablet in orizzontale: la finestra mantiene le proporzioni Android. Il fullscreen non aumenta i pixel del monitor.';screenProfileRestored='Risoluzione, densita e rotazione automatica Android ripristinate.';
     screenshot='Screenshot';touchHelp='Touch / Audio';fullscreen='Fullscreen';exitFullscreen='Esci fullscreen';
     folder='APK da cartella';link='APK da link HTTPS';splitTouch='Touchpad + mouse (futuro)';
@@ -179,6 +181,7 @@ $script:UiWords = @{
     install='Installer APK';measure='Mesurer ressources';reports='Ouvrir rapports';play='Ouvrir Play Store';
     package='Application a analyser :';screen='Ecran Android :';screenApply='Appliquer ecran';screenReset='Reinitialiser';
     screenPhoneLite='Telephone leger 720 x 1280 (320 dpi)';screenPhoneHigh='Telephone HD 1080 x 2400 (420 dpi)';screenTablet1610='Tablette paysage 1280 x 800 (200 dpi)';screenTablet169='Tablette large 1600 x 900 (240 dpi)';screenTabletAuto='Tablette auto - adaptee au moniteur';
+    screenFitWindow='Adapter la fenetre au moniteur';screenWindowFitted='Fenetre Android adaptee sans zones noires inutiles.';screenFitUnavailable='Fenetre Android indisponible pour le redimensionnement.';screenSmartFit='Portrait ou proportions differentes : bureau visible au lieu du plein ecran noir.';
     screenProfileApplied="Profil d'affichage Android applique :";screenProfileNotice="Tablette en mode paysage : la fenetre conserve les proportions Android. Le plein ecran n'augmente pas les pixels de l'ecran.";screenProfileRestored="Resolution, densite et rotation automatique Android restaurees.";
     screenshot='Capture ecran';touchHelp='Tactile / Audio';fullscreen='Plein ecran';exitFullscreen='Quitter plein ecran';
     folder='APK du dossier';link='APK via lien HTTPS';splitTouch='Pave tactile + souris (futur)';

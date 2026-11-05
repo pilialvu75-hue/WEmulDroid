@@ -779,6 +779,23 @@ function Update-WEmulDroidLanguage {
     $screenLabel.Text = (T 'screen')
     $btnScreen.Text = (T 'screenApply')
     $btnScreenReset.Text = (T 'screenReset')
+
+    # Preserve selected profile when switching English / Italian / French.
+    $selectedProfile = $script:ScreenCombo.SelectedIndex
+    $script:ScreenCombo.BeginUpdate()
+    try {
+        $script:ScreenCombo.Items.Clear()
+        foreach ($key in @('screenPhoneLite','screenPhoneHigh',
+                'screenTablet1610','screenTablet169','screenTabletAuto')) {
+            [void]$script:ScreenCombo.Items.Add((T $key))
+        }
+        $script:ScreenCombo.SelectedIndex = if ($selectedProfile -ge 0 -and $selectedProfile -lt 5) {
+            $selectedProfile
+        } else { 4 }
+    } finally {
+        $script:ScreenCombo.EndUpdate()
+    }
+
     $btnCapture.Text = (T 'screenshot')
     $btnTouchHelp.Text = (T 'touchHelp')
     $btnFullscreen.Text = (T $(if ($script:FullscreenWindowState) { 'exitFullscreen' } else { 'fullscreen' }))

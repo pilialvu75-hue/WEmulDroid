@@ -89,7 +89,6 @@ function Assert-WEmulDroidInstallerSignature {
     if ($actual -cne $expected.ToUpperInvariant()) {
         throw 'Installer SHA-256 changed after download.'
     }
-    $newSignature = Get-AuthenticodeSignature -LiteralPath $Installer
     if ($channel -eq 'development') {
         # The user opted into the explicitly labelled unsigned development
         # channel. No system-wide protection is altered to execute this file.
@@ -98,8 +97,12 @@ function Assert-WEmulDroidInstallerSignature {
         return $true
     }
 
-    # Once a CA-signed production version is installed, unsigned installers
-    # and changes of publisher identity must be rejected.
+    # Only query Authenticode for production releases. On some Windows 11
+    # systems Code Integrity blocks PowerShell while it inspects unsigned EXEs,
+    # even before the user tries to launch the installer. Development already
+    # verified the release's SHA-256 and must not claim Windows will run it.
+    # Production still requires valid trusted signatures and matching publisher.
+    $newSignature = Get-AuthenticodeSignature -LiteralPath $Installer
     $installed = Get-AuthenticodeSignature -LiteralPath $InstalledLauncher
     if ($installed.Status -ne 'Valid' -or -not $installed.SignerCertificate) {
         throw 'Production WEmulDroid launcher lacks a trusted signature.'

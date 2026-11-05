@@ -19,6 +19,7 @@ $script:LogBox.Multiline = $true
 
 $buttonNames = @(
     'btnSettings','btnSetup','btnStart','btnRefresh','btnStop',
+    'btnHome','btnBack','btnPcKeyboard','btnColdBoot',
     'btnInstall','btnApkFolder','btnApkLink','btnPlay',
     'btnScreen','btnScreenReset','btnCapture','btnTouchHelp','btnFullscreen',
     'btnSplitTouch','btnMeasure','btnReports','btnDiagnostics',
@@ -46,6 +47,11 @@ try {
     }
     if ($languageLabel.Right -gt $script:LanguageCombo.Left) {
         throw 'Language label overlaps language dropdown.'
+    }
+    foreach ($button in @($btnHome,$btnBack,$btnPcKeyboard,$btnColdBoot)) {
+        if ($button.Parent -ne $form -or $button.Top -ge $script:WorkTabs.Top) {
+            throw 'Android navigation and keyboard control not permanently visible.'
+        }
     }
     if ($btnStart.Parent -ne $form -or $btnStop.Parent -ne $form -or
         $btnSettings.Parent -ne $form) {

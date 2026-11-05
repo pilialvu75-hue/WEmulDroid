@@ -13,6 +13,7 @@ Add-Type -AssemblyName System.Drawing
 . (Join-Path $PSScriptRoot 'GuestControls.ps1')
 . (Join-Path $PSScriptRoot 'ApkInstall.ps1')
 . (Join-Path $PSScriptRoot 'WindowMode.ps1')
+. (Join-Path $PSScriptRoot 'ScreenProfiles.ps1')
 . (Join-Path $PSScriptRoot 'Snapshots.ps1')
 . (Join-Path $PSScriptRoot 'Diagnostics.ps1')
 . (Join-Path $PSScriptRoot 'Localization.ps1')
@@ -239,8 +240,10 @@ $script:ScreenCombo.DropDownStyle = 'DropDownList'
 $script:ScreenCombo.SetBounds(153, 270, 245, 30)
 [void]$script:ScreenCombo.Items.Add('Leggero 720 x 1280 (320 dpi)')
 [void]$script:ScreenCombo.Items.Add('Smartphone 1080 x 2400 (420 dpi)')
-[void]$script:ScreenCombo.Items.Add('Tablet 1600 x 2560 (320 dpi)')
-$script:ScreenCombo.SelectedIndex = 0
+[void]$script:ScreenCombo.Items.Add('Tablet 16:10 — 1280 x 800 (200 dpi)')
+[void]$script:ScreenCombo.Items.Add('Tablet 16:9 — 1600 x 900 (240 dpi)')
+[void]$script:ScreenCombo.Items.Add('Tablet automatico — adatta al monitor')
+$script:ScreenCombo.SelectedIndex = 4
 $form.Controls.Add($script:ScreenCombo)
 
 $btnScreen = New-LabButton 'Applica schermo' 406 267
@@ -497,26 +500,32 @@ $btnApkLink.Add_Click({
 $btnScreen.Add_Click({
     try {
         $serial = Require-RunningDevice
-        $selected = $script:ScreenCombo.SelectedIndex
-        if ($selected -lt 0) { throw (T 'chooseScreenFirst') }
-        $sizes = @('720x1280', '1080x2400', '1600x2560')
-        $dpis = @('320', '420', '320')
-        $size = $sizes[$selected]
-        $dpi = $dpis[$selected]
-        # Modifica reversibile del solo display Android emulato.
-        [void](Invoke-DeviceCommand $serial @('shell', 'wm', 'size', $size) 'Risoluzione')
-        [void](Invoke-DeviceCommand $serial @('shell', 'wm', 'density', $dpi) 'Densita')
-        Write-Log ('Schermo Android simulato: ' + $size + ' @ ' + $dpi + ' dpi.')
-        Write-Log 'La dimensione della finestra Windows resta indipendente dalla risoluzione Android.'
+        $index = $script:ScreenCombo.SelectedIndex
+        if ($index -lt 0) { throw (T 'chooseScreenFirst') }
+        $area = [System.Windows.Forms.Screen]::FromControl($form).WorkingArea
+        $profile = Get-WEmulDroidScreenProfile -Index $index -MonitorArea $area
+        # Apply the natural PORTRAIT base size and then rotate the Android
+        # display for landscape tablet mode. Prevent old portrait tablet bug.
+        foreach ($command in @(Get-WEmulDroidScreenCommands -Profile $profile)) {
+            [void](Invoke-DeviceCommand $serial $command.Arguments $command.Label)
+        }
+        Write-Log ((T 'screenProfileApplied') + ' ' + $profile.Name + ': ' +
+            $profile.Width + 'x' + $profile.Height + ' @ ' + $profile.Dpi + ' dpi.')
+        Write-Log (T 'screenProfileNotice')
+        # Android Emulator keeps the Qt window proportions. Recenter after
+        # guest rotation; do not attempt to stretch or distort the pixels.
+        if (-not $script:FullscreenWindowState) { Start-WEmulDroidAutoCenter }
     } catch { Show-Error $_.Exception.Message }
 })
 
 $btnScreenReset.Add_Click({
     try {
         $serial = Require-RunningDevice
-        [void](Invoke-DeviceCommand $serial @('shell', 'wm', 'size', 'reset') 'Ripristino risoluzione')
-        [void](Invoke-DeviceCommand $serial @('shell', 'wm', 'density', 'reset') 'Ripristino densita')
-        Write-Log 'Dimensioni e densita Android riportate ai valori originali dell AVD.'
+        [void](Invoke-DeviceCommand $serial @('shell','wm','user-rotation','free') 'Ripristino orientamento')
+        [void](Invoke-DeviceCommand $serial @('shell','wm','size','reset') 'Ripristino risoluzione')
+        [void](Invoke-DeviceCommand $serial @('shell','wm','density','reset') 'Ripristino densita')
+        if (-not $script:FullscreenWindowState) { Start-WEmulDroidAutoCenter }
+        Write-Log (T 'screenProfileRestored')
     } catch { Show-Error $_.Exception.Message }
 })
 

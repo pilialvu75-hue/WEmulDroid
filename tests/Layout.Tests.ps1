@@ -74,7 +74,7 @@ try {
             throw 'Diagnostics or snapshots button is missing from Diagnostics tab.'
         }
     }
-    if ($btnGamesMode.Bottom -gt $script:DisplayTab.DisplayRectangle.Height) {
+    if ($btnGamesMode.Bottom -gt ($script:WorkTabs.Height - 35)) {
         throw 'Game compatibility button is clipped by the tab page.'
     }
     if ($script:PackageCombo.Parent -ne $script:AppsTab -or

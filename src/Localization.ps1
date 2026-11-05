@@ -5,6 +5,15 @@ $script:UiLanguageNames = @('English', 'Italiano', 'Français')
 $script:UiWords = @{
   en = @{
     tabApps='Applications / APK';tabDisplay='Display / Touch';tabDiagnostics='Diagnostics / Snapshots';
+    home='Home';back='Back';keyboardPc='PC keyboard';keyboardAndroid='Android keyboard';coldBoot='Cold boot';
+    homeDone='Android Home key sent.';backDone='Android Back key sent.';
+    keyboardPcDone='PC keyboard enabled; click a text field in the emulator and type on your computer.';
+    keyboardAndroidDone='On-screen Android keyboard enabled again.';
+    keyboardRestart='Hardware keyboard was enabled for this AVD. Close and restart Android once for the physical keyboard to take effect.';
+    coldBootStopFirst='Stop Android before cold boot; current apps and data will be preserved.';
+    coldBootConfirm='Start Android without loading its previous snapshot? This can recover a black/gray screen. No apps or data will be erased.';
+    coldBootStarted='Cold boot started. Diagnostic log:';
+    emulatorLogSaved='Android emulator diagnostics saved:';
     title='WEmulDroid | Android on Windows';language='Language';device='Device:';notStarted='not started';
     setup='1. Install tools';start='2. Start Android';refresh='3. Refresh apps';stop='Stop Android';
     install='Install APK';measure='Measure resources';reports='Open reports';play='Open Play Store';
@@ -65,6 +74,15 @@ $script:UiWords = @{
   }
   it = @{
     tabApps='Applicazioni / APK';tabDisplay='Schermo / Comandi';tabDiagnostics='Diagnostica / Snapshot';
+    home='Home';back='Indietro';keyboardPc='Tastiera PC';keyboardAndroid='Tastiera Android';coldBoot='Avvio pulito';
+    homeDone='Comando Home inviato ad Android.';backDone='Comando Indietro inviato ad Android.';
+    keyboardPcDone='Tastiera PC abilitata. Clicca un campo di testo dentro Android e scrivi con la tastiera ASUS.';
+    keyboardAndroidDone='Tastiera virtuale Android riabilitata.';
+    keyboardRestart='La tastiera fisica è stata abilitata per questo dispositivo. Arresta e riavvia Android una volta per applicare la configurazione.';
+    coldBootStopFirst='Arresta Android prima di avviarlo senza snapshot: app e dati saranno conservati.';
+    coldBootConfirm='Avviare Android senza caricare lo snapshot precedente? Può risolvere una schermata nera/grigia. App e dati non saranno cancellati.';
+    coldBootStarted='Avvio pulito richiesto. Log diagnostico:';
+    emulatorLogSaved='Log del motore Android salvato:';
     title='WEmulDroid | Android su Windows';language='Lingua';device='Dispositivo:';notStarted='da avviare';
     setup='1. Installa strumenti';start='2. Avvia Android';refresh='3. Aggiorna elenco';stop='Arresta Android';
     install='Installa APK';measure='Misura risorse';reports='Apri report';play='Apri Play Store';
@@ -125,6 +143,15 @@ $script:UiWords = @{
   }
   fr = @{
     tabApps='Applications / APK';tabDisplay='Écran / Commandes';tabDiagnostics='Diagnostic / Instantanés';
+    home='Accueil';back='Retour';keyboardPc='Clavier PC';keyboardAndroid='Clavier Android';coldBoot='Démarrage à froid';
+    homeDone='Commande Accueil envoyée à Android.';backDone='Commande Retour envoyée à Android.';
+    keyboardPcDone='Clavier du PC activé. Cliquez dans un champ Android et tapez sur votre clavier.';
+    keyboardAndroidDone='Clavier Android à l’écran réactivé.';
+    keyboardRestart='Le clavier physique a été activé pour cet appareil. Arrêtez et redémarrez Android une fois pour appliquer le changement.';
+    coldBootStopFirst='Arrêtez Android avant un démarrage à froid. Les applications et données seront conservées.';
+    coldBootConfirm='Démarrer Android sans charger le dernier instantané ? Cela peut corriger un écran noir/gris sans effacer les applications ni les données.';
+    coldBootStarted='Démarrage à froid lancé. Journal :';
+    emulatorLogSaved='Journal de diagnostic Android enregistré :';
     title='WEmulDroid | Android sur Windows';language='Langue';device='Appareil :';notStarted='a demarrer';
     setup='1. Installer les outils';start='2. Demarrer Android';refresh='3. Actualiser les applis';stop='Arreter Android';
     install='Installer APK';measure='Mesurer ressources';reports='Ouvrir rapports';play='Ouvrir Play Store';

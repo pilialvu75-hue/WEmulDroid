@@ -22,7 +22,7 @@ $buttonNames = @(
     'btnHome','btnBack','btnPcKeyboard','btnColdBoot',
     'btnInstall','btnApkFolder','btnApkLink','btnPlay',
     'btnScreen','btnScreenReset','btnCapture','btnTouchHelp','btnFullscreen',
-    'btnSplitTouch','btnMeasure','btnReports','btnDiagnostics',
+    'btnSplitTouch','btnCenter','btnMeasure','btnReports','btnDiagnostics',
     'btnSnapshotList','btnSnapshotSave','btnSnapshotLoad'
 )
 foreach ($name in $buttonNames) {
@@ -63,7 +63,7 @@ try {
         }
     }
     foreach ($button in @($btnScreen,$btnScreenReset,$btnCapture,
-        $btnTouchHelp,$btnFullscreen,$btnSplitTouch)) {
+        $btnTouchHelp,$btnFullscreen,$btnSplitTouch,$btnCenter)) {
         if ($button.Parent -ne $script:DisplayTab) {
             throw 'Display control is missing from the Display tab.'
         }

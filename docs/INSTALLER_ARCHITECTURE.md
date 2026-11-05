@@ -42,7 +42,7 @@ La chiave di firma NON va inviata per chat, issue, allegati o repository. Va con
 - [x] Disinstallazione con conservazione di dati SDK e report.
 - [x] Selezione beta/stabile e rifiuto delle vecchie release ZIP testata su Windows PowerShell 5.1.
 - [x] Regressione ADB daemon 5037 simulata e verificata su Windows PowerShell 5.1.
-- [ ] Verifica reale **upgrade fra due installer con versioni differenti** (CI dedicata).
+- [x] Verifica automatizzata **upgrade fra due installer con versioni differenti**, inclusa conservazione dati e shortcut Windows (CI commit `cf8e74dc`, PASS). Il test su ASUS reale resta da eseguire.
 - [ ] Firma CA attendibile configurata nei segreti GitHub; pacchetto, launcher, scripts e uninstaller firmati.
 - [ ] Prova Smart App Control / SmartScreen su ASUS dell'utente con firma reale.
 - [ ] Primo avvio completo del sistema Android emulato dopo la correzione ADB e conferma dei dati preservati.
@@ -55,3 +55,18 @@ La chiave di firma NON va inviata per chat, issue, allegati o repository. Va con
 Microsoft Smart App Control: https://support.microsoft.com/en-us/windows/security/threat-malware-protection/smart-app-control-frequently-asked-questions
 
 Inno Setup: https://jrsoftware.org/isinfo.php
+
+
+## Evidenza ASUS — 5 novembre 2026, 23:11:34 (issue #5)
+
+L'ASUS con WEmulDroid `v0.9.0-beta.6` ha registrato eventi `Microsoft-Windows-CodeIntegrity/Operational` **3077** e **3033**, associati a `powershell.exe` e al file locale `WEmulDroid-Setup-v0.9.0-beta.7.exe` in `%LOCALAPPDATA%\WEmulDroid\Updates\installer-pending`.
+
+Il messaggio rilevato è: *did not meet the Enterprise signing level requirements* (per 3077 compare anche la possibile violazione di code integrity policy). Si tratta di un blocco della policy Windows, non di un errore dimostrato della connessione GitHub né della RAM. La presenza del file locale non dimostra che l'installer possa essere eseguito.
+
+- La beta.7 non firmata non è un candidato accettato sul dispositivo ASUS con questa policy.
+- Non disattivare Smart App Control, WDAC o altri controlli Windows per collaudare la release.
+- Il workflow `publish-official-installer.yml` richiede le credenziali di firma; non è possibile dichiarare eseguito un rilascio firmato senza configurazione e test reali.
+- I messaggi diagnostici per fase sono stati aggiornati nel commit `1606f868`; test aggiunti e integrati nel workflow fino al commit `cf8e74dc` (CI Windows PASS).
+- Prima di riprovare l'installazione: firma e verifica della catena di rilascio, test di compatibilità della policy sul vero ASUS e preservazione di Android SDK, AVD e login Play Store.
+
+Riferimento: https://github.com/pilialvu75-hue/WEmulDroid/issues/5

@@ -14,7 +14,7 @@ try {
     if (([IO.File]::ReadAllText($path)) -notmatch '(?m)^hw\.keyboard=yes$') {
         throw 'AVD keyboard setting was not enabled.'
     }
-    if (([IO.File]::ReadAllText($path)) -notmatch '(?m)^showDeviceFrame=yes$') {
+    if (-not ([IO.File]::ReadAllText($path)).Contains('showDeviceFrame=yes')) {
         throw 'Unrelated AVD config setting was modified.'
     }
     if (Enable-WEmulDroidPhysicalKeyboard 'WEmulDroid_API_35') {

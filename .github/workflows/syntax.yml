@@ -81,6 +81,8 @@ jobs:
           grep -Fq 'Update-WEmulDroidLanguage' src/Lab.ps1
           grep -Fq 'Initialize-WEmulDroidLayout' src/Lab.ps1
           grep -Fq 'Start-WEmulDroidQuietEmulator' src/Lab.ps1
+          grep -Fq 'Start-WEmulDroidAutoCenter' src/Lab.ps1
+          grep -Fq 'Set-WEmulDroidWindowCentered' src/WindowMode.ps1
           grep -Fq 'Show-WEmulDroidUpdateSettings' src/Lab.ps1
           grep -Fq 'Invoke-WEmulDroidNative' src/Lab.ps1
           test -s VERSION.txt

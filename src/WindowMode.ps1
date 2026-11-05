@@ -192,3 +192,23 @@ function Set-WEmulDroidWindowFitted {
     }
     return $true
 }
+
+
+# Smart presentation: never paint the unused desktop black when the Android
+# content is portrait or does not match the monitor aspect ratio.
+function Get-WEmulDroidPresentationMode {
+    [CmdletBinding()]
+    param(
+        [Parameter(Mandatory)][ValidateRange(0.45,3.0)][double]$GuestAspect,
+        [Parameter(Mandatory)][System.Drawing.Rectangle]$MonitorArea
+    )
+    if ($MonitorArea.Width -le 0 -or $MonitorArea.Height -le 0) {
+        throw 'Invalid display geometry.'
+    }
+    $monitorAspect = [double]$MonitorArea.Width / [double]$MonitorArea.Height
+    if ($GuestAspect -lt 1.20 -or
+        [Math]::Abs($GuestAspect - $monitorAspect) -gt 0.12) {
+        return 'fit'
+    }
+    return 'fullscreen'
+}

@@ -243,7 +243,7 @@ $script:ScreenCombo.SetBounds(153, 270, 245, 30)
 [void]$script:ScreenCombo.Items.Add('Tablet 16:10 — 1280 x 800 (200 dpi)')
 [void]$script:ScreenCombo.Items.Add('Tablet 16:9 — 1600 x 900 (240 dpi)')
 [void]$script:ScreenCombo.Items.Add('Tablet automatico — adatta al monitor')
-$script:ScreenCombo.SelectedIndex = 4
+$script:ScreenCombo.SelectedIndex = 0
 $form.Controls.Add($script:ScreenCombo)
 
 $btnScreen = New-LabButton 'Applica schermo' 406 267
@@ -454,6 +454,18 @@ $btnFullscreen.Add_Click({
             # fullscreen, so exiting fullscreen restores a useful tablet size.
             [void](Set-WEmulDroidWindowFitted -AvdName $script:AvdName -GuestAspect ([double]$profile.Width/$profile.Height) -OwnerForm $form)
         }
+        # Smartphone portrait or mismatched monitor aspect must not paint
+        # the unused desktop black. Fit just the useful Android window.
+        if (-not $script:FullscreenWindowState) {
+            $area = [System.Windows.Forms.Screen]::FromControl($form).WorkingArea
+            $profile = Get-WEmulDroidScreenProfile -Index $script:ScreenCombo.SelectedIndex -MonitorArea $area
+            $aspect = [double]$profile.Width / [double]$profile.Height
+            if ((Get-WEmulDroidPresentationMode -GuestAspect $aspect -MonitorArea $area) -eq 'fit') {
+                [void](Set-WEmulDroidWindowFitted -AvdName $script:AvdName -GuestAspect $aspect -OwnerForm $form)
+                Write-Log (T 'screenSmartFit')
+                return
+            }
+        }
         # Only the exact selected AVD's Qt emulator window is modified.
         $msg = Set-EmulatorWindowFullscreen $script:AvdName
         Write-Log $msg
@@ -556,6 +568,7 @@ $btnScreenReset.Add_Click({
         [void](Invoke-DeviceCommand $serial @('shell','wm','user-rotation','free') 'Ripristino orientamento')
         [void](Invoke-DeviceCommand $serial @('shell','wm','size','reset') 'Ripristino risoluzione')
         [void](Invoke-DeviceCommand $serial @('shell','wm','density','reset') 'Ripristino densita')
+        $script:ScreenCombo.SelectedIndex = 0
         if (-not $script:FullscreenWindowState) { Start-WEmulDroidAutoCenter }
         Write-Log (T 'screenProfileRestored')
     } catch { Show-Error $_.Exception.Message }
@@ -823,7 +836,7 @@ function Update-WEmulDroidLanguage {
         }
         $script:ScreenCombo.SelectedIndex = if ($selectedProfile -ge 0 -and $selectedProfile -lt 5) {
             $selectedProfile
-        } else { 4 }
+        } else { 0 }
     } finally {
         $script:ScreenCombo.EndUpdate()
     }

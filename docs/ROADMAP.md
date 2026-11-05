@@ -63,18 +63,28 @@ Dettagli: [UPDATES.md](UPDATES.md). La versione è distribuita come sorgenti Pow
 - [x] Aggiornamento beta.1 → beta.2 confermato con schermata utente, nonostante Windows abbia bloccato un tentativo di riavvio automatico dell'eseguibile non firmato
 - [x] Avvio quieto dell'emulatore: stdout/stderr su report locali, senza console tecnica invadente (CI Windows PASS; verifica GUI Qt sul vero ASUS da completare)
 - [x] Comandi Android sempre visibili: Home, Indietro, Tastiera PC / Android, Avvio pulito senza snapshot; test ADB e config AVD
-- [ ] Verificare sul vero ASUS la **tastiera PC** e il ripristino Gboard per il login: nuovo comando principale permette entrambe; nascondere Gboard solo su richiesta esplicita. Test regressione Windows PASS.
+- [x] Tastiera fisica ASUS e comando tastiera Android collaudati dall'utente con beta.5 (5 novembre 2026)
 - [ ] Confermare che la finestra console non appaia nella nuova beta; i log devono comunque rimanere consultabili
 - [ ] Verificare gli avvisi di caricamento snapshot (il sistema si avvia, gli avvisi da soli non rappresentano fallimento)
 - [x] Correzione geometria finestra Android: centraggio automatico nel monitor attivo, riduzione se eccede area utile, pulsante manuale «Centra Android» (test Windows PowerShell 5.1 PASS)
-- [ ] Verifica effettiva su ASUS del centraggio automatico della finestra Android, anche dopo riavvio e fullscreen
+- [x] Centraggio automatico Android verificato dall'utente sull'ASUS con beta.5 (5 novembre 2026)
 - [x] Riprova del centraggio durante i primi ~50 s del boot per contrastare il riposizionamento Qt (sintassi e test geometria Windows)
 - [x] Unico setup guidato di Android standard e Google Play ufficiale dopo consenso esplicito, nessuna sovrascrittura di AVD esistenti (CI Windows)
 - [ ] Collaudo reale di prima installazione completa su Windows vergine (download SDK+2 immagini, licenze Google e Google Play)
-- [ ] Verifica reale Google Play login senza keyboard lockout sulla prossima beta
+- [x] Google Play Store raggiunto, login eseguito e contenuti Play Store visibili nel profilo dedicato. Tastiera fisica ASUS e Gboard collaudati.
 - [ ] Provare APK reali, Google Play, mouse/audio, fullscreen e screenshot su ASUS
 
 Non confondere popup Google Search/tastiera Android del primo avvio con elementi della GUI WEmulDroid. Tenere separati dati dell'AVD, codice applicativo e aggiornamenti.
+
+## P0.10 — Modalità tablet nitida e spazio desktop visibile
+
+- [x] Correzione del vecchio tablet erroneamente verticale `1600x2560 @ 320 dpi`: preset tablet orizzontali 16:10 (`1280x800 @ 200 dpi`) e 16:9 (`1600x900 @ 240 dpi`)
+- [x] Profilo automatico che limita dimensioni e densità a quelle utili del monitor; niente 4K superfluo
+- [x] Pulsante **Adatta finestra al monitor**: regola la finestra Qt senza ingrandire/ritagliare Android, preservando le proporzioni
+- [x] Fullscreen intelligente: in verticale o se il monitor ha un altro rapporto di forma mantiene desktop visibile e adatta soltanto la finestra Android, evitando bande nere grandi
+- [x] Controlli Schermo tradotti in italiano, inglese e francese e test Windows del fit multi-monitor
+- [ ] Collaudo su ASUS di Play Store tablet in orizzontale e fullscreen con adattamento effettivo dell'immagine (i test CI verificano geometria/installer, non rendering Qt sul dispositivo reale)
+- [ ] Misurare fluidità, testo, RAM/GPU e comportamento dopo l'uscita da fullscreen; nessuna regressione smartphone
 
 ## P1 — Gestione input evoluta
 - [ ] Verificare se il touchpad ASUS espone contatti separati leggibili dal software

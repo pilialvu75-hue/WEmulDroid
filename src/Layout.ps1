@@ -74,6 +74,8 @@ function Initialize-WEmulDroidLayout {
         $script:DisplayTab.Controls.Add($entry[0])
         $entry[0].SetBounds($entry[1], $entry[2], $entry[3], 42)
     }
+    $script:DisplayTab.Controls.Add($btnCenter)
+    $btnCenter.SetBounds(22, 158, 202, 42)
 
     # Diagnostics and destructive snapshot actions are separate from daily use.
     $diagnosticControls = @(

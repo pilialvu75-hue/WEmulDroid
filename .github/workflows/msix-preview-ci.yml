@@ -50,6 +50,46 @@ jobs:
           $text=Get-Content '.\src\UpdateDialog.ps1' -Raw
           if (-not $text.Contains(" -eq 'store-preview'")) { throw 'Missing Store updater safety guard' }
           Write-Host 'PASS: isolated Store update channel.'
+      - name: Check staged desktop launcher and external data continuity
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          # Test the unpackaged staging EXE only; this is NOT MSIX activation or certification.
+          $launcher=(Resolve-Path '.\dist-msix\staging\WEmulDroid.exe').Path
+          $sdk=Join-Path $env:LOCALAPPDATA 'WEmulDroid\Sdk'
+          $reports=Join-Path $env:LOCALAPPDATA 'WEmulDroid\Reports'
+          $avd=Join-Path $env:USERPROFILE '.android\avd'
+          foreach ($folder in @($sdk,$reports,$avd)) {
+            New-Item -ItemType Directory -Force -Path $folder | Out-Null
+          }
+          $sentinels=@(
+            (Join-Path $sdk 'msix-preserve-sdk.txt'),
+            (Join-Path $reports 'msix-preserve-reports.txt'),
+            (Join-Path $avd 'msix-preserve-avd.txt')
+          )
+          foreach ($file in $sentinels) { Set-Content -LiteralPath $file -Value 'keep' }
+          $child=$null
+          $process=Start-Process -FilePath $launcher -PassThru
+          try {
+            Start-Sleep -Seconds 5
+            $process.Refresh()
+            if ($process.HasExited) { throw "Staged launcher exited: $($process.ExitCode)" }
+            $child=@(Get-CimInstance Win32_Process -Filter "ParentProcessId=$($process.Id)" |
+              Where-Object { $_.Name -ieq 'powershell.exe' })
+            if ($child.Count -lt 1) { throw 'Staged launcher did not start Windows PowerShell GUI' }
+            foreach ($file in $sentinels) {
+              if (-not (Test-Path -LiteralPath $file) -or (Get-Content -LiteralPath $file -Raw).Trim() -ne 'keep') {
+                throw "External Android/report data changed: $file"
+              }
+            }
+            Write-Host 'PASS: staging launcher child process and external user-data sentinels.'
+            Write-Host 'Not verified: actual signed Store installation, MSIX runtime virtualization, or ASUS Smart App Control.'
+          } finally {
+            foreach ($item in $child) {
+              Stop-Process -Id $item.ProcessId -Force -ErrorAction SilentlyContinue
+            }
+            Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
+          }
       - name: Archive test package without presenting it as installable
         uses: actions/upload-artifact@v4
         with:

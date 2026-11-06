@@ -2,6 +2,10 @@
 
 **Linea 0.9: installer Windows di sviluppo e Android 15/Google Play ufficiale.** Progetto indipendente da `Ai-orchestrator-riserva` e `AEmulWin`. Utilizza l'[Android Emulator ufficiale](https://developer.android.com/studio/run/emulator); non redistribuisce immagini Google o Java.
 
+## Esperimento Microsoft Store MSIX (separato dalle beta EXE)
+
+Il laboratorio [MSIX Store](docs/MSIX_STORE_PILOT.md) costruisce tramite [CI dedicata](.github/workflows/msix-preview-ci.yml) un **pacchetto di test NON FIRMATO e NON INSTALLABILE con Smart App Control**, senza includere o modificare SDK, AVD, Play Store e report dell'utente. Non equivale a una release approvata dallo Store: occorrono riserva del nome, identita publisher Microsoft, certificazione e verifica su ASUS. L'installer Inno Setup non viene sostituito automaticamente.
+
 ## Prima prova pratica sull'ASUS — beta di sviluppo
 
 Per non rallentare il progetto, abbiamo predisposto un **installer unico per Windows** utilizzabile come beta di sviluppo senza acquistare ora un certificato di firma.

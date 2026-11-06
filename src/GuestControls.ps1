@@ -57,7 +57,7 @@ function Start-WEmulDroidQuietEmulator {
     $outFile = Join-Path $ReportsRoot ('emulator-' + $AvdName + '-' + $stamp + '.stdout.log')
     $errFile = Join-Path $ReportsRoot ('emulator-' + $AvdName + '-' + $stamp + '.stderr.log')
     $arguments = @('-avd', $AvdName, '-gpu', 'auto')
-    if ($ColdBoot) { $arguments += '-no-snapshot-load' }
+    if ($ColdBoot -or $AvdName -eq 'WEmulDroid_Play_API_35') { $arguments += '-no-snapshot-load' }
     # Keep the Android Qt GUI visible; redirect console diagnostic output.
     $process = Start-Process -FilePath $EmulatorExe -ArgumentList $arguments -NoNewWindow -RedirectStandardOutput $outFile -RedirectStandardError $errFile -PassThru
     if (-not $process) { throw 'Android emulator process did not start.' }

@@ -91,6 +91,9 @@ function Initialize-WEmulDroidLayout {
         @($btnSnapshotList, 679, 27, 202),
         @($btnSnapshotSave, 22, 91, 202),
         @($btnSnapshotLoad, 241, 91, 202)
+        @($btnRamBefore, 460, 91, 202)
+        @($btnRamAndroid, 679, 91, 202)
+        @($btnRamGame, 22, 156, 202)
     )
     foreach ($entry in $diagnosticControls) {
         $script:DiagnosticsTab.Controls.Add($entry[0])

@@ -24,3 +24,19 @@ Workflow: `.github/workflows/msix-preview-ci.yml`. L'artefatto ha nome esplicito
 - https://learn.microsoft.com/en-us/uwp/schemas/appxpackage/uapmanifestschema/element-application
 
 **Non e ancora una release pubblicabile o eseguibile su ASUS.** Un successo CI conferma solo formato, contenuto e costruzione del pacchetto di prova.
+
+## Verifica blocchi di sicurezza del 6 novembre
+
+Sull'ASUS un evento Windows CodeIntegrity 3077 blocca la beta 10, per politica di firma. McAfee ha inoltre messo in quarantena `AI-Orchestrator-Runtime.exe` il 20 ottobre, episodio distinto: il rilevamento McAfee non dimostra che McAfee abbia bloccato anche WEmulDroid. Non disabilitare antivirus, Smart App Control, controlli enterprise o ripristinare file sospetti per collaudare.
+
+## Due rischi tecnici da certificare, non solo da compilare
+
+- Il launcher MSIX e una app desktop full-trust Win32 che avvia Windows PowerShell 5.1 e processi Android da percorso esterno al package. Anche se `runFullTrust` consente app desktop, verificare che la certificazione Store accetti questo flusso e che Windows avvii realmente il processo figlio.
+- I pacchetti MSIX hanno isolamento e virtualizzazione di alcune cartelle (AppData). Sulla macchina di prova verificare che `%LOCALAPPDATA%\WEmulDroid\Sdk` e `%USERPROFILE%\.android\avd` continuino a puntare ai dati preesistenti. Non eseguire migrazioni, reset, copia distruttiva, uninstall o modifica account automaticamente.
+
+Riferimenti Microsoft:
+- https://learn.microsoft.com/en-us/windows/apps/distribute-through-store/how-to-distribute-your-win32-app-through-microsoft-store
+- https://learn.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-behind-the-scenes
+- https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/app-capability-declarations
+
+Criterio di completamento: certificazione Store piu prova reale su ASUS con protezioni attive; CI di struttura non e sufficiente.

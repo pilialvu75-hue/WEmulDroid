@@ -111,7 +111,7 @@ function Get-WEmulDroidMemoryComparison {
         $m0=[double]::Parse($before.AvailableRamMiB,$culture)
         $m1=[double]::Parse($android.AvailableRamMiB,$culture)
         $m2=[double]::Parse($game.AvailableRamMiB,$culture)
-        if (@($m0,$m1,$m2 | Where-Object { $_ -lt 0 }).Count -gt 0) { throw 'Negative RAM sample' }
+        if ($m0 -lt 0 -or $m1 -lt 0 -or $m2 -lt 0) { throw 'Negative RAM sample' }
         return [pscustomobject]@{
             Comparable=$true
             AvailableBeforeMiB=$m0

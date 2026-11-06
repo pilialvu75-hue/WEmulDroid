@@ -1,0 +1,59 @@
+name: WEmulDroid Store MSIX proof-of-package (unsigned)
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'msix/**'
+      - 'installer/WEmulDroidLauncher.cs'
+      - 'installer/Make-Icon.ps1'
+      - 'src/**'
+      - 'VERSION.txt'
+      - '.github/workflows/msix-preview-ci.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  package-preview:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build unsigned MSIX for structural validation only
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          .\msix\Build-MSIX.ps1
+      - name: Validate package payload and external Android data boundaries
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          $path = @(Get-ChildItem -LiteralPath '.\dist-msix' -Filter '*.msix')
+          if ($path.Count -ne 1) { throw 'Exactly one preview package expected.' }
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $zip=[IO.Compression.ZipFile]::OpenRead($path[0].FullName)
+          try {
+            $names=@($zip.Entries | ForEach-Object { $_.FullName })
+            foreach ($required in @('AppxManifest.xml','WEmulDroid.exe','VERSION.txt','CHANNEL.txt','src/Lab.ps1','Assets/StoreLogo.png')) {
+              if ($required -notin $names) { throw "MSIX missing: $required" }
+            }
+            if (@($names | Where-Object { $_ -match '(^|/)(Sdk|avd|Reports)/' }).Count -ne 0) {
+              throw 'Package must never embed Android SDK, AVD or personal reports.'
+            }
+            Write-Host 'PASS: MSIX structure and non-bundling of Android data.'
+          } finally { $zip.Dispose() }
+          if ((Get-Content '.\dist-msix\staging\CHANNEL.txt' -Raw).Trim() -ne 'store-preview') {
+            throw 'Store preview must not use Inno update channel.'
+          }
+          $text=Get-Content '.\src\UpdateDialog.ps1' -Raw
+          if (-not $text.Contains(" -eq 'store-preview'")) { throw 'Missing Store updater safety guard' }
+          Write-Host 'PASS: isolated Store update channel.'
+      - name: Archive test package without presenting it as installable
+        uses: actions/upload-artifact@v4
+        with:
+          name: WEmulDroid-MSIX-Structural-Test-UNSIGNED-NOT-INSTALLABLE
+          path: dist-msix/*.msix
+          retention-days: 7
+          if-no-files-found: error

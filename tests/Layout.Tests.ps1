@@ -23,7 +23,8 @@ $buttonNames = @(
     'btnInstall','btnApkFolder','btnApkLink','btnPlay',
     'btnScreen','btnScreenReset','btnCapture','btnTouchHelp','btnFullscreen',
     'btnSplitTouch','btnCenter','btnFit','btnGamesMode','btnMeasure','btnReports','btnDiagnostics',
-    'btnSnapshotList','btnSnapshotSave','btnSnapshotLoad'
+    'btnSnapshotList','btnSnapshotSave','btnSnapshotLoad',
+    'btnRamBefore','btnRamAndroid','btnRamGame'
 )
 foreach ($name in $buttonNames) {
     $control = New-Object System.Windows.Forms.Button
@@ -69,7 +70,8 @@ try {
         }
     }
     foreach ($button in @($btnMeasure,$btnReports,$btnDiagnostics,
-        $btnSnapshotList,$btnSnapshotSave,$btnSnapshotLoad)) {
+        $btnSnapshotList,$btnSnapshotSave,$btnSnapshotLoad,
+        $btnRamBefore,$btnRamAndroid,$btnRamGame)) {
         if ($button.Parent -ne $script:DiagnosticsTab) {
             throw 'Diagnostics or snapshots button is missing from Diagnostics tab.'
         }

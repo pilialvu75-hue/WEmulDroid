@@ -416,6 +416,15 @@ $btnRamGame.Add_Click({
     try {
         $report = Save-WEmulDroidHostMemorySnapshot -Phase 'gioco' -ReportsRoot $script:ReportsRoot
         Write-Log ('RAM dopo tentativo di avvio gioco: disponibile ' + $report.Snapshot.AvailableRamMiB + ' MiB; emulatore ' + $report.Snapshot.EmulatorWorkingSetMiB + ' MiB; report: ' + $report.Path)
+        $comparison = Get-WEmulDroidMemoryComparison -CsvPath $report.Csv
+        if ($comparison.Comparable) {
+            Write-Log ('RAM variazione Android: ' + $comparison.AndroidDeltaMiB +
+                ' MiB, gioco: ' + $comparison.GameDeltaMiB +
+                ' MiB, totale: ' + $comparison.TotalDeltaMiB + ' MiB.')
+            Write-Log $comparison.Warning
+        } else {
+            Write-Log ('Confronto RAM non disponibile: ' + $comparison.Reason)
+        }
     } catch { Show-Error $_.Exception.Message }
 })
 

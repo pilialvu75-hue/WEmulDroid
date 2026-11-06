@@ -97,6 +97,21 @@ Non confondere popup Google Search/tastiera Android del primo avvio con elementi
 
 **Gate di completamento:** WEmulDroid operativo e ripetibile sul vero ASUS con Play Store, display smartphone/tablet corretto e diagnostica utile; senza crash di sistema riproducibili. In assenza di collaudo reale non dichiarare stabilità 1.0 né supporto garantito di giochi specifici. Non aprire Ads Kill o Freebox Secure durante questo gate.
 
+## P0.12 — Prima la memoria (Brawl Stars non parte sull'ASUS; diagnosi aperta)
+
+Il 6 novembre 2026 l'utente ha confermato la beta.8 installata da Impostazioni > Aggiornamenti, con Android 15, Google Play, fullscreen e rotazione funzionanti. Brawl Stars non si avvia: **non attribuire il problema alla RAM senza misure reali**. Possibili cause alternative sono APK/ABI, driver grafici, crash Android o incompatibilita dell'emulatore; il titolo e solo uno stress test tecnico.
+
+- [x] Implementati tre checkpoint Windows manuali, prima dell'avvio di Android, con Android acceso e dopo il tentativo di avvio gioco; nessuna modifica automatica dell'AVD.
+- [x] Registrazione RAM totale, disponibile, occupata, pressione RAM, processi emulator/qemu; JSON per campione e CSV storico locale. Test Windows PowerShell 5.1.
+- [ ] Raccogliere i tre campioni reali dell'ASUS in condizioni comparabili. Chiudere Android per il primo checkpoint; evitare altri carichi variabili.
+- [ ] Usare Diagnostica completa Android dopo crash (logcat crash buffer, meminfo, stato rotazione); **nessun upload automatico**.
+- [ ] Confrontare pressione RAM e crash logs: solo in presenza di indizi RAM valutare profilo AVD alternativo con backup e rollback.
+- [ ] Testare un'altra app consentita su emulatore per distinguere causa generale da blocco specifico del gioco.
+- [ ] Valutare 16 GB -> eventuale upgrade fisico solo dopo misurazioni e verifica espandibilita SKU, senza acquistare prima.
+- [ ] Collaudare la beta successiva sul vero ASUS e verificare che Play Store e app esistenti siano preservati.
+
+Nota: un test verde su GitHub non dimostra che Brawl Stars sia compatibile con un emulatore Android. Non aggirare limitazioni del gioco o le sue condizioni d'uso.
+
 ## P1 — Gestione input evoluta
 - [ ] Verificare se il touchpad ASUS espone contatti separati leggibili dal software
 - [ ] Esperimento dito 1 da touchpad + dito 2 da mouse, senza driver invasivi

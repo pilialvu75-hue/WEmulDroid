@@ -112,6 +112,16 @@ Il 6 novembre 2026 l'utente ha confermato la beta.8 installata da Impostazioni >
 
 Nota: un test verde su GitHub non dimostra che Brawl Stars sia compatibile con un emulatore Android. Non aggirare limitazioni del gioco o le sue condizioni d'uso.
 
+## P0.13 — Recupero grafico e report unificati (6 novembre)
+
+- [x] Analizzati log ASUS: mismatch gfxstream degli snapshot, errori OpenGL e RAM Windows ancora disponibile; nessuna prova di OOM Android del gioco.
+- [x] Profilo Google Play avviato senza recupero di Quick Boot precedente, senza eliminare dati Android, account o APK. Il primo avvio sara piu lento; questa mitigazione va rivalutata dopo collaudo.
+- [x] Diagnostica completa registra anche host-memory.json nella cartella dei log Android, dopo il consenso gia previsto.
+- [ ] Verificare su ASUS avvio, tempo, Play Store, giochi e dati persistenti.
+- [ ] Verificare la causa effettiva del crash Android tramite logcat-crashes.txt.
+- [ ] Valutare un renderer grafico alternativo in un collaudo separato e reversibile.
+- [ ] Non dichiarare risolto un crash specifico sulla sola base della CI.
+
 ## P1 — Gestione input evoluta
 - [ ] Verificare se il touchpad ASUS espone contatti separati leggibili dal software
 - [ ] Esperimento dito 1 da touchpad + dito 2 da mouse, senza driver invasivi

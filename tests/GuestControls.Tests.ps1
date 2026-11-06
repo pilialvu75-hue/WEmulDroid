@@ -50,6 +50,13 @@ try {
     $invalid = $false
     try { [void](Invoke-WEmulDroidGuestControl -Adb 'test' -Serial 'malicious' -Action home) } catch { $invalid = $true }
     if (-not $invalid) { throw 'Invalid device serial accepted.' }
+    $launcherText = [IO.File]::ReadAllText((Join-Path (Join-Path $PSScriptRoot '..') 'src\GuestControls.ps1'))
+    if ($launcherText -notmatch [regex]::Escape("if (\$ColdBoot -or \$AvdName -eq 'WEmulDroid_Play_API_35')")) {
+        throw 'Play AVD must skip incompatible Quick Boot snapshots.'
+    }
+    if ($launcherText -match 'wipe-data|factory-reset') {
+        throw 'Launch must not wipe Android data.'
+    }
     Write-Host 'PASS: PC keyboard config, reversible Android keyboard, Home/Back, AVD isolation.'
 } finally {
     $env:USERPROFILE = $oldUserProfile

@@ -60,3 +60,69 @@ function Save-WEmulDroidHostMemorySnapshot {
     }
     return [pscustomobject]@{ Path=$path; Csv=$csv; Snapshot=$snapshot }
 }
+
+# Compare the most recent ordered checkpoints. This is a MEMORY trend only:
+# it cannot attribute a specific game crash to RAM without Android crash logs.
+function Get-WEmulDroidMemoryComparison {
+    [CmdletBinding()]
+    param([Parameter(Mandatory)][string]$CsvPath,
+          [int]$MaxMinutes = 30)
+    if (-not (Test-Path -LiteralPath $CsvPath -PathType Leaf)) {
+        return [pscustomobject]@{ Comparable=$false; Reason='No memory history available.' }
+    }
+    $samples = @(Import-Csv -LiteralPath $CsvPath)
+    if ($samples.Count -lt 3) {
+        return [pscustomobject]@{ Comparable=$false; Reason='Three checkpoints are required: prima, android, gioco.' }
+    }
+    $gameIndex = -1
+    for ($i=$samples.Count-1; $i -ge 0; $i--) {
+        if ($samples[$i].Phase -eq 'gioco') { $gameIndex=$i; break }
+    }
+    if ($gameIndex -lt 2) {
+        return [pscustomobject]@{ Comparable=$false; Reason='No completed three-phase sequence.' }
+    }
+    $game=$samples[$gameIndex]
+    $androidIndex=-1
+    for ($i=$gameIndex-1; $i -ge 0; $i--) {
+        if ($samples[$i].Phase -eq 'android') { $androidIndex=$i; break }
+        if ($samples[$i].Phase -eq 'gioco') { break }
+    }
+    if ($androidIndex -lt 1) {
+        return [pscustomobject]@{ Comparable=$false; Reason='Android checkpoint missing before game checkpoint.' }
+    }
+    $android=$samples[$androidIndex]
+    $beforeIndex=-1
+    for ($i=$androidIndex-1; $i -ge 0; $i--) {
+        if ($samples[$i].Phase -eq 'prima') { $beforeIndex=$i; break }
+        if ($samples[$i].Phase -eq 'android' -or $samples[$i].Phase -eq 'gioco') { break }
+    }
+    if ($beforeIndex -lt 0) {
+        return [pscustomobject]@{ Comparable=$false; Reason='Baseline checkpoint missing before Android.' }
+    }
+    $before=$samples[$beforeIndex]
+    try {
+        $culture=[Globalization.CultureInfo]::InvariantCulture
+        $t0=[datetimeoffset]::Parse($before.Timestamp,$culture)
+        $t1=[datetimeoffset]::Parse($android.Timestamp,$culture)
+        $t2=[datetimeoffset]::Parse($game.Timestamp,$culture)
+        if ($t0 -gt $t1 -or $t1 -gt $t2 -or ($t2-$t0).TotalMinutes -gt $MaxMinutes) {
+            return [pscustomobject]@{ Comparable=$false; Reason='Checkpoints are out of order or over 30 minutes apart.' }
+        }
+        $m0=[double]::Parse($before.AvailableRamMiB,$culture)
+        $m1=[double]::Parse($android.AvailableRamMiB,$culture)
+        $m2=[double]::Parse($game.AvailableRamMiB,$culture)
+        if (@($m0,$m1,$m2 | Where-Object { $_ -lt 0 }).Count -gt 0) { throw 'Negative RAM sample' }
+        return [pscustomobject]@{
+            Comparable=$true
+            AvailableBeforeMiB=$m0
+            AvailableAndroidMiB=$m1
+            AvailableGameMiB=$m2
+            AndroidDeltaMiB=[math]::Round($m1-$m0,1)
+            GameDeltaMiB=[math]::Round($m2-$m1,1)
+            TotalDeltaMiB=[math]::Round($m2-$m0,1)
+            Warning=$(if ($m2 -lt 1024) { 'Less than 1 GiB available; memory pressure is possible, not proven as crash cause.' } else { 'No cause assigned: also inspect Android crash diagnostics.' })
+        }
+    } catch {
+        return [pscustomobject]@{ Comparable=$false; Reason=('Invalid memory history: ' + $_.Exception.Message) }
+    }
+}

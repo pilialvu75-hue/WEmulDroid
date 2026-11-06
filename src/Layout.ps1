@@ -91,14 +91,19 @@ function Initialize-WEmulDroidLayout {
         @($btnSnapshotList, 679, 27, 202),
         @($btnSnapshotSave, 22, 91, 202),
         @($btnSnapshotLoad, 241, 91, 202)
-        @($btnRamBefore, 460, 91, 202)
-        @($btnRamAndroid, 679, 91, 202)
-        @($btnRamGame, 22, 156, 202)
     )
     foreach ($entry in $diagnosticControls) {
         $script:DiagnosticsTab.Controls.Add($entry[0])
         $entry[0].SetBounds($entry[1], $entry[2], $entry[3], 42)
     }
+    # Keep RAM checkpoints explicit: Windows PowerShell 5.1 WinForms binding
+    # can misinterpret mixed control/int arrays passed through the layout loop.
+    $script:DiagnosticsTab.Controls.Add($btnRamBefore)
+    $btnRamBefore.SetBounds(460, 91, 202, 42)
+    $script:DiagnosticsTab.Controls.Add($btnRamAndroid)
+    $btnRamAndroid.SetBounds(679, 91, 202, 42)
+    $script:DiagnosticsTab.Controls.Add($btnRamGame)
+    $btnRamGame.SetBounds(22, 156, 202, 42)
 
     $logLabel.SetBounds(22, 542, 880, 29)
     $script:LogBox.SetBounds(20, 570, 918, 121)

@@ -29,6 +29,7 @@ jobs:
           .\tests\Updates.Tests.ps1
           .\tests\InstallerUpdates.Tests.ps1
           .\tests\InstallerSignatureDev.Tests.ps1
+          .\tests\HostMemory.Tests.ps1
           .\tests\UpdateDialogDiagnostics.Tests.ps1
           .\tests\AdbStartup.Tests.ps1
           .\tests\Localization.Tests.ps1

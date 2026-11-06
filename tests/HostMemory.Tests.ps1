@@ -21,7 +21,22 @@ try {
     foreach ($row in $rows) {
         if ([double]$row.TotalRamMiB -le 0) { throw 'Invalid CSV sample.' }
     }
-    Write-Host 'PASS: RAM snapshots work before Android starts, preserve history, require no AVD.'
+    $comparison = Get-WEmulDroidMemoryComparison -CsvPath $report.Csv
+    if (-not $comparison.Comparable) { throw ('Three-phase comparison unexpectedly failed: ' + $comparison.Reason) }
+    if ([math]::Abs(($comparison.AvailableGameMiB-$comparison.AvailableBeforeMiB)-$comparison.TotalDeltaMiB) -gt 0.11) {
+        throw 'Comparison delta is incorrect.'
+    }
+
+    # A lone, old or incorrectly ordered checkpoint must not produce a verdict.
+    $badCsv = Join-Path $root 'invalid-history.csv'
+    @(
+        [pscustomobject]@{ Timestamp='2026-11-06T00:00:00+01:00'; Phase='prima'; AvailableRamMiB='8000' },
+        [pscustomobject]@{ Timestamp='2026-11-06T02:00:00+01:00'; Phase='android'; AvailableRamMiB='5000' },
+        [pscustomobject]@{ Timestamp='2026-11-06T02:02:00+01:00'; Phase='gioco'; AvailableRamMiB='4500' }
+    ) | Export-Csv -LiteralPath $badCsv -NoTypeInformation
+    $bad = Get-WEmulDroidMemoryComparison -CsvPath $badCsv
+    if ($bad.Comparable) { throw 'Stale checkpoints must not be compared.' }
+    Write-Host 'PASS: RAM snapshots, delta comparisons and stale checkpoint guard.'
 } finally {
     Remove-Item -LiteralPath $root -Recurse -Force -ErrorAction SilentlyContinue
 }

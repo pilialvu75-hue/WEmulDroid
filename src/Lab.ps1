@@ -892,6 +892,9 @@ function Update-WEmulDroidLanguage {
     $btnSnapshotLoad.Text = (T 'snapshotLoad')
     $btnSnapshotList.Text = (T 'snapshotList')
     $btnDiagnostics.Text = (T 'diagnostics')
+    $btnRamBefore.Text = (T 'ramBefore')
+    $btnRamAndroid.Text = (T 'ramAndroid')
+    $btnRamGame.Text = (T 'ramGame')
     $logLabel.Text = (T 'log')
 }
 

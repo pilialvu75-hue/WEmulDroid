@@ -51,7 +51,7 @@ try {
     try { [void](Invoke-WEmulDroidGuestControl -Adb 'test' -Serial 'malicious' -Action home) } catch { $invalid = $true }
     if (-not $invalid) { throw 'Invalid device serial accepted.' }
     $launcherText = [IO.File]::ReadAllText((Join-Path (Join-Path $PSScriptRoot '..') 'src\GuestControls.ps1'))
-    if ($launcherText -notmatch [regex]::Escape("if (\$ColdBoot -or \$AvdName -eq 'WEmulDroid_Play_API_35')")) {
+    if (-not $launcherText.Contains("if (`$ColdBoot -or `$AvdName -eq 'WEmulDroid_Play_API_35')")) {
         throw 'Play AVD must skip incompatible Quick Boot snapshots.'
     }
     if ($launcherText -match 'wipe-data|factory-reset') {

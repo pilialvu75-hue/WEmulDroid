@@ -31,7 +31,7 @@ $script:UiWords = @{
     screenshot='Screenshot';touchHelp='Touch / Audio';fullscreen='Smart fullscreen';exitFullscreen='Exit fullscreen';
     folder='APK from folder';link='APK from HTTPS link';splitTouch='Touchpad + mouse (future)';
     snapshotSave='Save snapshot';snapshotLoad='Restore snapshot';snapshotList='List snapshots';
-    diagnostics='Full diagnostics';log='Activity and diagnostics:';
+    diagnostics='Full diagnostics';ramBefore='RAM: Before';ramAndroid='RAM: Android';ramGame='RAM: Game';log='Activity and diagnostics:';
     touchHelpTitle='WEmulDroid - Touch / Audio'; touchHelpText="TOUCH: left click = one tap; double-click = double tap.\nHold left button and drag for swipe.\nCtrl + mouse simulates mirrored multi-touch pinch.\nIndependent touchpad + mouse fingers: NOT IMPLEMENTED.\nType with the PC keyboard.\n\nAUDIO: output goes to PC speakers or headphones.\nVolume: emulator's side buttons.\nMicrophone: emulator Extended controls > Microphone; enable only when needed.\n\nRemote access is not automatically enabled. Diagnostics remain on your PC.";
     ready='Ready. For first use, select Install tools.';readyInstalled='Android SDK detected. Select Start Android to open your device.';
     settings="Settings";
@@ -110,7 +110,7 @@ $script:UiWords = @{
     screenshot='Screenshot';touchHelp='Touch / Audio';fullscreen='Fullscreen intelligente';exitFullscreen='Esci fullscreen';
     folder='APK da cartella';link='APK da link HTTPS';splitTouch='Touchpad + mouse (futuro)';
     snapshotSave='Salva snapshot';snapshotLoad='Ripristina snapshot';snapshotList='Elenco snapshot';
-    diagnostics='Diagnostica completa';log='Attivita e diagnostica:';
+    diagnostics='Diagnostica completa';ramBefore='RAM: Prima';ramAndroid='RAM: Android';ramGame='RAM: Gioco';log='Attivita e diagnostica:';
     touchHelpTitle='WEmulDroid - Touch / Audio'; touchHelpText="TOUCH: clic sinistro = tocco; doppio clic = doppio tocco.\nTieni premuto e trascina per lo swipe.\nCtrl + mouse simula il pinch multitouch speculare.\nDue dita indipendenti touchpad + mouse: NON IMPLEMENTATO.\nScrivi con la tastiera del PC.\n\nAUDIO: uscita su casse o cuffie del PC.\nVolume: pulsanti laterali dell'emulatore.\nMicrofono: Extended controls > Microphone; attivalo solo quando serve.\n\nL'accesso remoto non viene attivato automaticamente. I report rimangono sul PC.";
     ready='Pronto. Prima installazione: clicca Installa strumenti.';readyInstalled='Strumenti Android rilevati. Premi Avvia Android per aprire il dispositivo.';
     settings="Impostazioni";
@@ -189,7 +189,7 @@ $script:UiWords = @{
     screenshot='Capture ecran';touchHelp='Tactile / Audio';fullscreen='Plein ecran intelligent';exitFullscreen='Quitter plein ecran';
     folder='APK du dossier';link='APK via lien HTTPS';splitTouch='Pave tactile + souris (futur)';
     snapshotSave='Sauver snapshot';snapshotLoad='Restaurer snapshot';snapshotList='Liste snapshots';
-    diagnostics='Diagnostic complet';log='Activite et diagnostic :';
+    diagnostics='Diagnostic complet';ramBefore='RAM : Avant';ramAndroid='RAM : Android';ramGame='RAM : Jeu';log='Activite et diagnostic :';
     touchHelpTitle='WEmulDroid - Tactile / Audio'; touchHelpText="TACTILE : clic gauche = toucher ; double-clic = double toucher.\nMaintenez et faites glisser pour balayer.\nCtrl + souris simule un pincement multi-tactile symetrique.\nDeux doigts independants pave tactile + souris : NON DISPONIBLE.\nSaisissez du texte avec le clavier du PC.\n\nAUDIO : haut-parleurs ou casque du PC.\nVolume : boutons lateraux de l'emulateur.\nMicro : Extended controls > Microphone, a activer uniquement si besoin.\n\nL'acces a distance n'est pas active automatiquement. Les rapports restent sur le PC.";
     ready='Pret. Pour commencer, installez les outils.';readyInstalled='Outils Android détectés. Cliquez sur Démarrer Android pour ouvrir votre appareil.';
     settings="Paramètres";

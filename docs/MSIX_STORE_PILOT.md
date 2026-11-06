@@ -40,3 +40,9 @@ Riferimenti Microsoft:
 - https://learn.microsoft.com/en-us/windows/apps/package-and-deploy/app-capability-declarations
 
 Criterio di completamento: certificazione Store piu prova reale su ASUS con protezioni attive; CI di struttura non e sufficiente.
+
+## Gate automatico aggiunto: launcher e continuita dati (6 novembre)
+
+Nel workflow MSIX e stato aggiunto uno smoke test Windows reale sul **launcher estratto nella staging directory**: verifica che l'EXE avvii il processo PowerShell/WinForms e che file sentinella nei percorsi SDK, AVD e Reports rimangano invariati. In GitHub Actions, questi test hanno esito PASS nel run https://github.com/pilialvu75-hue/WEmulDroid/actions/runs/42167907352 . Non equivale a lanciare un MSIX installato, che richiede identita publisher corretta, firma e policy del dispositivo. Il test non modifica account, app o SDK sull'ASUS.
+
+La documentazione MSIX ufficiale indica che alcuni file AppData nuovi possono essere virtualizzati nel contenitore per applicazione. Il recupero del medesimo SDK/AVD preesistente sotto Store **rimane da provare**, non si presume dal test dei file sentinella. Riferimento: https://learn.microsoft.com/en-us/windows/msix/desktop/desktop-to-uwp-behind-the-scenes

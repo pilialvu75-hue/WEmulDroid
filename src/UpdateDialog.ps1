@@ -28,6 +28,14 @@ function Show-WEmulDroidUpdateSettings {
         [Parameter(Mandatory)][string]$InstallRoot,
         [Parameter(Mandatory)][ValidateSet('Avvia-Android.cmd','Avvia-PlayStore.cmd')][string]$Launcher
     )
+    $channelFile = Join-Path $InstallRoot 'CHANNEL.txt'
+    if ((Test-Path -LiteralPath $channelFile -PathType Leaf) -and
+        ([IO.File]::ReadAllText($channelFile)).Trim() -eq 'store-preview') {
+        [Windows.Forms.MessageBox]::Show(
+            'La versione Microsoft Store riceve aggiornamenti soltanto dallo Store. Questo pacchetto di prova non e ancora certificato o installabile su Smart App Control.',
+            'WEmulDroid - Microsoft Store', 'OK', 'Information') | Out-Null
+        return
+    }
     $versionFile = Join-Path $InstallRoot 'VERSION.txt'
     if (-not (Test-Path -LiteralPath $versionFile -PathType Leaf)) { throw 'WEmulDroid VERSION.txt not found.' }
     $version = ([IO.File]::ReadAllText($versionFile)).Trim()

@@ -16,6 +16,7 @@ Add-Type -AssemblyName System.Drawing
 . (Join-Path $PSScriptRoot 'ScreenProfiles.ps1')
 . (Join-Path $PSScriptRoot 'Snapshots.ps1')
 . (Join-Path $PSScriptRoot 'Diagnostics.ps1')
+. (Join-Path $PSScriptRoot 'HostMemory.ps1')
 . (Join-Path $PSScriptRoot 'Localization.ps1')
 . (Join-Path $PSScriptRoot 'Layout.ps1')
 . (Join-Path $PSScriptRoot 'UpdateDialog.ps1')
@@ -267,6 +268,9 @@ $btnSnapshotSave = New-LabButton 'Salva snapshot' 20 439
 $btnSnapshotLoad = New-LabButton 'Ripristina snapshot' 213 439
 $btnSnapshotList = New-LabButton 'Elenco snapshot' 406 439
 $btnDiagnostics = New-LabButton 'Diagnostica completa' 599 439
+$btnRamBefore = New-LabButton 'RAM: Prima' 20 600
+$btnRamAndroid = New-LabButton 'RAM: Android' 213 600
+$btnRamGame = New-LabButton 'RAM: Gioco' 406 600
 $script:BaselineSnapshot = 'WEmulDroid_baseline'
 
 
@@ -393,6 +397,25 @@ $btnSnapshotLoad.Add_Click({
             Write-Log ('Ripristino snapshot richiesto: ' + $script:BaselineSnapshot + '. ' + $output)
             Write-Log (T 'afterRestore')
         } finally { $form.Cursor = [System.Windows.Forms.Cursors]::Default }
+    } catch { Show-Error $_.Exception.Message }
+})
+
+$btnRamBefore.Add_Click({
+    try {
+        $report = Save-WEmulDroidHostMemorySnapshot -Phase 'prima' -ReportsRoot $script:ReportsRoot
+        Write-Log ('RAM prima di Android: disponibile ' + $report.Snapshot.AvailableRamMiB + ' MiB; report: ' + $report.Path)
+    } catch { Show-Error $_.Exception.Message }
+})
+$btnRamAndroid.Add_Click({
+    try {
+        $report = Save-WEmulDroidHostMemorySnapshot -Phase 'android' -ReportsRoot $script:ReportsRoot
+        Write-Log ('RAM con Android: disponibile ' + $report.Snapshot.AvailableRamMiB + ' MiB; emulatore ' + $report.Snapshot.EmulatorWorkingSetMiB + ' MiB; report: ' + $report.Path)
+    } catch { Show-Error $_.Exception.Message }
+})
+$btnRamGame.Add_Click({
+    try {
+        $report = Save-WEmulDroidHostMemorySnapshot -Phase 'gioco' -ReportsRoot $script:ReportsRoot
+        Write-Log ('RAM dopo tentativo di avvio gioco: disponibile ' + $report.Snapshot.AvailableRamMiB + ' MiB; emulatore ' + $report.Snapshot.EmulatorWorkingSetMiB + ' MiB; report: ' + $report.Path)
     } catch { Show-Error $_.Exception.Message }
 })
 

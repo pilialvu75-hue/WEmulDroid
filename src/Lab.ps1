@@ -439,6 +439,16 @@ $btnDiagnostics.Add_Click({
             $report = Collect-WEmulDroidDiagnostics -Adb $script:Adb -Serial $serial -ReportsRoot $script:ReportsRoot -PackageName $pkg
             Write-Log ('Diagnostica ' + $(if ($report.Failures -eq 0) { 'completata' } else { 'parziale' }) +
                 ': ' + $report.Folder)
+            # Put a host-memory snapshot beside Android crash data, so one
+            # diagnostics folder contains both sides of the failure.
+            try {
+                $hostRam = Get-WEmulDroidHostMemorySnapshot -Phase 'gioco'
+                $hostRam | ConvertTo-Json -Depth 5 |
+                    Set-Content -LiteralPath (Join-Path $report.Folder 'host-memory.json') -Encoding UTF8
+                Write-Log ('RAM Windows disponibile: ' + $hostRam.AvailableRamMiB + ' MiB.')
+            } catch {
+                Write-Log ('RAM Windows non disponibile: ' + $_.Exception.Message)
+            }
             if ($report.Failures -gt 0) {
                 Write-Log ('Operazioni non riuscite: ' + $report.Failures + '. Leggi report.txt.')
             }

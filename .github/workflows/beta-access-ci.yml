@@ -1,39 +1,27 @@
-name: Beta Access pilot checks
+name: WEmulDroid Beta Access integration checks
 on:
   pull_request:
     paths:
-      - 'beta-access/**'
       - 'src/BetaAccess.ps1'
       - 'src/BetaUpload.ps1'
       - 'src/Lab.ps1'
       - 'installer/Build-Windows.ps1'
+      - 'installer/WEmulDroid.iss'
+      - 'docs/BETA_ACCESS_INTEGRATION.md'
       - '.github/workflows/beta-access-ci.yml'
   push:
     branches: [main]
     paths:
-      - 'beta-access/**'
       - 'src/BetaAccess.ps1'
       - 'src/BetaUpload.ps1'
       - 'src/Lab.ps1'
       - 'installer/Build-Windows.ps1'
+      - 'installer/WEmulDroid.iss'
+      - 'docs/BETA_ACCESS_INTEGRATION.md'
       - '.github/workflows/beta-access-ci.yml'
 permissions:
   contents: read
 jobs:
-  node:
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: beta-access
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - run: npm install --no-audit --no-fund
-      - run: npm run check
-      - run: npx wrangler deploy --dry-run --outdir ./dry-run-build
-      - run: npm test
   powershell:
     runs-on: windows-latest
     steps:
@@ -49,4 +37,4 @@ jobs:
           }
           . .\src\BetaAccess.ps1
           $state = Get-WEmulDroidBetaContext (Resolve-Path .).Path
-          if ($state.Enabled -or -not $state.Allowed) { throw 'Normal install unexpectedly gated' }
+          if ($state.Enabled -or -not $state.Allowed) { throw 'Normal installer unexpectedly gated' }

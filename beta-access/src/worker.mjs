@@ -134,6 +134,31 @@ async function githubAPI(env,path,opts={}) {
   });
   return res;
 }
+// Paginate only assets within the current WEmulDroid installation release.
+async function listGithubAssets(env, releaseId) {
+  const all=[];
+  for(let page=1;page<=30;page++) {
+    const r=await githubAPI(env,"/releases/"+releaseId+"/assets?per_page=100&page="+page);
+    if(!r.ok) return null;
+    const pageAssets=await r.json();
+    if(!Array.isArray(pageAssets)) return null;
+    all.push(...pageAssets);
+    if(pageAssets.length < 100) return all;
+  }
+  return null; // Never infer completeness from a truncated asset list.
+}
+async function rotateOwnArchives(env,releaseId) {
+  const assets=await listGithubAssets(env,releaseId);
+  if(!assets) return;
+  // No other producer can ever be deleted here: dedicated release + exact prefix.
+  const owned=assets.filter(a => /^wemuldroid-diag-[a-f0-9]{64}\.jsonl$/.test(a.name||"") && a.state==="uploaded")
+    .sort((a,b)=>Date.parse(b.created_at||"")-Date.parse(a.created_at||""));
+  let bytes=0;
+  for(const asset of owned) {
+    if(bytes+asset.size <= 20*1024*1024) {bytes+=asset.size;continue;}
+    await githubAPI(env,"/releases/assets/"+asset.id,{method:"DELETE"});
+  }
+}
 async function flushDiagnostics(env) {
   if (!env.DIAGNOSTICS_GITHUB_TOKEN) return;
   const result = await env.DB.prepare("SELECT event_id,installation_id,payload_json FROM telemetry_outbox WHERE shipped_at IS NULL ORDER BY received_at LIMIT 25").all();
@@ -158,9 +183,9 @@ async function flushDiagnostics(env) {
     const payload=entries.map(e=>e.payload_json).join("\n")+"\n";
     const hash=await sha256hex(payload);
     const assetName="wemuldroid-diag-"+hash+".jsonl";
-    const assets = await githubAPI(env,"/releases/"+release.id+"/assets?per_page=100");
-    if (!assets.ok) continue;
-    const existing = await assets.json();
+    if(new TextEncoder().encode(payload).length > 1024*1024) continue;
+    const existing=await listGithubAssets(env,release.id);
+    if(!existing) continue;
     let success=existing.some(a=>a.name===assetName && a.state==="uploaded" && a.size===new TextEncoder().encode(payload).length);
     if (!success) {
       const upload = await fetch("https://uploads.github.com/repos/"+DIAGNOSTICS_REPO+"/releases/"+release.id+"/assets?name="+encodeURIComponent(assetName),{
@@ -173,6 +198,7 @@ async function flushDiagnostics(env) {
       for(const e of entries) {
         await env.DB.prepare("UPDATE telemetry_outbox SET shipped_at=? WHERE event_id=? AND shipped_at IS NULL").bind(iso(),e.event_id).run();
       }
+      try {await rotateOwnArchives(env,release.id);}catch(_){ /* retry next cron */ }
     }
   }
   // Only purge confirmed shipped local messages. GitHub keeps its own archive.

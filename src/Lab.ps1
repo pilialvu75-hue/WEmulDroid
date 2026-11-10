@@ -33,6 +33,7 @@ try {
 }
 if (-not $script:BetaAccess.Allowed) { return }
 $script:BetaStartupWatch = [System.Diagnostics.Stopwatch]::StartNew()
+$script:BetaUptimeWatch = [System.Diagnostics.Stopwatch]::StartNew()
 $script:BetaPerfTimer = $null
 $script:BetaPerfLastCpu = 0.0
 $script:BetaPerfLastWall = [datetime]::UtcNow
@@ -979,7 +980,7 @@ $form.Add_Shown({
                         Add-WEmulDroidBetaEvent $script:BetaAccess 'PERF_SAMPLE' 'info' @{
                             cpu_pct=[Math]::Round($cpu,1)
                             ram_mb=[Math]::Round($process.WorkingSet64 / 1MB,1)
-                            uptime_sec=[Math]::Round($script:BetaStartupWatch.Elapsed.TotalSeconds,0)
+                            uptime_sec=[Math]::Round($script:BetaUptimeWatch.Elapsed.TotalSeconds,0)
                         }
                     }
                     $script:BetaPerfLastCpu=$process.TotalProcessorTime.TotalSeconds

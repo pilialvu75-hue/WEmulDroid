@@ -1,0 +1,19 @@
+{
+  "name": "AIVEXUS Beta Access",
+  "short_name": "Beta Access",
+  "description": "Pannello privato per autorizzare i tester AIVEXUS",
+  "start_url": "/admin/",
+  "scope": "/admin/",
+  "display": "standalone",
+  "background_color": "#101624",
+  "theme_color": "#101624",
+  "lang": "it",
+  "icons": [
+    {
+      "src": "/admin/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

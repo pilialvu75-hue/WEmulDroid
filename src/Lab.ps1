@@ -20,6 +20,24 @@ Add-Type -AssemblyName System.Drawing
 . (Join-Path $PSScriptRoot 'Localization.ps1')
 . (Join-Path $PSScriptRoot 'Layout.ps1')
 . (Join-Path $PSScriptRoot 'UpdateDialog.ps1')
+. (Join-Path $PSScriptRoot 'BetaAccess.ps1')
+# Only installers intentionally built with BETA_ACCESS_URL.txt require activation.
+# Failure to contact the service must never silently unlock a gated tester build.
+try {
+    $script:BetaAccess = Show-WEmulDroidBetaGate (Get-WEmulDroidBetaContext (Split-Path -Parent $PSScriptRoot))
+} catch {
+    [void][System.Windows.Forms.MessageBox]::Show(
+        'Beta Access non disponibile. Impossibile verificare l''attivazione.',
+        'WEmulDroid', 'OK', 'Warning')
+    return
+}
+if (-not $script:BetaAccess.Allowed) { return }
+$script:BetaStartupWatch = [System.Diagnostics.Stopwatch]::StartNew()
+$script:BetaPerfTimer = $null
+$script:BetaPerfLastCpu = 0.0
+$script:BetaPerfLastWall = [datetime]::UtcNow
+$script:BetaPerfSamples = 0
+
 [void](Assert-WEmulDroidTranslations)
 [void](Load-WEmulDroidLanguage)
 
@@ -37,6 +55,8 @@ function Write-Log([string]$message) {
 }
 
 function Show-Error([string]$message) {
+    # Only closed classifications, never raw error messages, reach remote Diagnostics.
+    try { Add-WEmulDroidBetaEvent $script:BetaAccess 'APP_ERROR' 'error' @{error_code='WEMUL_UI_ERROR'} } catch {}
     Write-Log ('ERRORE: ' + $message)
     [System.Windows.Forms.MessageBox]::Show(
         $message, 'WEmulDroid',
@@ -835,6 +855,11 @@ $btnPlay.Add_Click({
 })
 
 $form.Add_FormClosing({
+    try {
+        if ($script:BetaPerfTimer) { $script:BetaPerfTimer.Stop(); $script:BetaPerfTimer.Dispose() }
+        Add-WEmulDroidBetaEvent $script:BetaAccess 'APP_EXIT' 'info' @{}
+        Start-WEmulDroidBetaUpload $script:BetaAccess
+    } catch {}
     if ($script:CenterTimer) { $script:CenterTimer.Stop(); $script:CenterTimer.Dispose() }
     if ($script:FullscreenWindowState) {
         try { [void](Restore-EmulatorWindow) } catch {}
@@ -929,6 +954,46 @@ Update-WEmulDroidLanguage
 # Requires explicit user consent for Google's SDK terms and multi-GB downloads.
 # Never delete already installed SDKs, AVDs or Play Store session data.
 $script:SetupConsentConfirmed = $false
+# Background uploader is a separate process, so network I/O cannot freeze WinForms.
+$form.Add_Shown({
+    try {
+        $script:BetaStartupWatch.Stop()
+        Add-WEmulDroidBetaEvent $script:BetaAccess 'APP_START' 'info' @{
+            startup_ms=[Math]::Round($script:BetaStartupWatch.Elapsed.TotalMilliseconds,0)
+        }
+        Start-WEmulDroidBetaUpload $script:BetaAccess
+        if ($script:BetaAccess.Enabled -and $script:BetaAccess.Telemetry) {
+            $script:BetaPerfLastCpu=(Get-Process -Id $PID).TotalProcessorTime.TotalSeconds
+            $script:BetaPerfLastWall=[datetime]::UtcNow
+            $script:BetaPerfTimer=New-Object System.Windows.Forms.Timer
+            $script:BetaPerfTimer.Interval=60000
+            $script:BetaPerfTimer.Add_Tick({
+                try {
+                    $process=Get-Process -Id $PID
+                    $now=[datetime]::UtcNow
+                    $seconds=($now-$script:BetaPerfLastWall).TotalSeconds
+                    if ($seconds -gt 0) {
+                        $cpu=[Math]::Max(0,[Math]::Min(100,
+                            100 * ($process.TotalProcessorTime.TotalSeconds-$script:BetaPerfLastCpu) /
+                            ($seconds * [Environment]::ProcessorCount)))
+                        Add-WEmulDroidBetaEvent $script:BetaAccess 'PERF_SAMPLE' 'info' @{
+                            cpu_pct=[Math]::Round($cpu,1)
+                            ram_mb=[Math]::Round($process.WorkingSet64 / 1MB,1)
+                            uptime_sec=[Math]::Round($script:BetaStartupWatch.Elapsed.TotalSeconds,0)
+                        }
+                    }
+                    $script:BetaPerfLastCpu=$process.TotalProcessorTime.TotalSeconds
+                    $script:BetaPerfLastWall=$now
+                    $script:BetaPerfSamples++
+                    if (($script:BetaPerfSamples % 5) -eq 0) {
+                        Start-WEmulDroidBetaUpload $script:BetaAccess
+                    }
+                } catch {} # Never interrupt the emulator due to monitoring failures.
+            })
+            $script:BetaPerfTimer.Start()
+        }
+    } catch {}
+})
 $form.Add_Shown({
     try {
         $avdFiles = @('WEmulDroid_API_35','WEmulDroid_Play_API_35') |

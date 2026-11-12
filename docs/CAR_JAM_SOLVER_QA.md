@@ -24,7 +24,9 @@
 2. Aprire il Play Store nel dispositivo virtuale, cercare il titolo esatto e controllare sviluppatore e package. L'utente conferma manualmente **Installa**; nessuna automazione del login Google.
 3. Testare disponibilità/installazione, avvio, gesti e fluidità. Il profilo attuale Android 15 / x86_64 potrebbe non supportare alcune versioni/ABI o rilevamenti di emulatore: registrare un FAIL di compatibilità, senza camuffare il dispositivo o aggirare blocchi.
 4. Verificare screenshot e telemetria host + Android disponibili nella diagnostica WEmulDroid. Mantenere privati account, notifiche, screenshot e log.
-5. Solo dopo il collaudo di base, sperimentare un driver di input a tocchi/gesti **sul dispositivo virtuale selezionato** e una fonte schermate read-only. WEmulDroid rimane indipendente da Aivexus: eventuale interfaccia fra processi richiederà consenso, contratto e collaudo separati.
+5. **Prima via di integrazione, senza ADB:** l'adattatore Windows Computer Use di Aivexus puo' osservare e selezionare la finestra Windows di WEmulDroid e inviare un clic verificato; WEmulDroid associa normalmente clic sinistro e tocco Android. Verificare fisicamente focus, coordinate e scaling della finestra Qt, senza presumere che il gioco riceva l'input.
+6. La visualizzazione del gioco Android nella finestra emulata **non espone necessariamente i veicoli come controlli UI Automation Windows**: il lettore UIA di 2048 non basta. Serve un interprete visuale consensuale e testato; non dichiarare IA capace di giocare solo perché può cliccare la finestra dell'emulatore.
+7. **Seconda via, soltanto se necessaria:** un driver dedicato AVD/ADB per tocchi e gesti sul solo emulatore selezionato, con verifica del seriale e consenso esplicito, senza shell arbitraria o input fuori dal gioco. WEmulDroid rimane indipendente da Aivexus: eventuale interfaccia fra processi richiederà consenso, contratto e collaudo separati.
 
 ## Fase 2: prova di intelligenza non preprogrammata
 

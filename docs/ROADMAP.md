@@ -31,6 +31,7 @@
 - [ ] Test Impostazioni Android, conferma UI e report RAM/CPU
 - [x] Google Play Store ufficiale avviato sull'ASUS, schermata di autenticazione Google raggiunta (5 novembre 2026). **Non memorizzare credenziali in WEmulDroid**.
 - [ ] Verifica download/installazione e avvio app compatibile autorizzata dal Play Store
+- [ ] **Car Jam Solver (Ladaneta):** verifica compatibilità sul profilo Play Store Android 15 x86_64, installazione con approvazione, avvio, 1 livello manuale, screenshot e diagnostica. Poi prova di decisioni IA su dispositivo virtuale solo dopo un driver autorizzato e verificato. Protocollo: [Car Jam QA](CAR_JAM_SOLVER_QA.md).
 - [ ] Installazione e avvio di una piccola applicazione indipendente x86_64
 - [ ] Verifica Windows PowerShell, WHPX, Java, GPU, spazio su disco
 - [ ] Rifinitura GUI e gestione dei problemi emersi su hardware reale

@@ -52,5 +52,23 @@ jobs:
           }
           if ($gate -match "Controlla stato") { throw 'Manual status button must be removed' }
           if ($gate -notmatch "Add_Tick" -or $gate -notmatch "Invoke-WEmulDroidBetaStatus") { throw 'Automatic approval polling absent' }
+          $now = [datetime]::UtcNow
+          $future = $now.AddHours(1).ToString('o')
+          $past = $now.AddMinutes(-1).ToString('o')
+          $valid = [pscustomobject]@{state='approved';approved_until=$future}
+          if (-not (Test-WEmulDroidBetaApproval $valid $now)) { throw 'Approved future lease incorrectly denied' }
+          foreach ($item in @(
+            [pscustomobject]@{state='pending';approved_until=$future},
+            [pscustomobject]@{state='denied';approved_until=$future},
+            [pscustomobject]@{state='revoked';approved_until=$future},
+            [pscustomobject]@{state='expired';approved_until=$past},
+            [pscustomobject]@{state='approved';approved_until=$past},
+            [pscustomobject]@{state='approved';approved_until='invalid-date'},
+            [pscustomobject]@{state='approved';approved_until=$null}
+          )) {
+            if (Test-WEmulDroidBetaApproval $item $now) {
+              throw ('Invalid gate state approved: '+$item.state+' '+$item.approved_until)
+            }
+          }
           $state = Get-WEmulDroidBetaContext (Resolve-Path .).Path
           if ($state.Enabled -or -not $state.Allowed) { throw 'Normal installer unexpectedly gated' }

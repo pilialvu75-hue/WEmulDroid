@@ -31,6 +31,19 @@ Brawl Stars è un gioco di Supercell disponibile su Google Play. Le [condizioni 
 
 Il nostro primo percorso di test rimane: avvio Android → Impostazioni (senza app esterne) → Play Store si apre → installazione di una piccola app/gioco con utilizzo in emulatore consentito → test RAM, CPU e rendering → benchmark ripetibili.
 
+### Primo confronto di IA: Car Jam Solver (Ladaneta)
+
+Il gioco ufficiale proposto per confrontare Galaxy S24 FE e WEmulDroid
+è [Car Jam Solver: Traffic Jam](https://play.google.com/store/apps/details?id=car.parking.jam.solver.puzzle.games),
+package `car.parking.jam.solver.puzzle.games`.
+Il protocollo dettagliato, incluso il trattamento di pubblicità e
+acquisti, si trova in [CAR_JAM_SOLVER_QA.md](CAR_JAM_SOLVER_QA.md).
+
+L'utente sceglie e approva personalmente l'installazione nel Play Store
+del dispositivo virtuale; WEmulDroid non entra nell'account Google e
+non invia in automatico acquisti, dati personali o tocchi al gioco.
+Compatibilità del titolo su Android 15 x86_64 **non ancora verificata**.
+
 ### Limiti e privacy
 
 - Google Play necessita connessione Internet, account e accettazione delle condizioni applicabili.

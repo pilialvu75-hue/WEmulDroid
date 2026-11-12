@@ -63,7 +63,7 @@ function Invoke-WEmulDroidBetaStatus([object]$Context) {
     $uri=$Context.Endpoint+'/api/v1/status?installation_id='+$Context.Profile.installation_id
     return Invoke-RestMethod -Method Get -Uri $uri -Headers @{
         'X-Device-Key'=(Get-WEmulDroidBetaSecret $Context)
-    } -TimeoutSec 12
+    } -TimeoutSec 5
 }
 function Invoke-WEmulDroidBetaEnroll([object]$Context) {
     [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12
@@ -80,6 +80,8 @@ function Invoke-WEmulDroidBetaEnroll([object]$Context) {
 }
 function Show-WEmulDroidBetaGate([object]$Context) {
     if (-not $Context.Enabled) { return $Context }
+    # The Windows client waits for the server's decision and unlocks automatically.
+    # No approval is cached: a signed-in tester must have a valid server-side lease.
     $dialog=New-Object System.Windows.Forms.Form
     $dialog.Text='WEmulDroid - Beta Access'
     $dialog.ClientSize=New-Object Drawing.Size(475,260)
@@ -98,30 +100,51 @@ function Show-WEmulDroidBetaGate([object]$Context) {
     $status.SetBounds(18,106,435,54);$dialog.Controls.Add($status)
     $request=New-Object Windows.Forms.Button
     $request.Text='Richiedi autorizzazione'
-    $request.SetBounds(18,184,216,38);$dialog.Controls.Add($request)
-    $refresh=New-Object Windows.Forms.Button
-    $refresh.Text='Controlla stato'
-    $refresh.SetBounds(244,184,209,38);$dialog.Controls.Add($refresh)
-    $refresh.Add_Click({
+    $request.SetBounds(18,184,435,38);$dialog.Controls.Add($request)
+
+    # Poll the authenticated status while the activation window is open.
+    # TLS, device-key verification and expiry are enforced on the server.
+    # A short timeout bounds the synchronous WinForms call (pilot implementation).
+    $timer=New-Object System.Windows.Forms.Timer
+    $timer.Interval=8000
+    $checking=$false
+    $timer.Add_Tick({
+        if ($checking -or $dialog.IsDisposed) { return }
+        $checking=$true
         try {
-            $status.Text='Controllo autorizzazione…'
-            $result=Invoke-WEmulDroidBetaStatus $Context
-            if ($result.state -eq 'approved' -and
-                ([datetime]::Parse($result.approved_until).ToUniversalTime() -gt [datetime]::UtcNow)) {
+            $answer=Invoke-WEmulDroidBetaStatus $Context
+            if ($answer.state -eq 'approved' -and $answer.approved_until -and
+                ([datetime]::Parse([string]$answer.approved_until).ToUniversalTime() -gt [datetime]::UtcNow)) {
                 $Context.Allowed=$true
-                $Context.Telemetry=([bool]$result.telemetry_consent -and [bool]$Context.Profile.telemetry_consent)
+                $Context.Telemetry=([bool]$answer.telemetry_consent -and [bool]$Context.Profile.telemetry_consent)
+                $timer.Stop()
                 $dialog.DialogResult=[Windows.Forms.DialogResult]::OK
                 $dialog.Close()
+            } elseif ($answer.state -eq 'pending') {
+                $status.Text='Richiesta in attesa. Il programma si aprirà automaticamente dopo l''approvazione.'
+            } elseif ($answer.state -eq 'denied' -or $answer.state -eq 'revoked') {
+                $status.Text='Accesso rifiutato o revocato. Puoi inviare una nuova richiesta.'
+            } elseif ($answer.state -eq 'expired') {
+                $status.Text='Autorizzazione scaduta. Premi Richiedi autorizzazione per rinnovarla.'
             } else {
-                $status.Text='Stato: '+[string]$result.state+'. Attendi l''approvazione del proprietario.'
+                $status.Text='In attesa della prima richiesta di autorizzazione.'
             }
         } catch {
-            $status.Text='Autorizzazione non verificabile. Internet necessario per questa beta.'
+            # Fail closed; do not unlock on an HTTP or network error.
+            $status.Text='Verifica automatica non disponibile. Controlla la connessione Internet.'
+        } finally {
+            $checking=$false
         }
     })
+    $dialog.Add_Shown({ $timer.Start() })
+    $dialog.Add_FormClosed({ $timer.Stop() })
     $request.Add_Click({
+        $request.Enabled=$false
         try {
-            if ([string]::IsNullOrWhiteSpace($name.Text)) {$status.Text='Inserisci un nome tester.';return}
+            if ([string]::IsNullOrWhiteSpace($name.Text)) {
+                $status.Text='Inserisci un nome tester.'
+                return
+            }
             $answer=[Windows.Forms.MessageBox]::Show(
                 'Acconsenti a inviare soltanto errori classificati e metriche numeriche (RAM, CPU, tempi) a Diagnostics? Nessun logcat, screenshot, nome PC o account. Puoi rifiutare.',
                 'Consenso diagnostica','YesNo','Question')
@@ -129,15 +152,22 @@ function Show-WEmulDroidBetaGate([object]$Context) {
             $Context.Profile.label=$name.Text.Trim()
             Save-WEmulDroidBetaProfile $Context
             [void](Invoke-WEmulDroidBetaEnroll $Context)
-            $status.Text='Richiesta inviata. Dopo l''approvazione premi Controlla stato.'
+            $status.Text='Richiesta inviata. Attendi: WEmulDroid si sbloccherà automaticamente.'
         } catch {
             $status.Text='Impossibile inviare. Verifica Internet e riprova.'
+        } finally {
+            $request.Enabled=$true
         }
     })
-    [void]$dialog.ShowDialog()
-    $dialog.Dispose()
+    try { [void]$dialog.ShowDialog() }
+    finally {
+        $timer.Stop()
+        $timer.Dispose()
+        $dialog.Dispose()
+    }
     return $Context
 }
+
 function Add-WEmulDroidBetaEvent([object]$Context,[string]$Event,[string]$Severity,[hashtable]$Fields) {
     if (-not $Context -or -not $Context.Enabled -or -not $Context.Allowed -or -not $Context.Telemetry) { return }
     if ($Event -notin @('APP_START','APP_EXIT','APP_ERROR','EMULATOR_ERROR','INSTALLER_ERROR','PERF_SAMPLE')) { return }

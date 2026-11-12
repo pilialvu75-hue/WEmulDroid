@@ -147,6 +147,23 @@ function Play-WEmulDroidBetaApprovalChime([object]$Context) {
     }
 }
 
+function Test-WEmulDroidBetaApproval([object]$ServerStatus,[datetime]$NowUtc=[datetime]::UtcNow) {
+    # Only an authenticated server response with a non-expired lease may unlock a gated client.
+    # Never assume approval when the server omits expiry or returns malformed status data.
+    if (-not $ServerStatus -or [string]$ServerStatus.state -cne 'approved' -or
+        [string]::IsNullOrWhiteSpace([string]$ServerStatus.approved_until)) {
+        return $false
+    }
+    $expires=[datetime]::MinValue
+    $parsed=[datetimeoffset]::MinValue
+    if (-not [datetimeoffset]::TryParse(
+        [string]$ServerStatus.approved_until,
+        [Globalization.CultureInfo]::InvariantCulture,
+        [Globalization.DateTimeStyles]::AssumeUniversal,
+        [ref]$parsed)) { return $false }
+    return $parsed.UtcDateTime -gt $NowUtc.ToUniversalTime()
+}
+
 function Show-WEmulDroidBetaGate([object]$Context) {
     if (-not $Context.Enabled) { return $Context }
     # The Windows client waits for the server's decision and unlocks automatically.
@@ -187,8 +204,7 @@ function Show-WEmulDroidBetaGate([object]$Context) {
         $checking=$true
         try {
             $answer=Invoke-WEmulDroidBetaStatus $Context
-            if ($answer.state -eq 'approved' -and $answer.approved_until -and
-                ([datetime]::Parse([string]$answer.approved_until).ToUniversalTime() -gt [datetime]::UtcNow)) {
+            if (Test-WEmulDroidBetaApproval $answer) {
                 $Context.Allowed=$true
                 $Context.Telemetry=([bool]$answer.telemetry_consent -and [bool]$Context.Profile.telemetry_consent)
                 $Context.Profile.approval_sound=[bool]$playChime.Checked

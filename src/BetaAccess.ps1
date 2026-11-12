@@ -1,5 +1,7 @@
 # Optional Beta Access gate. Not active without BETA_ACCESS_URL.txt in the installed payload.
 # Requires PowerShell 5.1 / Windows DPAPI. No personal log text leaves the computer.
+# ProtectedData is housed in System.Security on Windows PowerShell 5.1; load before DPAPI calls.
+Add-Type -AssemblyName System.Security
 function Get-WEmulDroidBetaContext([string]$InstallRoot) {
     $config = Join-Path $InstallRoot 'BETA_ACCESS_URL.txt'
     if (-not (Test-Path -LiteralPath $config -PathType Leaf)) {

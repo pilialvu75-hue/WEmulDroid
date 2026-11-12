@@ -37,3 +37,7 @@ La finestra Beta Access appare **al primo avvio dopo l'installazione**, prima de
 Le notifiche push riguardano invece il **telefono Android dell'amministratore** e si configurano nel repository [Beta-access](https://github.com/pilialvu75-hue/Beta-access/pull/7). La consegna è best-effort e richiede che il proprietario scelga `Attiva notifiche push` in Chrome/PWA.
 
 Attualmente il controllo Windows avviene tramite WinForms Timer e chiamate HTTPS sincrone con `-TimeoutSec 5`; l'interfaccia di attivazione può temporaneamente rallentare con Internet instabile. Da verificare su Windows reale prima di pubblicare la beta gated.
+
+## Conferma sonora dell'attivazione
+
+Quando il server approva una richiesta e il blocco viene rimosso, una **breve sequenza originale di due note** (D5/G5) può confermare lo sblocco prima di mostrare l'interfaccia WEmulDroid. La checkbox **«Suono breve quando l'app si sblocca»** è attivata per impostazione predefinita e salvata nelle preferenze locali del tester; si può deselezionare. La sequenza è generata localmente in memoria come WAV PCM, senza file audio distribuiti e senza invio di dati. Il tentativo di riprodurla è *best effort*: l'assenza di un dispositivo audio non deve mai impedire l'accesso autorizzato. Deve essere verificata su un computer Windows reale prima di pubblicare l'installer beta.

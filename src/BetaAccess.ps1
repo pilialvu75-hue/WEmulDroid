@@ -32,10 +32,15 @@ function Get-WEmulDroidBetaContext([string]$InstallRoot) {
             installation_id = [guid]::NewGuid().ToString()
             protected_key = [Convert]::ToBase64String($protected)
             telemetry_consent = $false
+            approval_sound = $true
             label = 'Tester WEmulDroid'
         }
         [IO.File]::WriteAllText($profilePath,($profile | ConvertTo-Json -Compress),
             (New-Object Text.UTF8Encoding($false)))
+    }
+    # Existing installation profiles default to the sound; never overwrite their consent.
+    if (-not $profile.PSObject.Properties['approval_sound']) {
+        $profile | Add-Member -MemberType NoteProperty -Name 'approval_sound' -Value $true
     }
     $versionPath = Join-Path $InstallRoot 'VERSION.txt'
     $version = if (Test-Path -LiteralPath $versionPath) {
@@ -78,13 +83,67 @@ function Invoke-WEmulDroidBetaEnroll([object]$Context) {
     } | ConvertTo-Json -Compress
     return Invoke-RestMethod -Method Post -Uri ($Context.Endpoint+'/api/v1/enroll') -Body $body -ContentType 'application/json' -TimeoutSec 15
 }
+function Play-WEmulDroidBetaApprovalChime([object]$Context) {
+    # Original two-note 16-bit PCM sequence: short and optional, no bundled music or assets.
+    # Errors (no speakers, disabled audio, restricted environment) must not block activation.
+    if (-not $Context -or -not [bool]$Context.Profile.approval_sound) { return }
+    try {
+        $sampleRate = 22050
+        $durations = @(0.14, 0.035, 0.18)
+        $tones = @(587.33, 0.0, 783.99)
+        $totalSamples = [int][Math]::Ceiling(($durations | Measure-Object -Sum).Sum * $sampleRate)
+        $audioStream = New-Object System.IO.MemoryStream
+        $writer = New-Object System.IO.BinaryWriter($audioStream)
+        try {
+            # Standard mono PCM WAV header (44 bytes, 16-bit).
+            $writer.Write([Text.Encoding]::ASCII.GetBytes('RIFF'))
+            $writer.Write([int](36 + $totalSamples * 2))
+            $writer.Write([Text.Encoding]::ASCII.GetBytes('WAVEfmt '))
+            $writer.Write([int]16)
+            $writer.Write([int16]1)
+            $writer.Write([int16]1)
+            $writer.Write([int]$sampleRate)
+            $writer.Write([int]($sampleRate * 2))
+            $writer.Write([int16]2)
+            $writer.Write([int16]16)
+            $writer.Write([Text.Encoding]::ASCII.GetBytes('data'))
+            $writer.Write([int]($totalSamples * 2))
+            $written = 0
+            for ($segment = 0; $segment -lt $durations.Length; $segment++) {
+                $count = if ($segment -eq $durations.Length - 1) {
+                    $totalSamples - $written
+                } else { [int][Math]::Round($durations[$segment] * $sampleRate) }
+                for ($i = 0; $i -lt $count; $i++) {
+                    $sample = 0.0
+                    if ($tones[$segment] -gt 0) {
+                        $t = $i / [double]$sampleRate
+                        $edge = [Math]::Min(1.0, [Math]::Min($i, $count - $i - 1) / 150.0)
+                        $sample = 0.12 * $edge * [Math]::Sin(2.0 * [Math]::PI * $tones[$segment] * $t)
+                    }
+                    $writer.Write([int16][Math]::Round([Math]::Max(-1.0,[Math]::Min(1.0,$sample)) * 32767.0))
+                }
+                $written += $count
+            }
+            $writer.Flush()
+            $audioStream.Position = 0
+            $player = New-Object System.Media.SoundPlayer($audioStream)
+            $player.PlaySync()
+        } finally {
+            $writer.Dispose()
+            $audioStream.Dispose()
+        }
+    } catch {
+        # Audio is decorative: never make approval dependent on playback.
+    }
+}
+
 function Show-WEmulDroidBetaGate([object]$Context) {
     if (-not $Context.Enabled) { return $Context }
     # The Windows client waits for the server's decision and unlocks automatically.
     # No approval is cached: a signed-in tester must have a valid server-side lease.
     $dialog=New-Object System.Windows.Forms.Form
     $dialog.Text='WEmulDroid - Beta Access'
-    $dialog.ClientSize=New-Object Drawing.Size(475,260)
+    $dialog.ClientSize=New-Object Drawing.Size(475,285)
     $dialog.StartPosition='CenterScreen'
     $dialog.FormBorderStyle='FixedDialog'
     $dialog.MaximizeBox=$false
@@ -98,9 +157,13 @@ function Show-WEmulDroidBetaGate([object]$Context) {
     $status=New-Object Windows.Forms.Label
     $status.Text='Non attiva. Premi Richiedi autorizzazione.'
     $status.SetBounds(18,106,435,54);$dialog.Controls.Add($status)
+    $playChime=New-Object System.Windows.Forms.CheckBox
+    $playChime.Text='Suono breve quando l''app si sblocca'
+    $playChime.Checked=[bool]$Context.Profile.approval_sound
+    $playChime.SetBounds(18,182,435,26);$dialog.Controls.Add($playChime)
     $request=New-Object Windows.Forms.Button
     $request.Text='Richiedi autorizzazione'
-    $request.SetBounds(18,184,435,38);$dialog.Controls.Add($request)
+    $request.SetBounds(18,222,435,38);$dialog.Controls.Add($request)
 
     # Poll the authenticated status while the activation window is open.
     # TLS, device-key verification and expiry are enforced on the server.
@@ -118,7 +181,10 @@ function Show-WEmulDroidBetaGate([object]$Context) {
                 ([datetime]::Parse([string]$answer.approved_until).ToUniversalTime() -gt [datetime]::UtcNow)) {
                 $Context.Allowed=$true
                 $Context.Telemetry=([bool]$answer.telemetry_consent -and [bool]$Context.Profile.telemetry_consent)
+                $Context.Profile.approval_sound=[bool]$playChime.Checked
+                Save-WEmulDroidBetaProfile $Context
                 $timer.Stop()
+                Play-WEmulDroidBetaApprovalChime $Context
                 $dialog.DialogResult=[Windows.Forms.DialogResult]::OK
                 $dialog.Close()
             } elseif ($answer.state -eq 'pending') {
@@ -151,6 +217,7 @@ function Show-WEmulDroidBetaGate([object]$Context) {
                 'Acconsenti a inviare soltanto errori classificati e metriche numeriche (RAM, CPU, tempi) a Diagnostics? Nessun logcat, screenshot, nome PC o account. Puoi rifiutare.',
                 'Consenso diagnostica','YesNo','Question')
             $Context.Profile.telemetry_consent=($answer -eq [Windows.Forms.DialogResult]::Yes)
+            $Context.Profile.approval_sound=[bool]$playChime.Checked
             $Context.Profile.label=$name.Text.Trim()
             Save-WEmulDroidBetaProfile $Context
             [void](Invoke-WEmulDroidBetaEnroll $Context)

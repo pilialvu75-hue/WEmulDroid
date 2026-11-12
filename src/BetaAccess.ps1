@@ -84,57 +84,66 @@ function Invoke-WEmulDroidBetaEnroll([object]$Context) {
     } | ConvertTo-Json -Compress
     return Invoke-RestMethod -Method Post -Uri ($Context.Endpoint+'/api/v1/enroll') -Body $body -ContentType 'application/json' -TimeoutSec 15
 }
+function New-WEmulDroidBetaApprovalWav {
+    # Pure function: generate a compact original confirmation chime without external assets.
+    $sampleRate = 22050
+    $durations = @(0.14, 0.035, 0.18)
+    $tones = @(587.33, 0.0, 783.99)
+    $totalSamples = [int][Math]::Ceiling(($durations | Measure-Object -Sum).Sum * $sampleRate)
+    $stream = [System.IO.MemoryStream]::new()
+    $writer = [System.IO.BinaryWriter]::new($stream)
+    try {
+        $writer.Write([Text.Encoding]::ASCII.GetBytes('RIFF'))
+        $writer.Write([int](36 + $totalSamples * 2))
+        $writer.Write([Text.Encoding]::ASCII.GetBytes('WAVEfmt '))
+        $writer.Write([int]16)
+        $writer.Write([int16]1)
+        $writer.Write([int16]1)
+        $writer.Write([int]$sampleRate)
+        $writer.Write([int]($sampleRate * 2))
+        $writer.Write([int16]2)
+        $writer.Write([int16]16)
+        $writer.Write([Text.Encoding]::ASCII.GetBytes('data'))
+        $writer.Write([int]($totalSamples * 2))
+        $written = 0
+        for ($segment = 0; $segment -lt $durations.Length; $segment++) {
+            $count = if ($segment -eq $durations.Length - 1) {
+                $totalSamples - $written
+            } else { [int][Math]::Round($durations[$segment] * $sampleRate) }
+            for ($i = 0; $i -lt $count; $i++) {
+                $sample = 0.0
+                if ($tones[$segment] -gt 0) {
+                    $t = $i / [double]$sampleRate
+                    $edge = [Math]::Min(1.0, [Math]::Min($i, $count - $i - 1) / 150.0)
+                    $sample = 0.12 * $edge * [Math]::Sin(2.0 * [Math]::PI * $tones[$segment] * $t)
+                }
+                $writer.Write([int16][Math]::Round([Math]::Max(-1.0,[Math]::Min(1.0,$sample)) * 32767.0))
+            }
+            $written += $count
+        }
+        $writer.Flush()
+        # Ensure the caller gets a single byte array, not one PowerShell object per sample.
+        return ,([byte[]]$stream.ToArray())
+    } finally {
+        $writer.Dispose()
+        $stream.Dispose()
+    }
+}
+
 function Play-WEmulDroidBetaApprovalChime([object]$Context) {
-    # Original two-note 16-bit PCM sequence: short and optional, no bundled music or assets.
-    # Errors (no speakers, disabled audio, restricted environment) must not block activation.
+    # Playback is strictly optional. No missing audio device may block activation.
     if (-not $Context -or -not [bool]$Context.Profile.approval_sound) { return }
     try {
-        $sampleRate = 22050
-        $durations = @(0.14, 0.035, 0.18)
-        $tones = @(587.33, 0.0, 783.99)
-        $totalSamples = [int][Math]::Ceiling(($durations | Measure-Object -Sum).Sum * $sampleRate)
-        $audioStream = New-Object System.IO.MemoryStream
-        $writer = New-Object System.IO.BinaryWriter($audioStream)
+        $wav = [byte[]](New-WEmulDroidBetaApprovalWav)
+        $stream = [System.IO.MemoryStream]::new($wav)
         try {
-            # Standard mono PCM WAV header (44 bytes, 16-bit).
-            $writer.Write([Text.Encoding]::ASCII.GetBytes('RIFF'))
-            $writer.Write([int](36 + $totalSamples * 2))
-            $writer.Write([Text.Encoding]::ASCII.GetBytes('WAVEfmt '))
-            $writer.Write([int]16)
-            $writer.Write([int16]1)
-            $writer.Write([int16]1)
-            $writer.Write([int]$sampleRate)
-            $writer.Write([int]($sampleRate * 2))
-            $writer.Write([int16]2)
-            $writer.Write([int16]16)
-            $writer.Write([Text.Encoding]::ASCII.GetBytes('data'))
-            $writer.Write([int]($totalSamples * 2))
-            $written = 0
-            for ($segment = 0; $segment -lt $durations.Length; $segment++) {
-                $count = if ($segment -eq $durations.Length - 1) {
-                    $totalSamples - $written
-                } else { [int][Math]::Round($durations[$segment] * $sampleRate) }
-                for ($i = 0; $i -lt $count; $i++) {
-                    $sample = 0.0
-                    if ($tones[$segment] -gt 0) {
-                        $t = $i / [double]$sampleRate
-                        $edge = [Math]::Min(1.0, [Math]::Min($i, $count - $i - 1) / 150.0)
-                        $sample = 0.12 * $edge * [Math]::Sin(2.0 * [Math]::PI * $tones[$segment] * $t)
-                    }
-                    $writer.Write([int16][Math]::Round([Math]::Max(-1.0,[Math]::Min(1.0,$sample)) * 32767.0))
-                }
-                $written += $count
-            }
-            $writer.Flush()
-            $audioStream.Position = 0
-            $player = New-Object System.Media.SoundPlayer($audioStream)
+            $player = [System.Media.SoundPlayer]::new($stream)
             $player.PlaySync()
         } finally {
-            $writer.Dispose()
-            $audioStream.Dispose()
+            $stream.Dispose()
         }
     } catch {
-        # Audio is decorative: never make approval dependent on playback.
+        # Approval is authoritative regardless of sound availability.
     }
 }
 

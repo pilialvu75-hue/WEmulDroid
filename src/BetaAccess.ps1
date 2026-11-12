@@ -51,6 +51,7 @@ function Get-WEmulDroidBetaContext([string]$InstallRoot) {
         Outbox=$outbox; Profile=$profile; ProfilePath=$profilePath
         Version=$version; Session=[guid]::NewGuid().ToString()
         Telemetry=[bool]$profile.telemetry_consent
+        AwaitingApproval=$false
     }
 }
 function Get-WEmulDroidBetaSecret([object]$Context) {
@@ -185,10 +186,13 @@ function Show-WEmulDroidBetaGate([object]$Context) {
                 # Preference persistence and sound are best effort; authorization wins.
                 try { Save-WEmulDroidBetaProfile $Context } catch {}
                 $timer.Stop()
-                Play-WEmulDroidBetaApprovalChime $Context
+                if ($Context.AwaitingApproval) {
+                    Play-WEmulDroidBetaApprovalChime $Context
+                }
                 $dialog.DialogResult=[Windows.Forms.DialogResult]::OK
                 $dialog.Close()
             } elseif ($answer.state -eq 'pending') {
+                $Context.AwaitingApproval=$true
                 $status.Text='Richiesta in attesa. Il programma si aprirà automaticamente dopo l''approvazione.'
             } elseif ($answer.state -eq 'denied' -or $answer.state -eq 'revoked') {
                 $status.Text='Accesso rifiutato o revocato. Puoi inviare una nuova richiesta.'
@@ -222,6 +226,7 @@ function Show-WEmulDroidBetaGate([object]$Context) {
             $Context.Profile.label=$name.Text.Trim()
             Save-WEmulDroidBetaProfile $Context
             [void](Invoke-WEmulDroidBetaEnroll $Context)
+            $Context.AwaitingApproval=$true
             $status.Text='Richiesta inviata. Attendi: WEmulDroid si sbloccherà automaticamente.'
         } catch {
             $status.Text='Impossibile inviare. Verifica Internet e riprova.'

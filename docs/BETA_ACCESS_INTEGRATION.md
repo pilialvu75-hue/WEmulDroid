@@ -15,7 +15,7 @@ Il tester:
 2. installa WEmulDroid su Windows;
 3. vede il pulsante `Richiedi autorizzazione` solo su un installer volutamente protetto;
 4. invia la richiesta e attende l'approvazione per la durata scelta;
-5. clicca `Controlla stato` per accedere.
+5. attende: WEmulDroid controlla lo stato automaticamente ogni circa 8 secondi e si avvia subito dopo l'approvazione (non esiste più il pulsante `Controlla stato`).
 
 La decisione è verificata online al lancio. Non esiste ancora una licenza offline firmata. Non vengono conservati credenziali cloud nei pacchetti Windows.
 
@@ -29,3 +29,11 @@ Il modulo ADB di diagnostica completa esistente continua a salvare file **localm
 - Build di sviluppo e test statici disponibili, non prova di funzionamento su ASUS.
 - Non sovrascrivere una beta esistente finché il servizio pubblico, il gate, l'attivazione e l'invio Diagnostics non hanno superato test end-to-end.
 - Il QR permanente e la console Android sono sviluppati **solo** su Beta-access; non duplicare il backend in WEmulDroid.
+
+## Sblocco automatico e avviso Android
+
+La finestra Beta Access appare **al primo avvio dopo l'installazione**, prima dell'interfaccia principale, e soltanto nelle nuove beta compilate con gate esplicito. Dopo aver premuto `Richiedi autorizzazione`, il tester può lasciare la finestra aperta: il programma verifica il server (primo controllo dopo circa mezzo secondo, poi ogni circa otto secondi) e si sblocca da solo quando l'approvazione non è scaduta. Un errore di rete non sblocca mai una beta protetta. Se il tester chiude l'app, alla riapertura una nuova verifica lo autorizzerà se il consenso è ancora valido.
+
+Le notifiche push riguardano invece il **telefono Android dell'amministratore** e si configurano nel repository [Beta-access](https://github.com/pilialvu75-hue/Beta-access/pull/7). La consegna è best-effort e richiede che il proprietario scelga `Attiva notifiche push` in Chrome/PWA.
+
+Attualmente il controllo Windows avviene tramite WinForms Timer e chiamate HTTPS sincrone con `-TimeoutSec 5`; l'interfaccia di attivazione può temporaneamente rallentare con Internet instabile. Da verificare su Windows reale prima di pubblicare la beta gated.

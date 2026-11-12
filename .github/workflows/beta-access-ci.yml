@@ -36,5 +36,8 @@ jobs:
             if ($errors.Count -gt 0) { throw ('Parser failed: ' + $file + ' ' + ($errors | Out-String)) }
           }
           . .\src\BetaAccess.ps1
+          $gate = Get-Content .\src\BetaAccess.ps1 -Raw
+          if ($gate -match "Controlla stato") { throw 'Manual status button must be removed' }
+          if ($gate -notmatch "Add_Tick" -or $gate -notmatch "Invoke-WEmulDroidBetaStatus") { throw 'Automatic approval polling absent' }
           $state = Get-WEmulDroidBetaContext (Resolve-Path .).Path
           if ($state.Enabled -or -not $state.Allowed) { throw 'Normal installer unexpectedly gated' }

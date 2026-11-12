@@ -182,7 +182,8 @@ function Show-WEmulDroidBetaGate([object]$Context) {
                 $Context.Allowed=$true
                 $Context.Telemetry=([bool]$answer.telemetry_consent -and [bool]$Context.Profile.telemetry_consent)
                 $Context.Profile.approval_sound=[bool]$playChime.Checked
-                Save-WEmulDroidBetaProfile $Context
+                # Preference persistence and sound are best effort; authorization wins.
+                try { Save-WEmulDroidBetaProfile $Context } catch {}
                 $timer.Stop()
                 Play-WEmulDroidBetaApprovalChime $Context
                 $dialog.DialogResult=[Windows.Forms.DialogResult]::OK

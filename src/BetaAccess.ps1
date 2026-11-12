@@ -110,6 +110,7 @@ function Show-WEmulDroidBetaGate([object]$Context) {
     $checking=$false
     $timer.Add_Tick({
         if ($checking -or $dialog.IsDisposed) { return }
+        $timer.Interval=8000
         $checking=$true
         try {
             $answer=Invoke-WEmulDroidBetaStatus $Context
@@ -136,7 +137,8 @@ function Show-WEmulDroidBetaGate([object]$Context) {
             $checking=$false
         }
     })
-    $dialog.Add_Shown({ $timer.Start() })
+    # Check promptly on first launch, then keep a bounded polling interval.
+    $dialog.Add_Shown({ $timer.Interval=500; $timer.Start() })
     $dialog.Add_FormClosed({ $timer.Stop() })
     $request.Add_Click({
         $request.Enabled=$false

@@ -6,6 +6,7 @@ on:
       - 'src/BetaUpload.ps1'
       - 'src/Lab.ps1'
       - 'installer/**'
+      - 'VERSION.txt'
       - '.github/workflows/beta-access-gated-build.yml'
   workflow_dispatch:
 permissions:
@@ -56,6 +57,7 @@ jobs:
         run: |
           $ErrorActionPreference='Stop'
           $version=(Get-Content -LiteralPath VERSION.txt -Raw).Trim()
+          if ($version -ne 'v0.9.0-beta.11') { throw 'Candidate must carry the isolated new beta.11 version' }
           $setup=Join-Path (Resolve-Path '.\dist-gated\payload\Output').Path ("WEmulDroid-Setup-$version.exe")
           if (-not (Test-Path -LiteralPath $setup)) { throw 'Gated installer EXE missing' }
           $hash=(Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash.ToLowerInvariant()

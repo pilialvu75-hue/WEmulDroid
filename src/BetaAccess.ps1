@@ -74,9 +74,12 @@ function Invoke-WEmulDroidBetaStatus([object]$Context) {
         'X-Device-Key'=(Get-WEmulDroidBetaSecret $Context)
     } -TimeoutSec 5
 }
-function Invoke-WEmulDroidBetaEnroll([object]$Context) {
-    [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12
-    $body=@{
+function New-WEmulDroidBetaEnrollmentBody([object]$Context) {
+    $code=[string]$Context.InviteToken
+    if ($code -cnotmatch '^[A-Za-z0-9_-]{43}$') {
+        throw 'A valid private WEmulDroid invitation is required.'
+    }
+    return @{
         app_id='wemuldroid'
         installation_id=$Context.Profile.installation_id
         device_secret=(Get-WEmulDroidBetaSecret $Context)
@@ -84,8 +87,12 @@ function Invoke-WEmulDroidBetaEnroll([object]$Context) {
         version=$Context.Version
         label=$Context.Profile.label
         telemetry_consent=[bool]$Context.Profile.telemetry_consent
-        invite_token=[string]$Context.InviteToken
+        invite_token=$code
     } | ConvertTo-Json -Compress
+}
+function Invoke-WEmulDroidBetaEnroll([object]$Context) {
+    [Net.ServicePointManager]::SecurityProtocol=[Net.SecurityProtocolType]::Tls12
+    $body=New-WEmulDroidBetaEnrollmentBody $Context
     return Invoke-RestMethod -Method Post -Uri ($Context.Endpoint+'/api/v1/enroll') -Body $body -ContentType 'application/json' -TimeoutSec 15
 }
 function New-WEmulDroidBetaApprovalWav {

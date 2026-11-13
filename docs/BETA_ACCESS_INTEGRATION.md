@@ -41,3 +41,9 @@ Attualmente il controllo Windows avviene tramite WinForms Timer e chiamate HTTPS
 ## Conferma sonora dell'attivazione
 
 Quando il server approva una richiesta e il blocco viene rimosso, una **breve sequenza originale di due note** (D5/G5) può confermare lo sblocco prima di mostrare l'interfaccia WEmulDroid. La checkbox **«Suono breve quando l'app si sblocca»** è attivata per impostazione predefinita e salvata nelle preferenze locali del tester; si può deselezionare. La sequenza è generata localmente in memoria come WAV PCM, senza file audio distribuiti e senza invio di dati. Il tentativo di riprodurla è *best effort*: l'assenza di un dispositivo audio non deve mai impedire l'accesso autorizzato. Deve essere verificata su un computer Windows reale prima di pubblicare l'installer beta.
+
+## Invito privato obbligatorio per nuove beta tester
+
+Quando la distribuzione tester sarà autorizzata, ogni primo avvio richiederà il **codice di invito personale** (43 caratteri) presente nel link HTTPS creato sul Galaxy S24 FE dal pannello Beta Access. Senza un codice valido, scaduto oppure già usato da un altro PC, il backend non accetterà la richiesta. Il codice è mantenuto **solo in memoria durante l'attivazione** e non viene scritto in `installation.json`, nei log o in Diagnostics. L'installazione resta bloccata finché il proprietario non l'approva: dopo l'approvazione, il gate verifica automaticamente lo stato e apre WEmulDroid con il suono facoltativo. Gli inviti non provano automaticamente la proprietà dell'email dichiarata; è una fase futura.
+
+L'interfaccia richiede esplicitamente il codice da incollare, ma le release pubbliche già distribuite **non sono aggiornate**: occorrerà compilare e collaudare la nuova beta gated prima di abilitare `PUBLIC_TESTERS_ENABLED`.

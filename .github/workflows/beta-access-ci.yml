@@ -70,5 +70,6 @@ jobs:
               throw ('Invalid gate state approved: '+$item.state+' '+$item.approved_until)
             }
           }
+          if ($gate -notmatch 'invite_token' -or $gate -notmatch 'New-WEmulDroidBetaEnrollmentBody') { throw 'Private invitation gate missing' }
           $state = Get-WEmulDroidBetaContext (Resolve-Path .).Path
           if ($state.Enabled -or -not $state.Allowed) { throw 'Normal installer unexpectedly gated' }

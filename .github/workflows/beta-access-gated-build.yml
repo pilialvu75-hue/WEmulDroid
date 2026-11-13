@@ -86,5 +86,6 @@ jobs:
           path: |
             dist-gated/payload/Output/WEmulDroid-Setup-*.exe
             dist-gated/payload/Output/WEmulDroid-Setup-*.exe.sha256
+            docs/FIRST_EXTERNAL_TESTER.md
           retention-days: 3
           if-no-files-found: error

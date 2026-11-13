@@ -54,6 +54,7 @@ function Get-WEmulDroidBetaContext([string]$InstallRoot) {
         Version=$version; Session=[guid]::NewGuid().ToString()
         Telemetry=[bool]$profile.telemetry_consent
         AwaitingApproval=$false
+        InviteToken=''
     }
 }
 function Get-WEmulDroidBetaSecret([object]$Context) {
@@ -83,6 +84,7 @@ function Invoke-WEmulDroidBetaEnroll([object]$Context) {
         version=$Context.Version
         label=$Context.Profile.label
         telemetry_consent=[bool]$Context.Profile.telemetry_consent
+        invite_token=[string]$Context.InviteToken
     } | ConvertTo-Json -Compress
     return Invoke-RestMethod -Method Post -Uri ($Context.Endpoint+'/api/v1/enroll') -Body $body -ContentType 'application/json' -TimeoutSec 15
 }
@@ -172,7 +174,7 @@ function Show-WEmulDroidBetaGate([object]$Context) {
     # No approval is cached: a signed-in tester must have a valid server-side lease.
     $dialog=New-Object System.Windows.Forms.Form
     $dialog.Text='WEmulDroid - Beta Access'
-    $dialog.ClientSize=New-Object Drawing.Size(475,285)
+    $dialog.ClientSize=New-Object Drawing.Size(475,344)
     $dialog.StartPosition='CenterScreen'
     $dialog.FormBorderStyle='FixedDialog'
     $dialog.MaximizeBox=$false
@@ -183,16 +185,23 @@ function Show-WEmulDroidBetaGate([object]$Context) {
     $name=New-Object Windows.Forms.TextBox
     $name.Text=[string]$Context.Profile.label;$name.MaxLength=48
     $name.SetBounds(18,65,435,30);$dialog.Controls.Add($name)
+    $inviteLabel=New-Object System.Windows.Forms.Label
+    $inviteLabel.Text='Codice invito privato (dal link ricevuto via email)'
+    $inviteLabel.SetBounds(18,103,435,22);$dialog.Controls.Add($inviteLabel)
+    $invite=New-Object System.Windows.Forms.TextBox
+    $invite.MaxLength=43
+    $invite.UseSystemPasswordChar=$true
+    $invite.SetBounds(18,127,435,30);$dialog.Controls.Add($invite)
     $status=New-Object Windows.Forms.Label
-    $status.Text='Non attiva. Premi Richiedi autorizzazione.'
-    $status.SetBounds(18,106,435,54);$dialog.Controls.Add($status)
+    $status.Text='Non attiva. Inserisci il codice invito, poi premi Richiedi autorizzazione.'
+    $status.SetBounds(18,171,435,48);$dialog.Controls.Add($status)
     $playChime=New-Object System.Windows.Forms.CheckBox
     $playChime.Text='Suono breve quando l''app si sblocca'
     $playChime.Checked=[bool]$Context.Profile.approval_sound
-    $playChime.SetBounds(18,182,435,26);$dialog.Controls.Add($playChime)
+    $playChime.SetBounds(18,235,435,26);$dialog.Controls.Add($playChime)
     $request=New-Object Windows.Forms.Button
     $request.Text='Richiedi autorizzazione'
-    $request.SetBounds(18,222,435,38);$dialog.Controls.Add($request)
+    $request.SetBounds(18,278,435,38);$dialog.Controls.Add($request)
 
     # Poll the authenticated status while the activation window is open.
     # TLS, device-key verification and expiry are enforced on the server.
@@ -245,6 +254,12 @@ function Show-WEmulDroidBetaGate([object]$Context) {
                 $status.Text='Inserisci un nome tester.'
                 return
             }
+            if ([string]$invite.Text.Trim() -cnotmatch '^[A-Za-z0-9_-]{43}$') {
+                $status.Text='Inserisci il codice di invito valido di 43 caratteri, ricevuto dal responsabile dei test.'
+                return
+            }
+            # Never store invitation in installation.json or Diagnostics.
+            $Context.InviteToken=$invite.Text.Trim()
             $answer=[Windows.Forms.MessageBox]::Show(
                 'Acconsenti a inviare soltanto errori classificati e metriche numeriche (RAM, CPU, tempi) a Diagnostics? Nessun logcat, screenshot, nome PC o account. Puoi rifiutare.',
                 'Consenso diagnostica','YesNo','Question')
@@ -253,6 +268,8 @@ function Show-WEmulDroidBetaGate([object]$Context) {
             $Context.Profile.label=$name.Text.Trim()
             Save-WEmulDroidBetaProfile $Context
             [void](Invoke-WEmulDroidBetaEnroll $Context)
+            $Context.InviteToken=''
+            $invite.Clear()
             $Context.AwaitingApproval=$true
             $status.Text='Richiesta inviata. Attendi: WEmulDroid si sbloccherà automaticamente.'
         } catch {

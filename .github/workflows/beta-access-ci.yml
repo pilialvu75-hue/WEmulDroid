@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'src/BetaAccess.ps1'
+      - 'tests/BetaAccessGate.Tests.ps1'
       - 'src/BetaUpload.ps1'
       - 'src/Lab.ps1'
       - 'installer/Build-Windows.ps1'
@@ -73,3 +74,8 @@ jobs:
           if ($gate -notmatch 'invite_token' -or $gate -notmatch 'New-WEmulDroidBetaEnrollmentBody') { throw 'Private invitation gate missing' }
           $state = Get-WEmulDroidBetaContext (Resolve-Path .).Path
           if ($state.Enabled -or -not $state.Allowed) { throw 'Normal installer unexpectedly gated' }
+      - name: Windows offline integration checks (real DPAPI, mocked HTTPS)
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          .\tests\BetaAccessGate.Tests.ps1

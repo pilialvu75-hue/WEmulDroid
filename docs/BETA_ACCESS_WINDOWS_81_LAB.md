@@ -36,7 +36,7 @@ Solo **dopo il PASS della fase A**, se PowerShell 5.1 è già presente, il propr
 
 1. Da un PC aggiornato, recuperare la sorgente completa del ramo `feature/beta-access-pilot` di WEmulDroid su GitHub. Trasferire la cartella via USB locale sul Windows 8.1 (non usare il vecchio PC per navigare o scaricare).
 2. Aprire **Windows PowerShell** come utente normale, senza privilegi amministrativi, nella cartella del repository.
-3. Eseguire `./scripts/Test-BetaAccessWin81Offline.ps1` oppure `.\\scripts\\Test-BetaAccessWin81Offline.ps1` dal repository. Se la policy di esecuzione impedisce l'avvio, **fermarsi**: non usare Bypass, RemoteSigned forzato o alterazioni delle protezioni.
+3. Eseguire `.\scripts\Test-BetaAccessWin81Offline.ps1` dalla cartella principale del repository. Se la policy di esecuzione impedisce l'avvio, **fermarsi**: non usare Bypass, RemoteSigned forzato o alterazioni delle protezioni.
 4. Riportare soltanto il riepilogo `BETA ACCESS - LABORATORIO OFFLINE` e le righe PASS/STOP. Non servono log, screenshot, segreti o dati personali.
 
 Non toccare l'installazione preesistente di AIVEXUS né i dati utente, driver di virtualizzazione, Hyper-V o BIOS. Se manca PowerShell 5.1, registrare l'incompatibilità; valutare l'eventuale upgrade soltanto dopo consenso esplicito e valutazione dei rischi.

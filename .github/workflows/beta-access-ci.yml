@@ -6,6 +6,7 @@ on:
       - 'src/UpdateDialog.ps1'
       - 'tests/BetaAccessGate.Tests.ps1'
       - 'scripts/Check-BetaAccessWin81.ps1'
+      - 'scripts/Test-BetaAccessWin81Offline.ps1'
       - 'src/BetaUpload.ps1'
       - 'src/Lab.ps1'
       - 'installer/Build-Windows.ps1'
@@ -90,3 +91,12 @@ jobs:
           [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path '.\scripts\Check-BetaAccessWin81.ps1'),[ref]$tokens,[ref]$errors)
           if ($errors.Count -gt 0) { throw 'Windows compatibility preflight parse failed' }
           .\scripts\Check-BetaAccessWin81.ps1
+      - name: Lab Windows 8.1 portable offline gate smoke (executed on modern Windows)
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $file = '.\scripts\Test-BetaAccessWin81Offline.ps1'
+          $tokens = $null; $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$errors)
+          if ($errors.Count -gt 0) { throw ('Offline lab parse failed: '+($errors | Out-String)) }
+          & $file

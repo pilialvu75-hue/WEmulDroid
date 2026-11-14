@@ -14,6 +14,7 @@ function Assert-Throws([scriptblock]$Action,[string]$Message) {
 
 $repo = Split-Path -Parent $PSScriptRoot
 . (Join-Path $repo 'src\BetaAccess.ps1')
+. (Join-Path $repo 'src\UpdateDialog.ps1')
 $previousLocalAppData = $env:LOCALAPPDATA
 $testDir = Join-Path $env:TEMP ('wemuldroid-beta-test-' + [guid]::NewGuid().ToString('N'))
 try {
@@ -23,6 +24,7 @@ try {
 
     $ungated = Join-Path $testDir 'normal-installer'
     New-Item -Path $ungated -ItemType Directory -Force | Out-Null
+    Assert-True (Test-WEmulDroidPublicUpdaterAllowed $ungated) 'Normal install lost public updater'
     $normal = Get-WEmulDroidBetaContext $ungated
     Assert-True ($normal.Enabled -eq $false -and $normal.Allowed -eq $true) 'Normal installer unexpectedly requires Beta Access'
 
@@ -31,6 +33,7 @@ try {
     $endpoint = 'https://beta.example.test'
     [IO.File]::WriteAllText((Join-Path $pilot 'BETA_ACCESS_URL.txt'),$endpoint)
     [IO.File]::WriteAllText((Join-Path $pilot 'VERSION.txt'),'v0.9.0-beta.11')
+    Assert-True (-not (Test-WEmulDroidPublicUpdaterAllowed $pilot)) 'Gated beta may update into ungated public build'
     $ctx = Get-WEmulDroidBetaContext $pilot
     Assert-True ($ctx.Enabled -and (-not $ctx.Allowed)) 'Gated installer did not fail closed'
     Assert-True ($ctx.Endpoint -ceq $endpoint) 'Unexpected Beta Access HTTPS host'

@@ -24,11 +24,24 @@ Per eseguirlo in modo controllato, quando il proprietario è davanti al PC Windo
 
 **Nota:** la CI esegue questo stesso script su un runner Windows recente, non su Windows 8.1. Un PASS CI non dimostra la compatibilità del sistema legacy.
 
-## Fase B — test offline solo se il preflight è compatibile
+## Fase B — laboratorio offline del modulo reale (preparato, da collaudare su Win8.1)
 
-- Preparare in un ramo distinto un adapter portatile che testi WinForms/DPAPI e i passaggi pending/approved/revoked contro risposte HTTPS simulate, senza installare WEmulDroid o Android.
-- Non toccare l'installazione preesistente di AIVEXUS né i dati utente, driver di virtualizzazione, Hyper-V o BIOS.
-- Se manca PowerShell 5.1, registrare l'incompatibilità; valutare l'eventuale upgrade soltanto dopo consenso esplicito e valutazione dei rischi.
+File: [scripts/Test-BetaAccessWin81Offline.ps1](../scripts/Test-BetaAccessWin81Offline.ps1).
+
+È un test **senza installer né backend** che carica le stesse funzioni di `src/BetaAccess.ps1` utilizzate dal client Windows. Richiede **Windows PowerShell 5.1** già presente. Controlla la cifratura DPAPI con una chiave casuale sintetica conservata in memoria, un invito fittizio, il consenso diagnostico inizialmente negato, stati pending/denied/revoked/expired, una lease futura simulata, il blocco del percorso HTTP tramite stub locale, la disponibilità di WinForms e la generazione del WAV originale (senza suonarlo).
+
+**Non esegue l'installer, non avvia Android né AIVEXUS, non chiama Cloudflare/GitHub, non crea un profilo Beta Access, non genera log Diagnostics e non invia token.** Windows può comunque gestire la propria normale infrastruttura interna di chiavi DPAPI. La simulazione è un test del codice reale ma non prova rete, sblocco dell'interfaccia visuale completa né Windows 8.1 finché non viene eseguita fisicamente.
+
+Solo **dopo il PASS della fase A**, se PowerShell 5.1 è già presente, il proprietario può:
+
+1. Da un PC aggiornato, recuperare la sorgente completa del ramo `feature/beta-access-pilot` di WEmulDroid su GitHub. Trasferire la cartella via USB locale sul Windows 8.1 (non usare il vecchio PC per navigare o scaricare).
+2. Aprire **Windows PowerShell** come utente normale, senza privilegi amministrativi, nella cartella del repository.
+3. Eseguire `./scripts/Test-BetaAccessWin81Offline.ps1` oppure `.\\scripts\\Test-BetaAccessWin81Offline.ps1` dal repository. Se la policy di esecuzione impedisce l'avvio, **fermarsi**: non usare Bypass, RemoteSigned forzato o alterazioni delle protezioni.
+4. Riportare soltanto il riepilogo `BETA ACCESS - LABORATORIO OFFLINE` e le righe PASS/STOP. Non servono log, screenshot, segreti o dati personali.
+
+Non toccare l'installazione preesistente di AIVEXUS né i dati utente, driver di virtualizzazione, Hyper-V o BIOS. Se manca PowerShell 5.1, registrare l'incompatibilità; valutare l'eventuale upgrade soltanto dopo consenso esplicito e valutazione dei rischi.
+
+La CI Windows moderna esercita automaticamente anche la fase B. Il successo in CI **non significa** collaudo fisico Windows 8.1.
 
 ## Fase C — confronto con Windows 11
 

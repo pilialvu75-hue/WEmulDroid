@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'src/BetaAccess.ps1'
+      - 'src/UpdateDialog.ps1'
       - 'tests/BetaAccessGate.Tests.ps1'
       - 'src/BetaUpload.ps1'
       - 'src/Lab.ps1'
@@ -14,6 +15,7 @@ on:
     branches: [main]
     paths:
       - 'src/BetaAccess.ps1'
+      - 'src/UpdateDialog.ps1'
       - 'src/BetaUpload.ps1'
       - 'src/Lab.ps1'
       - 'installer/Build-Windows.ps1'

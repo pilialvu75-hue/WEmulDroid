@@ -275,13 +275,15 @@ function Show-WEmulDroidBetaGate([object]$Context) {
             $Context.Profile.label=$name.Text.Trim()
             Save-WEmulDroidBetaProfile $Context
             [void](Invoke-WEmulDroidBetaEnroll $Context)
-            $Context.InviteToken=''
             $invite.Clear()
             $Context.AwaitingApproval=$true
             $status.Text='Richiesta inviata. Attendi: WEmulDroid si sbloccherà automaticamente.'
         } catch {
             $status.Text='Impossibile inviare. Verifica Internet e riprova.'
         } finally {
+            # Remove a failed or accepted invitation from the persistent UI context.
+            # The textbox remains populated on network failure to allow a human retry.
+            $Context.InviteToken=''
             $request.Enabled=$true
         }
     })

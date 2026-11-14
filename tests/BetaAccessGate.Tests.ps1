@@ -56,7 +56,7 @@ try {
     Assert-True ($enrollment.invite_token -ceq ('P' * 43)) 'Invitation token missing from HTTPS enrollment payload'
     Assert-True ($enrollment.telemetry_consent -eq $false) 'Telemetry must be opt-in'
     Assert-True (-not ([IO.File]::ReadAllText($ctx.ProfilePath)).Contains(('P' * 43))) 'Invitation token was saved to disk'
-    foreach ($bad in @('','short','A' * 42,'A' * 44)) {
+    foreach ($bad in @('', 'short', ('A' * 42), ('A' * 44))) {
         $ctx.InviteToken = $bad
         Assert-Throws { [void](New-WEmulDroidBetaEnrollmentBody $ctx) } 'Malformed invitation incorrectly accepted'
     }

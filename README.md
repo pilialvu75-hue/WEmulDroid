@@ -1,5 +1,7 @@
 # WEmulDroid — Android su Windows
 
+**AIVEXUS Beta Access:** la console Android per QR, autorizzazioni e raccolta diagnostica risiede ora nel repository indipendente [Beta-access](https://github.com/pilialvu75-hue/Beta-access) ([PR pilota #1](https://github.com/pilialvu75-hue/Beta-access/pull/1)). L'integrazione client Windows di WEmulDroid rimane in [PR #8](https://github.com/pilialvu75-hue/WEmulDroid/pull/8) ed è opt-in per le nuove beta. **Nessuna versione pubblicata è già protetta da attivazione.**
+
 **Linea 0.9: installer Windows di sviluppo e Android 15/Google Play ufficiale.** Progetto indipendente da `Ai-orchestrator-riserva` e `AEmulWin`. Utilizza l'[Android Emulator ufficiale](https://developer.android.com/studio/run/emulator); non redistribuisce immagini Google o Java.
 
 ## Esperimento Microsoft Store MSIX (separato dalle beta EXE)

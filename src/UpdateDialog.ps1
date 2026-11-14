@@ -21,6 +21,15 @@ function Format-WEmulDroidUpdateError {
     return "$phaseName - $Message"
 }
 
+# A gated/private tester installation must never downgrade through the
+# normal GitHub updater to a public un-gated installer. A signed, gate-aware
+# update channel can be added after physical testing.
+function Test-WEmulDroidPublicUpdaterAllowed([string]$InstallRoot) {
+    if ([string]::IsNullOrWhiteSpace($InstallRoot)) { return $false }
+    $marker=Join-Path $InstallRoot 'BETA_ACCESS_URL.txt'
+    return (-not (Test-Path -LiteralPath $marker -PathType Leaf))
+}
+
 function Show-WEmulDroidUpdateSettings {
     [CmdletBinding()]
     param(
@@ -34,6 +43,12 @@ function Show-WEmulDroidUpdateSettings {
         [Windows.Forms.MessageBox]::Show(
             'La versione Microsoft Store riceve aggiornamenti soltanto dallo Store. Questo pacchetto di prova non e ancora certificato o installabile su Smart App Control.',
             'WEmulDroid - Microsoft Store', 'OK', 'Information') | Out-Null
+        return
+    }
+    if (-not (Test-WEmulDroidPublicUpdaterAllowed $InstallRoot)) {
+        [Windows.Forms.MessageBox]::Show(
+            'Questa installazione e un test privato Beta Access. Gli aggiornamenti pubblici potrebbero rimuovere il controllo di autorizzazione. Per una nuova beta protetta contatta il responsabile del test. Le installazioni normali non sono interessate.',
+            'WEmulDroid - Beta Access', 'OK', 'Information') | Out-Null
         return
     }
     $versionFile = Join-Path $InstallRoot 'VERSION.txt'

@@ -1,0 +1,102 @@
+name: WEmulDroid Beta Access integration checks
+on:
+  pull_request:
+    paths:
+      - 'src/BetaAccess.ps1'
+      - 'src/UpdateDialog.ps1'
+      - 'tests/BetaAccessGate.Tests.ps1'
+      - 'scripts/Check-BetaAccessWin81.ps1'
+      - 'scripts/Test-BetaAccessWin81Offline.ps1'
+      - 'src/BetaUpload.ps1'
+      - 'src/Lab.ps1'
+      - 'installer/Build-Windows.ps1'
+      - 'installer/WEmulDroid.iss'
+      - 'docs/BETA_ACCESS_INTEGRATION.md'
+      - '.github/workflows/beta-access-ci.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'src/BetaAccess.ps1'
+      - 'src/UpdateDialog.ps1'
+      - 'src/BetaUpload.ps1'
+      - 'src/Lab.ps1'
+      - 'installer/Build-Windows.ps1'
+      - 'installer/WEmulDroid.iss'
+      - 'docs/BETA_ACCESS_INTEGRATION.md'
+      - '.github/workflows/beta-access-ci.yml'
+permissions:
+  contents: read
+jobs:
+  powershell:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          foreach ($file in @('src/BetaAccess.ps1','src/BetaUpload.ps1','src/Lab.ps1','installer/Build-Windows.ps1')) {
+            $tokens = $null
+            $errors = $null
+            [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$errors)
+            if ($errors.Count -gt 0) { throw ('Parser failed: ' + $file + ' ' + ($errors | Out-String)) }
+          }
+          . .\src\BetaAccess.ps1
+          [byte[]]$sound = New-WEmulDroidBetaApprovalWav
+          if ($sound.Length -lt 10000) { throw 'Chime audio missing or too short' }
+          $riff = [Text.Encoding]::ASCII.GetString($sound,0,4)
+          $wave = [Text.Encoding]::ASCII.GetString($sound,8,4)
+          $size = [BitConverter]::ToInt32($sound,40)
+          if ($riff -ne 'RIFF' -or $wave -ne 'WAVE' -or ($size + 44) -ne $sound.Length) {
+            throw 'Invalid generated approval WAV'
+          }
+          $muted = [pscustomobject]@{Profile=[pscustomobject]@{approval_sound=$false}}
+          Play-WEmulDroidBetaApprovalChime $muted
+          $gate = Get-Content .\src\BetaAccess.ps1 -Raw
+          if ($gate -notmatch "Suono breve" -or $gate -notmatch "Play-WEmulDroidBetaApprovalChime") {
+            throw 'Optional chime not wired to approval'
+          }
+          if ($gate -match "Controlla stato") { throw 'Manual status button must be removed' }
+          if ($gate -notmatch "Add_Tick" -or $gate -notmatch "Invoke-WEmulDroidBetaStatus") { throw 'Automatic approval polling absent' }
+          $now = [datetime]::UtcNow
+          $future = $now.AddHours(1).ToString('o')
+          $past = $now.AddMinutes(-1).ToString('o')
+          $valid = [pscustomobject]@{state='approved';approved_until=$future}
+          if (-not (Test-WEmulDroidBetaApproval $valid $now)) { throw 'Approved future lease incorrectly denied' }
+          foreach ($item in @(
+            [pscustomobject]@{state='pending';approved_until=$future},
+            [pscustomobject]@{state='denied';approved_until=$future},
+            [pscustomobject]@{state='revoked';approved_until=$future},
+            [pscustomobject]@{state='expired';approved_until=$past},
+            [pscustomobject]@{state='approved';approved_until=$past},
+            [pscustomobject]@{state='approved';approved_until='invalid-date'},
+            [pscustomobject]@{state='approved';approved_until=$null}
+          )) {
+            if (Test-WEmulDroidBetaApproval $item $now) {
+              throw ('Invalid gate state approved: '+$item.state+' '+$item.approved_until)
+            }
+          }
+          if ($gate -notmatch 'invite_token' -or $gate -notmatch 'New-WEmulDroidBetaEnrollmentBody') { throw 'Private invitation gate missing' }
+          $state = Get-WEmulDroidBetaContext (Resolve-Path .).Path
+          if ($state.Enabled -or -not $state.Allowed) { throw 'Normal installer unexpectedly gated' }
+      - name: Windows offline integration checks (real DPAPI, mocked HTTPS)
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          .\tests\BetaAccessGate.Tests.ps1
+      - name: Safe Windows compatibility preflight script (syntax and no-write smoke)
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $tokens = $null; $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path '.\scripts\Check-BetaAccessWin81.ps1'),[ref]$tokens,[ref]$errors)
+          if ($errors.Count -gt 0) { throw 'Windows compatibility preflight parse failed' }
+          .\scripts\Check-BetaAccessWin81.ps1
+      - name: Lab Windows 8.1 portable offline gate smoke (executed on modern Windows)
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $file = '.\scripts\Test-BetaAccessWin81Offline.ps1'
+          $tokens = $null; $errors = $null
+          [void][System.Management.Automation.Language.Parser]::ParseFile((Resolve-Path $file),[ref]$tokens,[ref]$errors)
+          if ($errors.Count -gt 0) { throw ('Offline lab parse failed: '+($errors | Out-String)) }
+          & $file

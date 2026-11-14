@@ -34,6 +34,19 @@ foreach ($name in @('VERSION.txt','README.md','LICENSE')) {
 }
 Copy-Item -Path (Join-Path $repo 'src\*.ps1') -Destination (Join-Path $payload 'src') -Force
 Copy-Item -Path (Join-Path $repo 'docs\*.md') -Destination (Join-Path $payload 'docs') -Force
+# Beta Access is an explicit pilot opt-in at installer-build time.
+# Normal stable/development installers remain unchanged unless this variable is set.
+if (-not [string]::IsNullOrWhiteSpace($env:WEMULDROID_BETA_ACCESS_URL)) {
+    $candidate=$env:WEMULDROID_BETA_ACCESS_URL.Trim().TrimEnd('/')
+    $pilotUri=$null
+    if (-not [Uri]::TryCreate($candidate,[UriKind]::Absolute,[ref]$pilotUri) -or
+        $pilotUri.Scheme -ne 'https' -or $pilotUri.AbsolutePath -ne '/' -or
+        $pilotUri.Query -or $pilotUri.Fragment) {
+        throw 'WEMULDROID_BETA_ACCESS_URL must be an HTTPS origin.'
+    }
+    [IO.File]::WriteAllText((Join-Path $payload 'BETA_ACCESS_URL.txt'),
+        $candidate,(New-Object Text.UTF8Encoding($false)))
+}
 $ico = Join-Path $payload 'WEmulDroid.ico'
 & (Join-Path $PSScriptRoot 'Make-Icon.ps1') -OutputPath $ico
 

@@ -63,12 +63,18 @@ Source: "{#Payload}\WEmulDroid.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\WEmulDroid.ico"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\VERSION.txt"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\CHANNEL.txt"; DestDir: "{app}"; Flags: ignoreversion
+; Optional: exists ONLY for an explicitly built Beta Access pilot release.
+Source: "{#Payload}\BETA_ACCESS_URL.txt"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
 Source: "{#Payload}\src\*.ps1"; DestDir: "{app}\src"; Flags: ignoreversion
 Source: "{#Payload}\docs\*.md"; DestDir: "{app}\docs"; Flags: ignoreversion
 Source: "{#Payload}\README.md"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#Payload}\LICENSE"; DestDir: "{app}"; Flags: ignoreversion
 ; Android SDK, emulator images, Play Store content, AVDs and diagnostics are
 ; deliberately outside the installation directory and are never deleted here.
+
+[InstallDelete]
+; Remove stale beta gate endpoint before a later non-gated installer update.
+Type: files; Name: "{app}\BETA_ACCESS_URL.txt"
 
 [Icons]
 Name: "{group}\WEmulDroid"; Filename: "{app}\WEmulDroid.exe"; IconFilename: "{app}\WEmulDroid.ico"

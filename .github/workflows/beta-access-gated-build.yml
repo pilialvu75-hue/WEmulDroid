@@ -1,0 +1,98 @@
+name: WEmulDroid gated Windows beta — isolated CI installer
+on:
+  pull_request:
+    paths:
+      - 'src/BetaAccess.ps1'
+      - 'src/UpdateDialog.ps1'
+      - 'tests/BetaAccessGate.Tests.ps1'
+      - 'src/BetaUpload.ps1'
+      - 'src/Lab.ps1'
+      - 'installer/**'
+      - 'VERSION.txt'
+      - '.github/workflows/beta-access-gated-build.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build-gated-exe:
+    runs-on: windows-latest
+    timeout-minutes: 20
+    env:
+      WEMULDROID_BETA_ACCESS_URL: https://aivexus-beta-access.aivexus-lab.workers.dev
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check PowerShell 5.1 and launcher activation policies
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          if ($PSVersionTable.PSVersion.Major -ne 5) { throw 'Windows PowerShell 5.1 required' }
+          . .\src\BetaAccess.ps1
+          $now=[datetime]::UtcNow
+          if (Test-WEmulDroidBetaApproval ([pscustomobject]@{state='pending';approved_until=$now.AddDays(1).ToString('o')}) $now) {
+            throw 'Pending user unlocked unexpectedly'
+          }
+          if (-not (Test-WEmulDroidBetaApproval ([pscustomobject]@{state='approved';approved_until=$now.AddDays(1).ToString('o')}) $now)) {
+            throw 'Approved lease was refused'
+          }
+      - name: Verify DPAPI, private invite, fail-closed status and consent without network
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          .\tests\BetaAccessGate.Tests.ps1
+      - name: Install Inno Setup compiler on CI only
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          $compiler=Join-Path ([Environment]::GetFolderPath('ProgramFilesX86')) 'Inno Setup 6\ISCC.exe'
+          if (-not (Test-Path -LiteralPath $compiler)) {
+            choco install innosetup --version=6.7.1 --yes --no-progress --limit-output
+            if ($LASTEXITCODE -ne 0) { throw 'Inno Setup installation failed' }
+          }
+          if (-not (Test-Path -LiteralPath $compiler)) { throw 'Inno Setup compiler not found' }
+      - name: Compile isolated gated installer; do not sign or publish
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          .\installer\Build-Windows.ps1 -OutputRoot (Join-Path (Get-Location) 'dist-gated')
+          $marker=Join-Path (Get-Location) 'dist-gated\payload\BETA_ACCESS_URL.txt'
+          if (-not (Test-Path -LiteralPath $marker)) { throw 'Gated installer marker not embedded in payload' }
+          if ((Get-Content -LiteralPath $marker -Raw).Trim() -cne $env:WEMULDROID_BETA_ACCESS_URL) {
+            throw 'Installer endpoint does not match owner-approved Cloudflare Beta Access'
+          }
+      - name: Test actual installer embeds activation gate without running the app
+        shell: powershell
+        run: |
+          $ErrorActionPreference='Stop'
+          $version=(Get-Content -LiteralPath VERSION.txt -Raw).Trim()
+          if ($version -ne 'v0.9.0-beta.11') { throw 'Candidate must carry the isolated new beta.11 version' }
+          $setup=Join-Path (Resolve-Path '.\dist-gated\payload\Output').Path ("WEmulDroid-Setup-$version.exe")
+          if (-not (Test-Path -LiteralPath $setup)) { throw 'Gated installer EXE missing' }
+          $hash=(Get-FileHash -LiteralPath $setup -Algorithm SHA256).Hash.ToLowerInvariant()
+          $hashFile=Get-Content -LiteralPath "$setup.sha256" -Raw
+          if ($hashFile -notmatch [regex]::Escape($hash)) { throw 'SHA-256 mismatch' }
+          if ((Get-AuthenticodeSignature -LiteralPath $setup).Status -eq 'Valid') {
+            throw 'Test-only unsigned installer is unexpectedly signed'
+          }
+          $proc=Start-Process -FilePath $setup -ArgumentList '/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP-' -Wait -PassThru
+          if ($proc.ExitCode -ne 0) { throw "Gated installer failed: $($proc.ExitCode)" }
+          $app=Join-Path $env:LOCALAPPDATA 'Programs\WEmulDroid'
+          $installedMarker=Join-Path $app 'BETA_ACCESS_URL.txt'
+          if (-not (Test-Path -LiteralPath $installedMarker)) { throw 'Gated marker not installed' }
+          if ((Get-Content -LiteralPath $installedMarker -Raw).Trim() -cne $env:WEMULDROID_BETA_ACCESS_URL) {
+            throw 'Incorrect gated endpoint installed'
+          }
+          . (Join-Path $app 'src\BetaAccess.ps1')
+          $ctx=Get-WEmulDroidBetaContext $app
+          if (-not $ctx.Enabled -or $ctx.Allowed) { throw 'Gated installer failed closed-policy test' }
+          # Do not start the emulator or create an enrollment on production Cloudflare.
+          Write-Host 'CI PASS: actual installed EXE includes opt-in gate, no user account was enrolled.'
+      - name: Archive isolated development test EXE only (never GitHub Release)
+        uses: actions/upload-artifact@v4
+        with:
+          name: WEmulDroid-Gated-Test-Installer-Unsigned-NOT-FOR-DISTRIBUTION
+          path: |
+            dist-gated/payload/Output/WEmulDroid-Setup-*.exe
+            dist-gated/payload/Output/WEmulDroid-Setup-*.exe.sha256
+            docs/FIRST_EXTERNAL_TESTER.md
+          retention-days: 3
+          if-no-files-found: error

@@ -9,6 +9,8 @@ Questo documento **non è un'autorizzazione a installare**: ricevi prima conferm
 - Non c'è alcun costo richiesto per il test.
 - L'installer di sviluppo è **privo di firma digitale**. Se Windows Smart App Control, Defender o un antivirus lo blocca, **fermati** e comunica il messaggio all'organizzatore. Non disattivare protezioni, firewall, controlli UAC né antivirus.
 - Non installare la precedente `v0.9.0-beta.10` per provare Beta Access: non dispone del nuovo gate.
+- Nel pilot privato, **Impostazioni → Aggiornamenti** non propone release pubbliche: potrebbero rimuovere la protezione dell'invito. Segui esclusivamente le istruzioni del responsabile per eventuali nuove beta gated.
+- Il file preparato dalla CI è ancora identificato come **NOT FOR DISTRIBUTION**; la presente guida non autorizza la sua condivisione o esecuzione. Il proprietario deve prima definire e autorizzare un percorso di consegna sicuro.
 - Non è necessario condividere password, PIN, email di accesso Windows, contenuti personali o log completi.
 
 ## Verifica del materiale, quando autorizzato

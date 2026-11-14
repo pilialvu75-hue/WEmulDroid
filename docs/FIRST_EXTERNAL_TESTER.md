@@ -13,6 +13,16 @@ Questo documento **non è un'autorizzazione a installare**: ricevi prima conferm
 - Il file preparato dalla CI è ancora identificato come **NOT FOR DISTRIBUTION**; la presente guida non autorizza la sua condivisione o esecuzione. Il proprietario deve prima definire e autorizzare un percorso di consegna sicuro.
 - Non è necessario condividere password, PIN, email di accesso Windows, contenuti personali o log completi.
 
+## Controllo preliminare senza installare nulla
+
+Il candidato può comunicare questi dati tecnici **senza scaricare WEmulDroid e senza cambiare impostazioni**:
+
+1. In **Impostazioni → Sistema → Informazioni sul sistema**, confermare Windows 11 e architettura a 64 bit.
+2. In **Gestione attività → Prestazioni → CPU**, leggere se **Virtualizzazione** è `Abilitata` o `Disabilitata`. Non modificare BIOS, Hyper-V o altre impostazioni.
+3. In **Sicurezza Windows → Controllo app e browser → Controllo app intelligente**, leggere se lo stato è `Attivato`, `Valutazione` o `Disattivato`, quando la voce è disponibile. **Non modificarlo**.
+4. Indicare RAM installata e spazio libero disponibile (numeri approssimativi sono sufficienti). Non inviare nomi di account Windows, indirizzi, seriali o screenshot con dati personali.
+
+Queste informazioni servono soltanto a decidere se un collaudo guidato sia praticabile; **non autorizzano a distribuire l'artefatto CI unsigned**.
 ## Verifica del materiale, quando autorizzato
 
 1. Recupera esclusivamente il file fornito o indicato dall'organizzatore. La versione prevista è **`WEmulDroid-Setup-v0.9.0-beta.11.exe`**.

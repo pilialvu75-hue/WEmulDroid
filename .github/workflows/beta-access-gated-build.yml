@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - 'src/BetaAccess.ps1'
+      - 'tests/BetaAccessGate.Tests.ps1'
       - 'src/BetaUpload.ps1'
       - 'src/Lab.ps1'
       - 'installer/**'
@@ -32,6 +33,11 @@ jobs:
           if (-not (Test-WEmulDroidBetaApproval ([pscustomobject]@{state='approved';approved_until=$now.AddDays(1).ToString('o')}) $now)) {
             throw 'Approved lease was refused'
           }
+      - name: Verify DPAPI, private invite, fail-closed status and consent without network
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          .\tests\BetaAccessGate.Tests.ps1
       - name: Install Inno Setup compiler on CI only
         shell: powershell
         run: |
